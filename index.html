@@ -82,8 +82,29 @@ body{padding:20px}.wrap{max-width:1500px;margin:0 auto}.topbar{display:flex;just
 
 <script>
 const SALES_API="https://script.google.com/macros/s/AKfycbyM5mUlz5SeMZ_oPJCo2FgLkPEcodAQ7wPl5wxAdrvfqLvsZLaHxiOtS02L1Q3ZRA3D/exec";
-const RAW_VIEW=(new URLSearchParams(location.search).get('view')||'all').toLowerCase();
-const VIEW=RAW_VIEW==='your'?'your':'all';
+// Resolve A/R mode from the permanent Dashboard shell first.
+// Because both pages are hosted under the same GitHub Pages origin, the iframe
+// can safely read the parent's ?module= value. The iframe's own view parameter
+// remains as a fallback when the A/R page is opened directly.
+function resolveARView(){
+  let parentModule='';
+  try {
+    if (window.parent && window.parent !== window) {
+      parentModule=(new URLSearchParams(window.parent.location.search).get('module')||'').toLowerCase();
+    }
+  } catch(e) {}
+  if(parentModule==='ar-your') return 'your';
+  if(parentModule==='ar-all') return 'all';
+
+  const own=new URLSearchParams(location.search);
+  const shellModule=(own.get('shellModule')||'').toLowerCase();
+  if(shellModule==='ar-your') return 'your';
+  if(shellModule==='ar-all') return 'all';
+
+  const raw=(own.get('view')||'all').toLowerCase();
+  return raw==='your'?'your':'all';
+}
+const VIEW=resolveARView();
 const SESSION_KEY=VIEW==='all'?'bb_ar_admin_session':'bb_ar_salesman_session';
 const $=id=>document.getElementById(id);
 let sessionToken=sessionStorage.getItem(SESSION_KEY)||'';
