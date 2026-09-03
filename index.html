@@ -19,7 +19,7 @@ body{padding:20px}.wrap{max-width:1500px;margin:0 auto}.topbar{display:flex;just
 <div class="wrap">
   <div class="topbar">
     <div><h1 id="pageTitle">Account Receivable</h1><p class="subtitle" id="pageSubtitle">Secure receivable view based on your assigned locations.</p></div>
-    <div class="userbox"><span class="pill" id="salesmanPill">Not signed in</span><span class="pill" id="locationPill">0 locations</span><button class="logout" id="logoutBtn" onclick="logout()" hidden>Logout</button></div>
+    <div class="userbox"><span class="pill" id="accessPill">Not signed in</span><span class="pill" id="locationPill">0 locations</span><button class="logout" id="logoutBtn" onclick="logout()" hidden>Logout</button></div>
   </div>
 
   <div class="cards">
@@ -30,7 +30,7 @@ body{padding:20px}.wrap{max-width:1500px;margin:0 auto}.topbar{display:flex;just
   </div>
 
   <div class="panel">
-    <div class="view-banner" id="viewBanner">All Receivable = all receivables from your permitted locations only.</div>
+    <div class="view-banner" id="viewBanner">Secure Credit receivable access.</div>
     <div class="filters">
       <input id="searchBox" placeholder="Search invoice or customer" oninput="renderRows()">
       <select id="locationFilter" onchange="renderRows()"><option value="">All permitted locations</option></select>
@@ -49,12 +49,12 @@ body{padding:20px}.wrap{max-width:1500px;margin:0 auto}.topbar{display:flex;just
 
 <div class="overlay" id="loginOverlay">
   <div class="loginbox">
-    <h2>🔐 Salesman Access</h2>
-    <p>Enter your Salesman Code. You will only see receivables from locations assigned to your Salesman ID in the database.</p>
-    <div class="field"><label>Salesman Code</label><input id="salesmanCode" type="password" autocomplete="off" placeholder="Enter salesman code" onkeydown="if(event.key==='Enter')login()"></div>
+    <h2 id="loginTitle">🔐 Secure Access</h2>
+    <p id="loginText">Enter your access code.</p>
+    <div class="field"><label id="loginLabel">Access Code</label><input id="accessCode" type="password" autocomplete="off" placeholder="Enter code" onkeydown="if(event.key==='Enter')login()"></div>
     <button class="btn primary" id="loginBtn" style="width:100%" onclick="login()">Sign In</button>
     <div class="loginerror" id="loginError"></div>
-    <div class="secure-note">Your secret code is not stored in this HTML or in localStorage.</div>
+    <div class="secure-note" id="loginNote">Your secret code is checked on the server and is not stored in this HTML.</div>
   </div>
 </div>
 
@@ -82,10 +82,12 @@ body{padding:20px}.wrap{max-width:1500px;margin:0 auto}.topbar{display:flex;just
 
 <script>
 const SALES_API="https://script.google.com/macros/s/AKfycbyM5mUlz5SeMZ_oPJCo2FgLkPEcodAQ7wPl5wxAdrvfqLvsZLaHxiOtS02L1Q3ZRA3D/exec";
-const VIEW=(new URLSearchParams(location.search).get('view')||'all').toLowerCase();
+const RAW_VIEW=(new URLSearchParams(location.search).get('view')||'all').toLowerCase();
+const VIEW=RAW_VIEW==='your'?'your':'all';
+const SESSION_KEY=VIEW==='all'?'bb_ar_admin_session':'bb_ar_salesman_session';
 const $=id=>document.getElementById(id);
-let sessionToken=sessionStorage.getItem('bb_ar_session_token')||'';
-let sessionProfile=null, rows=[], revision='', currentInvoice=null, syncTimer=null;
+let sessionToken=sessionStorage.getItem(SESSION_KEY)||'';
+let sessionProfile=null,rows=[],revision='',currentInvoice=null,syncTimer=null;
 
 function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 function num(v){const n=Number(v);return Number.isFinite(n)?n:0}
@@ -93,71 +95,98 @@ function money(v,c='USD'){return (c==='KHR'?'៛':'$')+num(v).toLocaleString(und
 function today(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
 
 async function apiPost(params){
-  const body=new URLSearchParams(); Object.entries(params).forEach(([k,v])=>body.append(k,v==null?'':String(v)));
+  const body=new URLSearchParams();Object.entries(params).forEach(([k,v])=>body.append(k,v==null?'':String(v)));
   const res=await fetch(SALES_API,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},body,redirect:'follow'});
-  const text=await res.text();
-  let data; try{data=JSON.parse(text)}catch(e){throw new Error('Server returned an unreadable response. Please check Web App deployment.')}
-  return data;
+  const text=await res.text();let data;try{data=JSON.parse(text)}catch(e){throw new Error('Server returned an unreadable response. Please check Sales Web App deployment.')}return data;
 }
-
 function setLoginError(msg){$('loginError').textContent=msg||'';$('loginError').classList.toggle('show',!!msg)}
 function setPaymentError(msg){$('paymentError').textContent=msg||'';$('paymentError').classList.toggle('show',!!msg)}
 
+function configureView(){
+  if(VIEW==='all'){
+    $('pageTitle').textContent='All Receivable';
+    $('pageSubtitle').textContent='Company-wide Credit invoices from all active Location Codes.';
+    $('viewBanner').textContent='All Receivable = Admin Access only. Tracks every open Credit invoice by Location Code.';
+    $('loginTitle').textContent='🔐 Admin Access';
+    $('loginText').textContent='Enter an active Admin Code to review company-wide receivables.';
+    $('loginLabel').textContent='Admin Code';
+    $('accessCode').placeholder='Enter admin code';
+    $('loginNote').textContent='Admin Code is verified server-side and is not stored in this HTML.';
+  }else{
+    $('pageTitle').textContent='Your Receivable';
+    $('pageSubtitle').textContent='Credit invoices from Location Codes assigned to your Salesman ID.';
+    $('viewBanner').textContent='Your Receivable = only Credit invoices from your assigned Location Codes.';
+    $('loginTitle').textContent='🔐 Salesman Access';
+    $('loginText').textContent='Enter your Salesman Code. The server will load only Location Codes assigned to your Salesman ID.';
+    $('loginLabel').textContent='Salesman Code';
+    $('accessCode').placeholder='Enter salesman code';
+    $('loginNote').textContent='Salesman Code is verified server-side and is not stored in this HTML.';
+  }
+}
+
 async function login(){
-  const code=$('salesmanCode').value.trim(); if(!code){setLoginError('Please enter Salesman Code.');return}
-  const btn=$('loginBtn'); btn.disabled=true; btn.textContent='Checking…'; setLoginError('');
+  const code=$('accessCode').value.trim();
+  if(!code){setLoginError(VIEW==='all'?'Please enter Admin Code.':'Please enter Salesman Code.');return}
+  const btn=$('loginBtn');btn.disabled=true;btn.textContent='Checking…';setLoginError('');
   try{
-    const data=await apiPost({action:'arLogin',salesmanCode:code});
-    if(!data||!data.success||!data.authorized) throw new Error(data?.error||'Access denied.');
-    sessionToken=data.sessionToken; sessionProfile=data; sessionStorage.setItem('bb_ar_session_token',sessionToken);
-    $('salesmanCode').value=''; $('loginOverlay').classList.add('hidden'); $('logoutBtn').hidden=false;
-    applyProfile(data); await loadAR(true); startSync();
-  }catch(e){sessionToken='';sessionStorage.removeItem('bb_ar_session_token');setLoginError(e.message||'Access denied.')}
+    const data=VIEW==='all'?await apiPost({action:'arAdminLogin',adminCode:code}):await apiPost({action:'arLogin',salesmanCode:code});
+    if(!data||!data.success||!data.authorized)throw new Error(data?.error||'Access denied.');
+    sessionToken=data.sessionToken;sessionProfile=data;sessionStorage.setItem(SESSION_KEY,sessionToken);
+    $('accessCode').value='';$('loginOverlay').classList.add('hidden');$('logoutBtn').hidden=false;
+    applyProfile(data);await loadAR(true);startSync();
+  }catch(e){sessionToken='';sessionStorage.removeItem(SESSION_KEY);setLoginError(e.message||'Access denied.');}
   finally{btn.disabled=false;btn.textContent='Sign In'}
 }
 
 function applyProfile(p){
-  sessionProfile=p; $('salesmanPill').textContent='👤 '+(p.salesmanName||'Salesman');
-  const locs=Array.isArray(p.locations)?p.locations:[]; $('locationPill').textContent=`📍 ${locs.length} location${locs.length===1?'':'s'}`;
-  const sel=$('locationFilter'); const cur=sel.value; sel.innerHTML='<option value="">All permitted locations</option>';
-  locs.filter(l=>VIEW!=='siemreap'||String(l.locationName||'').toLowerCase().includes('siem reap')).forEach(l=>{const o=document.createElement('option');o.value=l.locationCode;o.textContent=`${l.locationName||l.locationCode} (${l.locationCode})`;sel.appendChild(o)}); if([...sel.options].some(o=>o.value===cur))sel.value=cur;
+  sessionProfile=p;const locs=Array.isArray(p.locations)?p.locations:[];
+  if((p.role||'')==='admin'){
+    $('accessPill').textContent='🛡️ '+(p.adminName||'Admin');
+    $('locationPill').textContent=`📍 ${locs.length} active location${locs.length===1?'':'s'}`;
+    $('pageTitle').textContent='All Receivable';
+    $('pageSubtitle').textContent='Company-wide Credit invoices from all active Location Codes.';
+  }else{
+    const name=p.salesmanName||'Salesman';
+    $('accessPill').textContent='👤 '+name;
+    $('locationPill').textContent=`📍 ${locs.length} location${locs.length===1?'':'s'}`;
+    const names=locs.map(l=>l.locationName||l.locationCode).filter(Boolean);
+    $('pageTitle').textContent=locs.length===1?`${names[0]} Receivable`:`${name} Receivable`;
+    $('pageSubtitle').textContent=locs.length?`Assigned locations: ${locs.map(l=>`${l.locationName||l.locationCode} (${l.locationCode})`).join(' • ')}`:'No assigned locations.';
+    $('viewBanner').textContent=`${name}: tracking open Credit invoices by assigned Location Code${locs.length===1?'':'s'}.`;
+  }
+  const sel=$('locationFilter'),cur=sel.value;sel.innerHTML='<option value="">All permitted locations</option>';
+  locs.forEach(l=>{const o=document.createElement('option');o.value=l.locationCode;o.textContent=`${l.locationName||l.locationCode} (${l.locationCode})`;sel.appendChild(o)});if([...sel.options].some(o=>o.value===cur))sel.value=cur;
 }
 
 async function restoreSession(){
   if(!sessionToken){$('loginOverlay').classList.remove('hidden');return}
-  try{await loadAR(true);$('loginOverlay').classList.add('hidden');$('logoutBtn').hidden=false;startSync()}catch(e){sessionToken='';sessionStorage.removeItem('bb_ar_session_token');$('loginOverlay').classList.remove('hidden');setLoginError('Session expired. Please sign in again.')}
+  try{await loadAR(true);$('loginOverlay').classList.add('hidden');$('logoutBtn').hidden=false;startSync()}catch(e){sessionToken='';sessionStorage.removeItem(SESSION_KEY);$('loginOverlay').classList.remove('hidden');setLoginError('Session expired or access changed. Please sign in again.')}
 }
-
 async function logout(){
-  const token=sessionToken; sessionToken='';sessionProfile=null;rows=[];revision='';sessionStorage.removeItem('bb_ar_session_token');clearInterval(syncTimer);syncTimer=null;
-  if(token){try{await apiPost({action:'arLogout',sessionToken:token})}catch(_){} }
-  $('salesmanPill').textContent='Not signed in';$('locationPill').textContent='0 locations';$('logoutBtn').hidden=true;$('arBody').innerHTML='<tr><td colspan="10" class="empty">Sign in to view receivables.</td></tr>';$('loginOverlay').classList.remove('hidden');
+  const token=sessionToken;sessionToken='';sessionProfile=null;rows=[];revision='';sessionStorage.removeItem(SESSION_KEY);clearInterval(syncTimer);syncTimer=null;
+  if(token){try{await apiPost({action:'arLogout',sessionToken:token})}catch(_){}}
+  $('accessPill').textContent='Not signed in';$('locationPill').textContent='0 locations';$('logoutBtn').hidden=true;$('arBody').innerHTML='<tr><td colspan="10" class="empty">Sign in to view receivables.</td></tr>';$('loginOverlay').classList.remove('hidden');configureView();
 }
 
 async function loadAR(force=false){
-  if(!sessionToken) throw new Error('No A/R session.');
-  $('syncStatus').textContent=force?'Syncing…':'Loading…';
-  const data=await apiPost({action:'arList',sessionToken,view:VIEW});
-  if(!data||!data.success) throw new Error(data?.error||'Could not load receivables.');
-  rows=Array.isArray(data.receivables)?data.receivables:[];revision=data.revision||revision;
-  if(data.salesman)applyProfile({...data.salesman,locations:data.salesman.locations||[]});
-  renderRows(); $('syncStatus').textContent='Up to date · secure sync 20s'; return data;
+  if(!sessionToken)throw new Error('No A/R session.');$('syncStatus').textContent=force?'Syncing…':'Loading…';
+  const data=await apiPost({action:'arList',sessionToken,view:VIEW});if(!data||!data.success)throw new Error(data?.error||'Could not load receivables.');
+  rows=Array.isArray(data.receivables)?data.receivables:[];revision=data.revision||revision;if(data.access)applyProfile(data.access);renderRows();$('syncStatus').textContent='Up to date · secure sync 20s';return data;
 }
 
 function renderRows(){
-  const q=$('searchBox').value.trim().toLowerCase(), loc=$('locationFilter').value.trim().toLowerCase(), stat=$('statusFilter').value;
+  const q=$('searchBox').value.trim().toLowerCase(),loc=$('locationFilter').value.trim().toLowerCase(),stat=$('statusFilter').value;
   const visible=rows.filter(r=>{if(q&&!(`${r.invoiceNo} ${r.customer}`.toLowerCase().includes(q)))return false;if(loc&&String(r.locationCode).toLowerCase()!==loc)return false;if(stat&&r.arStatus!==stat)return false;return true});
-  let out=0,over=0;const customers=new Set(); visible.forEach(r=>{out+=num(r.outstanding);if(r.arStatus==='Overdue')over+=num(r.outstanding);if(r.customer)customers.add(r.customer.toLowerCase())});
+  let out=0,over=0;const customers=new Set();visible.forEach(r=>{out+=num(r.outstanding);if(r.arStatus==='Overdue')over+=num(r.outstanding);if(r.customer)customers.add(r.customer.toLowerCase())});
   $('sumOutstanding').textContent=money(out);$('sumOverdue').textContent=money(over);$('sumInvoices').textContent=visible.length;$('sumCustomers').textContent=customers.size;$('rowCount').textContent=`${visible.length} record${visible.length===1?'':'s'}`;
-  if(!visible.length){$('arBody').innerHTML='<tr><td colspan="10" class="empty">No receivables found for this view.</td></tr>';return}
+  if(!visible.length){$('arBody').innerHTML='<tr><td colspan="10" class="empty">No open Credit invoices found for this view.</td></tr>';return}
   $('arBody').innerHTML=visible.map(r=>`<tr><td><strong>${esc(r.invoiceNo)}</strong></td><td>${esc(String(r.invoiceDate||'').slice(0,10))}</td><td>${esc(r.dueDate||'-')}</td><td>${esc(r.customer)}</td><td>${esc(r.locationName||r.locationCode)}<br><small>${esc(r.locationCode)}</small></td><td class="money">${money(r.grandTotal,r.currency)}</td><td class="money">${money(r.amountPaid,r.currency)}</td><td class="money"><strong>${money(r.outstanding,r.currency)}</strong></td><td><span class="status ${r.arStatus.toLowerCase()}">${esc(r.arStatus)}</span></td><td><button class="btn primary" onclick='openPayment(${JSON.stringify(r.invoiceNo)})'>Receive</button></td></tr>`).join('');
 }
 
 async function openPayment(invoiceNo){
   currentInvoice=rows.find(r=>r.invoiceNo===invoiceNo);if(!currentInvoice)return;
-  $('paymentInfo').textContent=`${currentInvoice.invoiceNo} · ${currentInvoice.customer} · Outstanding ${money(currentInvoice.outstanding,currentInvoice.currency)}`;
-  $('payDate').value=today();$('payAmount').value='';$('payAmount').max=currentInvoice.outstanding;$('payMethod').value='Cash';$('payBank').value='';$('transactionId').value='';$('bankReference').value='';$('payNote').value='';$('adminCode').value='';setPaymentError('');toggleBankFields();$('paymentOverlay').classList.remove('hidden');
-  $('paymentHistory').textContent='Loading…';
+  $('paymentInfo').textContent=`${currentInvoice.invoiceNo} · ${currentInvoice.customer} · ${currentInvoice.locationCode} · Outstanding ${money(currentInvoice.outstanding,currentInvoice.currency)}`;
+  $('payDate').value=today();$('payAmount').value='';$('payAmount').max=currentInvoice.outstanding;$('payMethod').value='Cash';$('payBank').value='';$('transactionId').value='';$('bankReference').value='';$('payNote').value='';$('adminCode').value='';setPaymentError('');toggleBankFields();$('paymentOverlay').classList.remove('hidden');$('paymentHistory').textContent='Loading…';
   try{const d=await apiPost({action:'arDetail',sessionToken,view:VIEW,invoiceNo});if(!d||!d.success)throw new Error(d?.error||'Could not load payment history.');const ps=Array.isArray(d.payments)?d.payments:[];$('paymentHistory').innerHTML=ps.length?ps.map(p=>`<div class="historyitem"><strong>${money(p.amount,p.currency)}</strong> · ${esc(p.paymentDate)} · ${esc(p.paymentMethod)}${p.transactionId?`<br>Transaction ID: ${esc(p.transactionId)}`:''}${p.approvedBy?`<br>Approved by: ${esc(p.approvedBy)}`:''}</div>`).join(''):'<div class="empty" style="padding:12px">No previous payments.</div>'}catch(e){$('paymentHistory').textContent=e.message}
 }
 function closePayment(){$('paymentOverlay').classList.add('hidden');currentInvoice=null}
@@ -165,27 +194,13 @@ function toggleBankFields(){$('bankFields').classList.toggle('show',$('payMethod
 
 async function savePayment(){
   if(!currentInvoice)return;const amount=num($('payAmount').value),method=$('payMethod').value,tx=$('transactionId').value.trim(),admin=$('adminCode').value.trim();setPaymentError('');
-  if(amount<=0)return setPaymentError('Payment amount must be greater than zero.');
-  if(amount>num(currentInvoice.outstanding)+.000001)return setPaymentError('Payment cannot exceed outstanding balance.');
-  if(method==='Bank'&&!$('payBank').value.trim())return setPaymentError('Bank Name is required.');
-  if(method==='Bank'&&!tx)return setPaymentError('Transaction ID is required for Bank payment.');
-  if(!admin)return setPaymentError('Admin Code is required to approve payment.');
+  if(amount<=0)return setPaymentError('Payment amount must be greater than zero.');if(amount>num(currentInvoice.outstanding)+.000001)return setPaymentError('Payment cannot exceed outstanding balance.');if(method==='Bank'&&!$('payBank').value.trim())return setPaymentError('Bank Name is required.');if(method==='Bank'&&!tx)return setPaymentError('Transaction ID is required for Bank payment.');if(!admin)return setPaymentError('Admin Code is required to approve payment.');
   const btn=$('savePayBtn');btn.disabled=true;btn.textContent='Saving…';
-  try{
-    const paymentData={sessionToken,adminCode:admin,invoiceNo:currentInvoice.invoiceNo,paymentDate:$('payDate').value,amount,paymentMethod:method,bankPayment:method==='Bank'?$('payBank').value.trim():'',transactionId:method==='Bank'?tx:'',bankReference:method==='Bank'?$('bankReference').value.trim():'',note:$('payNote').value.trim()};
-    const d=await apiPost({action:'arPayment',paymentData:JSON.stringify(paymentData)});
-    if(!d||!d.success)throw new Error(d?.error||'Payment failed.');
-    closePayment();await loadAR(true);alert(`Payment saved successfully.\nApproved by: ${d.approvedBy||'Admin'}\nPayment ID: ${d.paymentId||''}`);
-  }catch(e){setPaymentError(e.message||'Payment failed. Nothing was changed.')}
-  finally{btn.disabled=false;btn.textContent='✓ Approve & Save Payment';$('adminCode').value=''}
+  try{const paymentData={sessionToken,adminCode:admin,invoiceNo:currentInvoice.invoiceNo,paymentDate:$('payDate').value,amount,paymentMethod:method,bankPayment:method==='Bank'?$('payBank').value.trim():'',transactionId:method==='Bank'?tx:'',bankReference:method==='Bank'?$('bankReference').value.trim():'',note:$('payNote').value.trim()};const d=await apiPost({action:'arPayment',paymentData:JSON.stringify(paymentData)});if(!d||!d.success)throw new Error(d?.error||'Payment failed.');closePayment();await loadAR(true);alert(`Payment saved successfully.\nApproved by: ${d.approvedBy||'Admin'}\nPayment ID: ${d.paymentId||''}`)}catch(e){setPaymentError(e.message||'Payment failed. Nothing was changed.')}finally{btn.disabled=false;btn.textContent='✓ Approve & Save Payment';$('adminCode').value=''}
 }
-
-function startSync(){clearInterval(syncTimer);syncTimer=setInterval(async()=>{if(document.hidden||!sessionToken)return;try{const d=await apiPost({action:'arRevision',sessionToken});if(d&&d.success&&d.revision!==revision)await loadAR(false)}catch(e){if(String(e.message).toLowerCase().includes('session')){await logout();setLoginError('Session expired. Please sign in again.')}}},20000)}
+function startSync(){clearInterval(syncTimer);syncTimer=setInterval(async()=>{if(document.hidden||!sessionToken)return;try{const d=await apiPost({action:'arRevision',sessionToken});if(d&&d.success&&d.revision!==revision)await loadAR(false)}catch(e){if(String(e.message).toLowerCase().includes('session')||String(e.message).toLowerCase().includes('inactive')){await logout();setLoginError('Access session expired or was disabled. Please sign in again.')}}},20000)}
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&sessionToken)loadAR(false).catch(()=>{})});
-
-(function init(){
-  const siem=VIEW==='siemreap';$('pageTitle').textContent=siem?'Siem Reap Receivable':'All Receivable';$('pageSubtitle').textContent=siem?'Only your permitted Siem Reap locations are shown.':'All receivables from locations assigned to your Salesman ID.';$('viewBanner').textContent=siem?'Siem Reap Receivable = only assigned locations whose current Location Name contains “Siem Reap”.':'All Receivable = all receivables from your permitted locations only.';restoreSession();
-})();
+configureView();restoreSession();
 </script>
 </body>
 </html>
