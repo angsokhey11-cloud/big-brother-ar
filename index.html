@@ -95,6 +95,7 @@ body{padding:20px}.wrap{max-width:1500px;margin:0 auto}.topbar{display:flex;just
 
 <script>
 const SALES_API="https://script.google.com/macros/s/AKfycbyM5mUlz5SeMZ_oPJCo2FgLkPEcodAQ7wPl5wxAdrvfqLvsZLaHxiOtS02L1Q3ZRA3D/exec";
+const MASTER_API="https://script.google.com/macros/s/AKfycbzIjs-cNehMxWTZs3ZPAosseGUu1nqACTPo3S4-onLLEYnEgqP6AUK7p3jwb6MaFr7H0w/exec";
 // Resolve A/R mode from the permanent Dashboard shell first.
 // Because both pages are hosted under the same GitHub Pages origin, the iframe
 // can safely read the parent's ?module= value. The iframe's own view parameter
@@ -233,17 +234,42 @@ function updateSummaryControls(){
   all.checked=visibleKeys.length>0&&selectedVisible===visibleKeys.length;all.indeterminate=selectedVisible>0&&selectedVisible<visibleKeys.length;
 }
 function selectedSummaryRows(){return rows.filter(r=>selectedInvoices.has(String(r.invoiceNo)))}
-function openSummary(){
+async function getMasterCustomerContact_(row){
+  const fallback={phone:row?.customerPhone||'',address:row?.customerAddress||''};
+  try{
+    const qs=new URLSearchParams({
+      action:'invoiceCustomerData',
+      locationCode:String(row?.locationCode||''),
+      customer:String(row?.customer||'')
+    });
+    const res=await fetch(`${MASTER_API}?${qs.toString()}`,{method:'GET',redirect:'follow',cache:'no-store'});
+    if(!res.ok)throw new Error('Master Database request failed.');
+    const data=await res.json();
+    const c=data&&data.customer?data.customer:null;
+    if(data&&data.success&&data.found&&c){
+      return {phone:String(c.phone||'').trim(),address:String(c.address||'').trim()};
+    }
+  }catch(e){console.warn('Customer contact lookup failed:',e)}
+  return fallback;
+}
+async function openSummary(){
   const picked=selectedSummaryRows();if(!picked.length)return alert('Please check at least one invoice first.');
   const customerKeys=[...new Set(picked.map(r=>String(r.customer||'').trim().toLowerCase()))];
   if(customerKeys.length!==1)return alert('Please select invoices for one customer only before creating the summary.');
-  buildSummary(picked);$('summaryOverlay').classList.remove('hidden');
+  const btn=$('summaryBtn'),oldText=btn.textContent;btn.disabled=true;btn.textContent='Loading Customer…';
+  try{
+    const contact=await getMasterCustomerContact_(picked[0]);
+    buildSummary(picked,contact);
+    $('summaryOverlay').classList.remove('hidden');
+  }finally{
+    btn.disabled=false;btn.textContent=oldText;updateSummaryControls();
+  }
 }
 function closeSummary(){$('summaryOverlay').classList.add('hidden')}
-function buildSummary(picked){
+function buildSummary(picked,contact){
   const first=picked[0],customer=first.customer||'-',salesman=sessionProfile?.salesmanName||'Salesman';
-  const phone=first.customerPhone||'-';
-  const address=first.customerAddress||'-';
+  const phone=(contact&&contact.phone)||first.customerPhone||'-';
+  const address=(contact&&contact.address)||first.customerAddress||'-';
   const currencies=[...new Set(picked.map(r=>r.currency||'USD'))];
   const totals={};
   currencies.forEach(c=>totals[c]=0);
