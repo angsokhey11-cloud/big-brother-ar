@@ -8,9 +8,9 @@
 :root{--bg:#f4f7fb;--card:#fff;--line:#dfe6ef;--text:#17304f;--muted:#6d7d91;--blue:#1f5fbf;--blue2:#174b98;--green:#198754;--red:#c93c46;--amber:#b67a00;--shadow:0 10px 28px rgba(20,48,82,.08)}
 *{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text)}
 body{padding:20px}.wrap{max-width:1500px;margin:0 auto}.topbar{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:18px}.topbar h1{margin:0 0 5px;font-size:28px}.subtitle{margin:0;color:var(--muted)}.userbox{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}.pill{padding:8px 12px;border:1px solid #c9d8ec;border-radius:999px;background:#edf5ff;color:#245da8;font-size:12px;font-weight:700}.logout{border:1px solid #cfd8e4;background:#fff;color:#4e6076;border-radius:9px;padding:8px 12px;cursor:pointer;font-weight:700}.cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin-bottom:16px}.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:15px;box-shadow:var(--shadow)}.card small{display:block;color:var(--muted);font-weight:700;margin-bottom:7px}.card strong{font-size:24px}.card.red strong{color:var(--red)}
-.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}.filters{padding:14px;display:grid;grid-template-columns:1.25fr 1fr 1fr auto;gap:10px;border-bottom:1px solid var(--line)}input,select,textarea{width:100%;border:1px solid #cbd6e3;border-radius:9px;padding:10px 11px;font:inherit;color:var(--text);background:#fff}input:focus,select:focus,textarea:focus{outline:2px solid rgba(31,95,191,.14);border-color:#6f9ed8}.btn{border:0;border-radius:9px;padding:10px 14px;font-weight:700;cursor:pointer}.btn.primary{background:var(--blue);color:#fff}.btn.primary:hover{background:var(--blue2)}.btn.secondary{background:#eef3f8;color:#284761}.btn.danger{background:#fff0f1;color:var(--red)}.btn:disabled{opacity:.55;cursor:not-allowed}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}.filters{padding:14px;display:grid;grid-template-columns:1.25fr 1fr 1fr auto auto;gap:10px;border-bottom:1px solid var(--line)}input,select,textarea{width:100%;border:1px solid #cbd6e3;border-radius:9px;padding:10px 11px;font:inherit;color:var(--text);background:#fff}input:focus,select:focus,textarea:focus{outline:2px solid rgba(31,95,191,.14);border-color:#6f9ed8}.btn{border:0;border-radius:9px;padding:10px 14px;font-weight:700;cursor:pointer}.btn.primary{background:var(--blue);color:#fff}.btn.primary:hover{background:var(--blue2)}.btn.secondary{background:#eef3f8;color:#284761}.btn.danger{background:#fff0f1;color:var(--red)}.btn:disabled{opacity:.55;cursor:not-allowed}
 .tablewrap{overflow:auto}table{width:100%;border-collapse:collapse;min-width:1080px}th,td{padding:11px 10px;border-bottom:1px solid #e7edf4;text-align:left;font-size:13px;white-space:nowrap}th{background:#f7f9fc;color:#53657a;font-size:12px;position:sticky;top:0}tbody tr:hover{background:#f9fbfe}.money{text-align:right;font-variant-numeric:tabular-nums}.status{display:inline-block;padding:5px 8px;border-radius:999px;font-size:11px;font-weight:800}.status.overdue{background:#fff0f1;color:var(--red)}.status.outstanding{background:#fff7df;color:#966200}.empty{text-align:center;color:var(--muted);padding:30px}.foot{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:11px 14px;color:var(--muted);font-size:12px}
-.overlay{position:fixed;inset:0;background:rgba(10,27,48,.68);display:flex;align-items:center;justify-content:center;padding:18px;z-index:9999}.overlay.hidden{display:none}.loginbox,.modalbox{width:min(460px,100%);background:#fff;border-radius:16px;padding:22px;box-shadow:0 25px 70px rgba(0,0,0,.25)}.loginbox h2,.modalbox h2{margin:0 0 7px}.loginbox p,.modalbox p{color:var(--muted);margin:0 0 16px;line-height:1.5}.field{margin-bottom:12px}.field label{display:block;font-size:12px;font-weight:800;color:#556a82;margin-bottom:5px}.loginerror,.formerror{display:none;margin-top:10px;padding:9px 10px;background:#fff0f1;color:var(--red);border-radius:8px;font-size:12px}.loginerror.show,.formerror.show{display:block}.modalhead{display:flex;justify-content:space-between;align-items:center;gap:10px}.close{border:0;background:#eef2f7;width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:18px}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.bankfields{display:none}.bankfields.show{display:block}.history{margin-top:15px;border-top:1px solid var(--line);padding-top:12px}.history h3{margin:0 0 8px;font-size:15px}.historyitem{border:1px solid var(--line);border-radius:9px;padding:9px 10px;margin-bottom:7px;font-size:12px}.historyitem strong{font-size:13px}.secure-note{font-size:11px;color:var(--muted);margin-top:8px}.view-banner{padding:10px 14px;background:#eef5ff;border-bottom:1px solid #d6e5f7;color:#245da8;font-size:12px;font-weight:700}
+.overlay{position:fixed;inset:0;background:rgba(10,27,48,.68);display:flex;align-items:center;justify-content:center;padding:18px;z-index:9999}.overlay.hidden{display:none}.loginbox,.modalbox{width:min(460px,100%);background:#fff;border-radius:16px;padding:22px;box-shadow:0 25px 70px rgba(0,0,0,.25)}.loginbox h2,.modalbox h2{margin:0 0 7px}.loginbox p,.modalbox p{color:var(--muted);margin:0 0 16px;line-height:1.5}.field{margin-bottom:12px}.field label{display:block;font-size:12px;font-weight:800;color:#556a82;margin-bottom:5px}.loginerror,.formerror{display:none;margin-top:10px;padding:9px 10px;background:#fff0f1;color:var(--red);border-radius:8px;font-size:12px}.loginerror.show,.formerror.show{display:block}.modalhead{display:flex;justify-content:space-between;align-items:center;gap:10px}.close{border:0;background:#eef2f7;width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:18px}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.bankfields{display:none}.bankfields.show{display:block}.history{margin-top:15px;border-top:1px solid var(--line);padding-top:12px}.history h3{margin:0 0 8px;font-size:15px}.historyitem{border:1px solid var(--line);border-radius:9px;padding:9px 10px;margin-bottom:7px;font-size:12px}.historyitem strong{font-size:13px}.secure-note{font-size:11px;color:var(--muted);margin-top:8px}.view-banner{padding:10px 14px;background:#eef5ff;border-bottom:1px solid #d6e5f7;color:#245da8;font-size:12px;font-weight:700}.checkcell{width:42px;text-align:center}.rowcheck,.selectall{width:17px;height:17px;cursor:pointer;accent-color:var(--blue)}.summary-btn{background:#173f77;color:#fff}.summary-btn:hover{background:#102f5a}.summary-modal{width:min(1120px,96vw);max-height:94vh;overflow:auto;background:#eef2f7;border-radius:16px;padding:16px;box-shadow:0 25px 70px rgba(0,0,0,.3)}.summary-actions{display:flex;justify-content:flex-end;gap:8px;margin-bottom:12px;position:sticky;top:0;z-index:3;background:#eef2f7;padding:2px 0 10px}.a4-sheet{width:210mm;min-height:297mm;margin:0 auto;background:#fff;padding:14mm 14mm 16mm;color:#152b46;box-shadow:0 5px 22px rgba(0,0,0,.12)}.sum-head{display:flex;justify-content:space-between;gap:20px;border-bottom:2px solid #173f77;padding-bottom:10px;margin-bottom:14px}.sum-brand h1{font-size:24px;margin:0 0 3px}.sum-brand p,.sum-meta p{margin:2px 0;font-size:12px}.sum-title{text-align:center;font-size:20px;font-weight:800;letter-spacing:.5px;margin:8px 0 16px}.sum-customer{display:grid;grid-template-columns:1.2fr 1fr;gap:10px;margin-bottom:14px;font-size:12px}.sum-box{border:1px solid #d7e0eb;border-radius:8px;padding:9px 11px}.sum-box strong{display:block;font-size:11px;color:#6a7a8d;margin-bottom:4px;text-transform:uppercase}.sum-table{width:100%;min-width:0;border-collapse:collapse}.sum-table th,.sum-table td{font-size:11px;padding:8px 6px;border-bottom:1px solid #dfe6ef;white-space:normal}.sum-table th{background:#f2f5f9;color:#304b69;position:static}.sum-total{margin-left:auto;margin-top:14px;width:330px;border-collapse:collapse}.sum-total td{padding:6px 8px;font-size:12px;border-bottom:1px solid #e4e9f0}.sum-total td:last-child{text-align:right;font-weight:800}.sum-footer{margin-top:28px;padding-top:10px;border-top:1px solid #dfe6ef;font-size:10px;color:#738195;display:flex;justify-content:space-between;gap:20px}@media print{body>*{display:none!important}#summaryOverlay{display:block!important;position:static!important;background:#fff!important;padding:0!important}#summaryOverlay .summary-modal{display:block!important;width:auto!important;max-height:none!important;overflow:visible!important;background:#fff!important;padding:0!important;box-shadow:none!important}#summaryOverlay .summary-actions{display:none!important}.a4-sheet{box-shadow:none!important;margin:0!important;width:210mm!important;min-height:297mm!important}@page{size:A4;margin:0}}
 @media(max-width:900px){.cards{grid-template-columns:repeat(2,1fr)}.filters{grid-template-columns:1fr 1fr}.topbar{flex-direction:column}.userbox{justify-content:flex-start}}
 @media(max-width:560px){body{padding:10px}.cards{grid-template-columns:1fr 1fr;gap:8px}.card{padding:11px}.card strong{font-size:18px}.filters{grid-template-columns:1fr}.grid2{grid-template-columns:1fr}.topbar h1{font-size:23px}}
 </style>
@@ -32,15 +32,16 @@ body{padding:20px}.wrap{max-width:1500px;margin:0 auto}.topbar{display:flex;just
   <div class="panel">
     <div class="view-banner" id="viewBanner">Secure Credit receivable access.</div>
     <div class="filters">
-      <input id="searchBox" placeholder="Search invoice or customer" oninput="renderRows()">
-      <select id="locationFilter" onchange="renderRows()"><option value="">All permitted locations</option></select>
-      <select id="statusFilter" onchange="renderRows()"><option value="">All status</option><option value="Outstanding">Outstanding</option><option value="Overdue">Overdue</option></select>
+      <input id="searchBox" placeholder="Search invoice or customer" oninput="filterChanged()">
+      <select id="locationFilter" onchange="filterChanged()"><option value="">All permitted locations</option></select>
+      <select id="statusFilter" onchange="filterChanged()"><option value="">All status</option><option value="Outstanding">Outstanding</option><option value="Overdue">Overdue</option></select>
+      <button class="btn summary-btn" id="summaryBtn" onclick="openSummary()" disabled hidden>🧾 Summary Invoice (0)</button>
       <button class="btn secondary" onclick="loadAR(true)">↻ Refresh</button>
     </div>
     <div class="tablewrap">
       <table>
-        <thead><tr><th>Invoice No</th><th>Date</th><th>Due Date</th><th>Customer</th><th>Location</th><th class="money">Grand Total</th><th class="money">Paid</th><th class="money">Outstanding</th><th>Status</th><th>Action</th></tr></thead>
-        <tbody id="arBody"><tr><td colspan="10" class="empty">Sign in to view receivables.</td></tr></tbody>
+        <thead><tr><th class="checkcell" id="selectHead" hidden><input class="selectall" id="selectAllBox" type="checkbox" title="Select all visible invoices" onchange="toggleSelectAll(this.checked)"></th><th>Invoice No</th><th>Date</th><th>Due Date</th><th>Customer</th><th>Location</th><th class="money">Grand Total</th><th class="money">Paid</th><th class="money">Outstanding</th><th>Status</th><th>Action</th></tr></thead>
+        <tbody id="arBody"><tr><td colspan="11" class="empty">Sign in to view receivables.</td></tr></tbody>
       </table>
     </div>
     <div class="foot"><span id="rowCount">0 records</span><span id="syncStatus">Secure A/R</span></div>
@@ -80,6 +81,18 @@ body{padding:20px}.wrap{max-width:1500px;margin:0 auto}.topbar{display:flex;just
   </div>
 </div>
 
+<div class="overlay hidden" id="summaryOverlay">
+  <div class="summary-modal">
+    <div class="summary-actions">
+      <button class="btn secondary" onclick="closeSummary()">✕ Close</button>
+      <button class="btn primary" onclick="printSummary()">🖨 Print A4</button>
+      <button class="btn summary-btn" id="savePdfBtn" onclick="saveSummaryPDF()">💾 Save PDF</button>
+    </div>
+    <div class="a4-sheet" id="summarySheet"></div>
+  </div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
 <script>
 const SALES_API="https://script.google.com/macros/s/AKfycbyM5mUlz5SeMZ_oPJCo2FgLkPEcodAQ7wPl5wxAdrvfqLvsZLaHxiOtS02L1Q3ZRA3D/exec";
 // Resolve A/R mode from the permanent Dashboard shell first.
@@ -109,6 +122,8 @@ const SESSION_KEY=VIEW==='all'?'bb_ar_admin_session':'bb_ar_salesman_session';
 const $=id=>document.getElementById(id);
 let sessionToken=sessionStorage.getItem(SESSION_KEY)||'';
 let sessionProfile=null,rows=[],revision='',currentInvoice=null,syncTimer=null;
+const selectedInvoices=new Set();
+let visibleRows=[];
 
 function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 function num(v){const n=Number(v);return Number.isFinite(n)?n:0}
@@ -124,6 +139,9 @@ function setLoginError(msg){$('loginError').textContent=msg||'';$('loginError').
 function setPaymentError(msg){$('paymentError').textContent=msg||'';$('paymentError').classList.toggle('show',!!msg)}
 
 function configureView(){
+  const salesmanMode=VIEW==='your';
+  $('summaryBtn').hidden=!salesmanMode;
+  $('selectHead').hidden=!salesmanMode;
   if(VIEW==='all'){
     $('pageTitle').textContent='All Receivable';
     $('pageSubtitle').textContent='Company-wide Credit invoices from all active Location Codes.';
@@ -186,22 +204,54 @@ async function restoreSession(){
 async function logout(){
   const token=sessionToken;sessionToken='';sessionProfile=null;rows=[];revision='';sessionStorage.removeItem(SESSION_KEY);clearInterval(syncTimer);syncTimer=null;
   if(token){try{await apiPost({action:'arLogout',sessionToken:token})}catch(_){}}
-  $('accessPill').textContent='Not signed in';$('locationPill').textContent='0 locations';$('logoutBtn').hidden=true;$('arBody').innerHTML='<tr><td colspan="10" class="empty">Sign in to view receivables.</td></tr>';$('loginOverlay').classList.remove('hidden');configureView();
+  selectedInvoices.clear();visibleRows=[];updateSummaryControls();$('accessPill').textContent='Not signed in';$('locationPill').textContent='0 locations';$('logoutBtn').hidden=true;$('arBody').innerHTML='<tr><td colspan="11" class="empty">Sign in to view receivables.</td></tr>';$('loginOverlay').classList.remove('hidden');configureView();
 }
 
 async function loadAR(force=false){
   if(!sessionToken)throw new Error('No A/R session.');$('syncStatus').textContent=force?'Syncing…':'Loading…';
   const data=await apiPost({action:'arList',sessionToken,view:VIEW});if(!data||!data.success)throw new Error(data?.error||'Could not load receivables.');
-  rows=Array.isArray(data.receivables)?data.receivables:[];revision=data.revision||revision;if(data.access)applyProfile(data.access);renderRows();$('syncStatus').textContent='Up to date · secure sync 20s';return data;
+  rows=Array.isArray(data.receivables)?data.receivables:[];revision=data.revision||revision;selectedInvoices.clear();if(data.access)applyProfile(data.access);renderRows();$('syncStatus').textContent='Up to date · secure sync 20s';return data;
 }
 
+function filterChanged(){selectedInvoices.clear();renderRows()}
 function renderRows(){
   const q=$('searchBox').value.trim().toLowerCase(),loc=$('locationFilter').value.trim().toLowerCase(),stat=$('statusFilter').value;
-  const visible=rows.filter(r=>{if(q&&!(`${r.invoiceNo} ${r.customer}`.toLowerCase().includes(q)))return false;if(loc&&String(r.locationCode).toLowerCase()!==loc)return false;if(stat&&r.arStatus!==stat)return false;return true});
-  let out=0,over=0;const customers=new Set();visible.forEach(r=>{out+=num(r.outstanding);if(r.arStatus==='Overdue')over+=num(r.outstanding);if(r.customer)customers.add(r.customer.toLowerCase())});
-  $('sumOutstanding').textContent=money(out);$('sumOverdue').textContent=money(over);$('sumInvoices').textContent=visible.length;$('sumCustomers').textContent=customers.size;$('rowCount').textContent=`${visible.length} record${visible.length===1?'':'s'}`;
-  if(!visible.length){$('arBody').innerHTML='<tr><td colspan="10" class="empty">No open Credit invoices found for this view.</td></tr>';return}
-  $('arBody').innerHTML=visible.map(r=>`<tr><td><strong>${esc(r.invoiceNo)}</strong></td><td>${esc(String(r.invoiceDate||'').slice(0,10))}</td><td>${esc(r.dueDate||'-')}</td><td>${esc(r.customer)}</td><td>${esc(r.locationName||r.locationCode)}<br><small>${esc(r.locationCode)}</small></td><td class="money">${money(r.grandTotal,r.currency)}</td><td class="money">${money(r.amountPaid,r.currency)}</td><td class="money"><strong>${money(r.outstanding,r.currency)}</strong></td><td><span class="status ${r.arStatus.toLowerCase()}">${esc(r.arStatus)}</span></td><td><button class="btn primary" onclick='openPayment(${JSON.stringify(r.invoiceNo)})'>Receive</button></td></tr>`).join('');
+  visibleRows=rows.filter(r=>{if(q&&!(`${r.invoiceNo} ${r.customer}`.toLowerCase().includes(q)))return false;if(loc&&String(r.locationCode).toLowerCase()!==loc)return false;if(stat&&r.arStatus!==stat)return false;return true});
+  let out=0,over=0;const customers=new Set();visibleRows.forEach(r=>{out+=num(r.outstanding);if(r.arStatus==='Overdue')over+=num(r.outstanding);if(r.customer)customers.add(r.customer.toLowerCase())});
+  $('sumOutstanding').textContent=money(out);$('sumOverdue').textContent=money(over);$('sumInvoices').textContent=visibleRows.length;$('sumCustomers').textContent=customers.size;$('rowCount').textContent=`${visibleRows.length} record${visibleRows.length===1?'':'s'}`;
+  if(!visibleRows.length){$('arBody').innerHTML=`<tr><td colspan="${VIEW==='your'?11:10}" class="empty">No open Credit invoices found for this view.</td></tr>`;updateSummaryControls();return}
+  $('arBody').innerHTML=visibleRows.map(r=>`<tr>${VIEW==='your'?`<td class="checkcell"><input class="rowcheck" type="checkbox" ${selectedInvoices.has(String(r.invoiceNo))?'checked':''} onchange='toggleInvoice(${JSON.stringify(String(r.invoiceNo))},this.checked)' title="Include ${esc(r.invoiceNo)} in summary"></td>`:''}<td><strong>${esc(r.invoiceNo)}</strong></td><td>${esc(String(r.invoiceDate||'').slice(0,10))}</td><td>${esc(r.dueDate||'-')}</td><td>${esc(r.customer)}</td><td>${esc(r.locationName||r.locationCode)}<br><small>${esc(r.locationCode)}</small></td><td class="money">${money(r.grandTotal,r.currency)}</td><td class="money">${money(r.amountPaid,r.currency)}</td><td class="money"><strong>${money(r.outstanding,r.currency)}</strong></td><td><span class="status ${r.arStatus.toLowerCase()}">${esc(r.arStatus)}</span></td><td><button class="btn primary" onclick='openPayment(${JSON.stringify(r.invoiceNo)})'>Receive</button></td></tr>`).join('');
+  updateSummaryControls();
+}
+function toggleInvoice(invoiceNo,checked){if(checked)selectedInvoices.add(String(invoiceNo));else selectedInvoices.delete(String(invoiceNo));updateSummaryControls()}
+function toggleSelectAll(checked){visibleRows.forEach(r=>{const k=String(r.invoiceNo);if(checked)selectedInvoices.add(k);else selectedInvoices.delete(k)});renderRows()}
+function updateSummaryControls(){
+  if(VIEW!=='your')return;
+  const count=selectedInvoices.size,btn=$('summaryBtn'),all=$('selectAllBox');
+  btn.textContent=`🧾 Summary Invoice (${count})`;btn.disabled=count===0;
+  const visibleKeys=visibleRows.map(r=>String(r.invoiceNo));const selectedVisible=visibleKeys.filter(k=>selectedInvoices.has(k)).length;
+  all.checked=visibleKeys.length>0&&selectedVisible===visibleKeys.length;all.indeterminate=selectedVisible>0&&selectedVisible<visibleKeys.length;
+}
+function selectedSummaryRows(){return rows.filter(r=>selectedInvoices.has(String(r.invoiceNo)))}
+function openSummary(){
+  const picked=selectedSummaryRows();if(!picked.length)return alert('Please check at least one invoice first.');
+  const customerKeys=[...new Set(picked.map(r=>String(r.customer||'').trim().toLowerCase()))];
+  if(customerKeys.length!==1)return alert('Please select invoices for one customer only before creating the summary.');
+  buildSummary(picked);$('summaryOverlay').classList.remove('hidden');
+}
+function closeSummary(){$('summaryOverlay').classList.add('hidden')}
+function buildSummary(picked){
+  const first=picked[0],customer=first.customer||'-',salesman=sessionProfile?.salesmanName||'Salesman';
+  const locations=[...new Map(picked.map(r=>[String(r.locationCode),`${r.locationName||r.locationCode} (${r.locationCode})`])).values()];
+  const currencies=[...new Set(picked.map(r=>r.currency||'USD'))];
+  const totals={};currencies.forEach(c=>totals[c]={grand:0,paid:0,out:0});picked.forEach(r=>{const c=r.currency||'USD';totals[c].grand+=num(r.grandTotal);totals[c].paid+=num(r.amountPaid);totals[c].out+=num(r.outstanding)});
+  const totalRows=currencies.map(c=>`<tr><td>Total Invoice${currencies.length>1?' ('+esc(c)+')':''}</td><td>${money(totals[c].grand,c)}</td></tr><tr><td>Total Paid${currencies.length>1?' ('+esc(c)+')':''}</td><td>${money(totals[c].paid,c)}</td></tr><tr><td><strong>Total Outstanding${currencies.length>1?' ('+esc(c)+')':''}</strong></td><td><strong>${money(totals[c].out,c)}</strong></td></tr>`).join('');
+  $('summarySheet').innerHTML=`<div class="sum-head"><div class="sum-brand"><h1>BIG BROTHER</h1><p>Sales & Accounting System</p></div><div class="sum-meta"><p><strong>Summary Date:</strong> ${esc(today())}</p><p><strong>Prepared By:</strong> ${esc(salesman)}</p><p><strong>Selected Invoices:</strong> ${picked.length}</p></div></div><div class="sum-title">CUSTOMER INVOICE SUMMARY</div><div class="sum-customer"><div class="sum-box"><strong>Customer</strong>${esc(customer)}</div><div class="sum-box"><strong>Location</strong>${esc(locations.join(' • '))}</div></div><table class="sum-table"><thead><tr><th>#</th><th>Invoice No</th><th>Date</th><th>Due Date</th><th>Location</th><th style="text-align:right">Grand Total</th><th style="text-align:right">Paid</th><th style="text-align:right">Outstanding</th></tr></thead><tbody>${picked.map((r,i)=>`<tr><td>${i+1}</td><td><strong>${esc(r.invoiceNo)}</strong></td><td>${esc(String(r.invoiceDate||'').slice(0,10))}</td><td>${esc(r.dueDate||'-')}</td><td>${esc(r.locationCode||'')}</td><td style="text-align:right">${money(r.grandTotal,r.currency)}</td><td style="text-align:right">${money(r.amountPaid,r.currency)}</td><td style="text-align:right"><strong>${money(r.outstanding,r.currency)}</strong></td></tr>`).join('')}</tbody></table><table class="sum-total">${totalRows}</table><div class="sum-footer"><span>Customer Invoice Summary generated from open Credit receivables selected by the salesman.</span><span>BIG BROTHER</span></div>`;
+}
+function printSummary(){window.print()}
+async function saveSummaryPDF(){
+  const picked=selectedSummaryRows();if(!picked.length)return;const customer=(picked[0].customer||'Customer').replace(/[^a-z0-9]+/gi,'_').replace(/^_|_$/g,'');const filename=`Customer_Invoice_Summary_${customer}_${today()}.pdf`;const btn=$('savePdfBtn');btn.disabled=true;const old=btn.textContent;btn.textContent='Saving PDF…';
+  try{if(typeof html2pdf!=='function')throw new Error('PDF library is not available.');await html2pdf().set({margin:0,filename,image:{type:'jpeg',quality:.98},html2canvas:{scale:2,useCORS:true},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},pagebreak:{mode:['avoid-all','css','legacy']}}).from($('summarySheet')).save()}catch(e){alert('Could not save PDF directly. Please use Print A4 and choose “Save as PDF” in your browser.')}finally{btn.disabled=false;btn.textContent=old}
 }
 
 async function openPayment(invoiceNo){
