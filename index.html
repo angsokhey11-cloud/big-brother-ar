@@ -8,9 +8,9 @@
 :root{--bg:#f4f7fb;--card:#fff;--line:#dfe6ef;--text:#17304f;--muted:#6d7d91;--blue:#1f5fbf;--blue2:#174b98;--green:#198754;--red:#c93c46;--amber:#b67a00;--shadow:0 10px 28px rgba(20,48,82,.08)}
 *{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text)}
 body{padding:20px}.wrap{max-width:1500px;margin:0 auto}.topbar{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:18px}.topbar h1{margin:0 0 5px;font-size:28px}.subtitle{margin:0;color:var(--muted)}.userbox{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}.pill{padding:8px 12px;border:1px solid #c9d8ec;border-radius:999px;background:#edf5ff;color:#245da8;font-size:12px;font-weight:700}.logout{border:1px solid #cfd8e4;background:#fff;color:#4e6076;border-radius:9px;padding:8px 12px;cursor:pointer;font-weight:700}.cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin-bottom:16px}.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:15px;box-shadow:var(--shadow)}.card small{display:block;color:var(--muted);font-weight:700;margin-bottom:7px}.card strong{font-size:24px}.card.red strong{color:var(--red)}
-.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}.filters{padding:14px;display:grid;grid-template-columns:1.25fr 1fr 1fr auto auto;gap:10px;border-bottom:1px solid var(--line)}input,select,textarea{width:100%;border:1px solid #cbd6e3;border-radius:9px;padding:10px 11px;font:inherit;color:var(--text);background:#fff}input:focus,select:focus,textarea:focus{outline:2px solid rgba(31,95,191,.14);border-color:#6f9ed8}.btn{border:0;border-radius:9px;padding:10px 14px;font-weight:700;cursor:pointer}.btn.primary{background:var(--blue);color:#fff}.btn.primary:hover{background:var(--blue2)}.btn.secondary{background:#eef3f8;color:#284761}.btn.danger{background:#fff0f1;color:var(--red)}.btn:disabled{opacity:.55;cursor:not-allowed}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}.filters{padding:14px;display:grid;grid-template-columns:1.25fr 1fr 1fr auto auto auto;gap:10px;border-bottom:1px solid var(--line)}input,select,textarea{width:100%;border:1px solid #cbd6e3;border-radius:9px;padding:10px 11px;font:inherit;color:var(--text);background:#fff}input:focus,select:focus,textarea:focus{outline:2px solid rgba(31,95,191,.14);border-color:#6f9ed8}.btn{border:0;border-radius:9px;padding:10px 14px;font-weight:700;cursor:pointer}.btn.primary{background:var(--blue);color:#fff}.btn.primary:hover{background:var(--blue2)}.btn.secondary{background:#eef3f8;color:#284761}.btn.danger{background:#fff0f1;color:var(--red)}.btn:disabled{opacity:.55;cursor:not-allowed}
 .tablewrap{overflow:auto}table{width:100%;border-collapse:collapse;min-width:1080px}th,td{padding:11px 10px;border-bottom:1px solid #e7edf4;text-align:left;font-size:13px;white-space:nowrap}th{background:#f7f9fc;color:#53657a;font-size:12px;position:sticky;top:0}tbody tr:hover{background:#f9fbfe}.money{text-align:right;font-variant-numeric:tabular-nums}.status{display:inline-block;padding:5px 8px;border-radius:999px;font-size:11px;font-weight:800}.status.overdue{background:#fff0f1;color:var(--red)}.status.outstanding{background:#fff7df;color:#966200}.empty{text-align:center;color:var(--muted);padding:30px}.foot{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:11px 14px;color:var(--muted);font-size:12px}
-.overlay{position:fixed;inset:0;background:rgba(10,27,48,.68);display:flex;align-items:center;justify-content:center;padding:18px;z-index:9999}.overlay.hidden{display:none}.loginbox,.modalbox{width:min(460px,100%);background:#fff;border-radius:16px;padding:22px;box-shadow:0 25px 70px rgba(0,0,0,.25)}.loginbox h2,.modalbox h2{margin:0 0 7px}.loginbox p,.modalbox p{color:var(--muted);margin:0 0 16px;line-height:1.5}.field{margin-bottom:12px}.field label{display:block;font-size:12px;font-weight:800;color:#556a82;margin-bottom:5px}.loginerror,.formerror{display:none;margin-top:10px;padding:9px 10px;background:#fff0f1;color:var(--red);border-radius:8px;font-size:12px}.loginerror.show,.formerror.show{display:block}.modalhead{display:flex;justify-content:space-between;align-items:center;gap:10px}.close{border:0;background:#eef2f7;width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:18px}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.bankfields{display:none}.bankfields.show{display:block}.history{margin-top:15px;border-top:1px solid var(--line);padding-top:12px}.history h3{margin:0 0 8px;font-size:15px}.historyitem{border:1px solid var(--line);border-radius:9px;padding:9px 10px;margin-bottom:7px;font-size:12px}.historyitem strong{font-size:13px}.secure-note{font-size:11px;color:var(--muted);margin-top:8px}.view-banner{padding:10px 14px;background:#eef5ff;border-bottom:1px solid #d6e5f7;color:#245da8;font-size:12px;font-weight:700}.checkcell{width:42px;text-align:center}.rowcheck,.selectall{width:17px;height:17px;cursor:pointer;accent-color:var(--blue)}.summary-btn{background:#173f77;color:#fff}.summary-btn:hover{background:#102f5a}.summary-modal{width:min(1180px,96vw);max-height:94vh;overflow:auto;background:#eef2f7;border-radius:16px;padding:16px;box-shadow:0 25px 70px rgba(0,0,0,.3)}.summary-actions{display:flex;justify-content:flex-end;gap:8px;margin-bottom:12px;position:sticky;top:0;z-index:3;background:#eef2f7;padding:2px 0 10px}.a4-sheet{width:210mm;min-height:297mm;margin:0 auto;background:#fff;padding:12mm 12mm 14mm;color:#152b46;box-shadow:0 5px 22px rgba(0,0,0,.12)}.sum-top{display:flex;justify-content:space-between;gap:18px;align-items:flex-start}.sum-brand h1{font-size:26px;line-height:1.05;margin:0;color:#143d78;letter-spacing:.5px}.sum-brand p{margin:4px 0 0;font-size:13px;color:#304b69;font-weight:700}.sum-contact{margin-top:8px;font-size:12px;line-height:1.5;color:#324b67}.sum-meta{font-size:12px;line-height:1.55;text-align:right;min-width:220px}.sum-meta strong{color:#132f56}.sum-divider{height:2px;background:#24354a;margin:12px 0 16px}.sum-title{text-align:center;font-size:18px;font-weight:900;letter-spacing:.8px;color:#143d78;margin:4px 0 16px}.sum-customer{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;font-size:12px}.sum-box{border:1px solid #cfd9e6;border-radius:10px;padding:12px 14px;min-height:82px}.sum-box strong{display:block;font-size:11px;color:#1e4f9d;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px}.sum-customer-name{font-size:16px;font-weight:800;color:#152b46}.sum-contact-line{display:flex;gap:8px;align-items:flex-start;margin:5px 0;font-size:12px;line-height:1.45}.sum-contact-icon{width:18px;flex:0 0 18px;color:#1f5fbf;font-weight:900}.sum-table{width:100%;min-width:0;border-collapse:collapse}.sum-table th,.sum-table td{font-size:11px;padding:9px 7px;border-bottom:1px solid #dfe6ef;white-space:normal}.sum-table th{background:#2456a6;color:#fff;position:static;text-transform:uppercase;font-size:10.5px;letter-spacing:.35px}.sum-table td.money{text-align:right;font-variant-numeric:tabular-nums}.sum-table td.center{text-align:center}.sum-grand{margin:16px 0 0 auto;width:44%;border-top:3px solid #2456a6;padding:11px 6px 0;display:flex;justify-content:space-between;gap:18px;align-items:baseline;color:#143d78}.sum-grand .label{font-size:15px;font-weight:900}.sum-grand .value{font-size:21px;font-weight:900;white-space:nowrap}.sum-grand-multi{margin:16px 0 0 auto;width:44%;border-top:3px solid #2456a6;padding-top:7px}.sum-grand-multi .row{display:flex;justify-content:space-between;gap:14px;padding:5px 6px;font-size:13px;font-weight:900;color:#143d78}.sum-footer{margin-top:24px;padding-top:10px;border-top:1px solid #dfe6ef;font-size:10px;color:#738195;display:flex;justify-content:space-between;gap:20px}.sum-small{font-size:10px;color:#7a8798}@media print{body>*{display:none!important}#summaryOverlay{display:block!important;position:static!important;background:#fff!important;padding:0!important}#summaryOverlay .summary-modal{display:block!important;width:auto!important;max-height:none!important;overflow:visible!important;background:#fff!important;padding:0!important;box-shadow:none!important}#summaryOverlay .summary-actions{display:none!important}.a4-sheet{box-shadow:none!important;margin:0!important;width:210mm!important;min-height:297mm!important}@page{size:A4;margin:0}}
+.overlay{position:fixed;inset:0;background:rgba(10,27,48,.68);display:flex;align-items:center;justify-content:center;padding:18px;z-index:9999}.overlay.hidden{display:none}.loginbox,.modalbox{width:min(460px,100%);background:#fff;border-radius:16px;padding:22px;box-shadow:0 25px 70px rgba(0,0,0,.25)}.loginbox h2,.modalbox h2{margin:0 0 7px}.loginbox p,.modalbox p{color:var(--muted);margin:0 0 16px;line-height:1.5}.field{margin-bottom:12px}.field label{display:block;font-size:12px;font-weight:800;color:#556a82;margin-bottom:5px}.loginerror,.formerror{display:none;margin-top:10px;padding:9px 10px;background:#fff0f1;color:var(--red);border-radius:8px;font-size:12px}.loginerror.show,.formerror.show{display:block}.modalhead{display:flex;justify-content:space-between;align-items:center;gap:10px}.close{border:0;background:#eef2f7;width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:18px}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.bankfields{display:none}.bankfields.show{display:block}.history{margin-top:15px;border-top:1px solid var(--line);padding-top:12px}.history h3{margin:0 0 8px;font-size:15px}.historyitem{border:1px solid var(--line);border-radius:9px;padding:9px 10px;margin-bottom:7px;font-size:12px}.historyitem strong{font-size:13px}.secure-note{font-size:11px;color:var(--muted);margin-top:8px}.remember-row{display:flex;align-items:center;gap:8px;margin:8px 0 14px;font-size:12px;color:#50647b}.remember-row input{width:16px;height:16px;margin:0;accent-color:var(--blue)}.batch-btn{background:#198754;color:#fff}.batch-btn:hover{background:#146c43}.batch-list{max-height:180px;overflow:auto;border:1px solid var(--line);border-radius:9px;margin:8px 0 12px}.batch-item{display:flex;justify-content:space-between;gap:10px;padding:8px 10px;border-bottom:1px solid #edf1f5;font-size:12px}.batch-item:last-child{border-bottom:0}.batch-total{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:10px 12px;background:#eef8f2;border:1px solid #cfe8d8;border-radius:9px;margin-bottom:12px;font-weight:800;color:#146c43}.view-banner{padding:10px 14px;background:#eef5ff;border-bottom:1px solid #d6e5f7;color:#245da8;font-size:12px;font-weight:700}.checkcell{width:42px;text-align:center}.rowcheck,.selectall{width:17px;height:17px;cursor:pointer;accent-color:var(--blue)}.summary-btn{background:#173f77;color:#fff}.summary-btn:hover{background:#102f5a}.summary-modal{width:min(1180px,96vw);max-height:94vh;overflow:auto;background:#eef2f7;border-radius:16px;padding:16px;box-shadow:0 25px 70px rgba(0,0,0,.3)}.summary-actions{display:flex;justify-content:flex-end;gap:8px;margin-bottom:12px;position:sticky;top:0;z-index:3;background:#eef2f7;padding:2px 0 10px}.a4-sheet{width:210mm;min-height:297mm;margin:0 auto;background:#fff;padding:12mm 12mm 14mm;color:#152b46;box-shadow:0 5px 22px rgba(0,0,0,.12)}.sum-top{display:flex;justify-content:space-between;gap:18px;align-items:flex-start}.sum-brand h1{font-size:26px;line-height:1.05;margin:0;color:#143d78;letter-spacing:.5px}.sum-brand p{margin:4px 0 0;font-size:13px;color:#304b69;font-weight:700}.sum-contact{margin-top:8px;font-size:12px;line-height:1.5;color:#324b67}.sum-meta{font-size:12px;line-height:1.55;text-align:right;min-width:220px}.sum-meta strong{color:#132f56}.sum-divider{height:2px;background:#24354a;margin:12px 0 16px}.sum-title{text-align:center;font-size:18px;font-weight:900;letter-spacing:.8px;color:#143d78;margin:4px 0 16px}.sum-customer{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;font-size:12px}.sum-box{border:1px solid #cfd9e6;border-radius:10px;padding:12px 14px;min-height:82px}.sum-box strong{display:block;font-size:11px;color:#1e4f9d;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px}.sum-customer-name{font-size:16px;font-weight:800;color:#152b46}.sum-contact-line{display:flex;gap:8px;align-items:flex-start;margin:5px 0;font-size:12px;line-height:1.45}.sum-contact-icon{width:18px;flex:0 0 18px;color:#1f5fbf;font-weight:900}.sum-table{width:100%;min-width:0;border-collapse:collapse}.sum-table th,.sum-table td{font-size:11px;padding:9px 7px;border-bottom:1px solid #dfe6ef;white-space:normal}.sum-table th{background:#2456a6;color:#fff;position:static;text-transform:uppercase;font-size:10.5px;letter-spacing:.35px}.sum-table td.money{text-align:right;font-variant-numeric:tabular-nums}.sum-table td.center{text-align:center}.sum-grand{margin:16px 0 0 auto;width:44%;border-top:3px solid #2456a6;padding:11px 6px 0;display:flex;justify-content:space-between;gap:18px;align-items:baseline;color:#143d78}.sum-grand .label{font-size:15px;font-weight:900}.sum-grand .value{font-size:21px;font-weight:900;white-space:nowrap}.sum-grand-multi{margin:16px 0 0 auto;width:44%;border-top:3px solid #2456a6;padding-top:7px}.sum-grand-multi .row{display:flex;justify-content:space-between;gap:14px;padding:5px 6px;font-size:13px;font-weight:900;color:#143d78}.sum-footer{margin-top:24px;padding-top:10px;border-top:1px solid #dfe6ef;font-size:10px;color:#738195;display:flex;justify-content:space-between;gap:20px}.sum-small{font-size:10px;color:#7a8798}@media print{body>*{display:none!important}#summaryOverlay{display:block!important;position:static!important;background:#fff!important;padding:0!important}#summaryOverlay .summary-modal{display:block!important;width:auto!important;max-height:none!important;overflow:visible!important;background:#fff!important;padding:0!important;box-shadow:none!important}#summaryOverlay .summary-actions{display:none!important}.a4-sheet{box-shadow:none!important;margin:0!important;width:210mm!important;min-height:297mm!important}@page{size:A4;margin:0}}
 @media(max-width:900px){.cards{grid-template-columns:repeat(2,1fr)}.filters{grid-template-columns:1fr 1fr}.topbar{flex-direction:column}.userbox{justify-content:flex-start}}
 @media(max-width:560px){body{padding:10px}.cards{grid-template-columns:1fr 1fr;gap:8px}.card{padding:11px}.card strong{font-size:18px}.filters{grid-template-columns:1fr}.grid2{grid-template-columns:1fr}.topbar h1{font-size:23px}}
 </style>
@@ -36,6 +36,7 @@ body{padding:20px}.wrap{max-width:1500px;margin:0 auto}.topbar{display:flex;just
       <select id="locationFilter" onchange="filterChanged()"><option value="">All permitted locations</option></select>
       <select id="statusFilter" onchange="filterChanged()"><option value="">All status</option><option value="Outstanding">Outstanding</option><option value="Overdue">Overdue</option></select>
       <button class="btn summary-btn" id="summaryBtn" onclick="openSummary()" disabled hidden>🧾 Summary Invoice (0)</button>
+      <button class="btn batch-btn" id="batchBtn" onclick="openBatchPayment()" disabled hidden>💰 Receive Selected (0)</button>
       <button class="btn secondary" onclick="loadAR(true)">↻ Refresh</button>
     </div>
     <div class="tablewrap">
@@ -53,6 +54,7 @@ body{padding:20px}.wrap{max-width:1500px;margin:0 auto}.topbar{display:flex;just
     <h2 id="loginTitle">🔐 Secure Access</h2>
     <p id="loginText">Enter your access code.</p>
     <div class="field"><label id="loginLabel">Access Code</label><input id="accessCode" type="password" autocomplete="off" placeholder="Enter code" onkeydown="if(event.key==='Enter')login()"></div>
+    <label class="remember-row"><input id="rememberDevice" type="checkbox"> Remember me on this device</label>
     <button class="btn primary" id="loginBtn" style="width:100%" onclick="login()">Sign In</button>
     <div class="loginerror" id="loginError"></div>
     <div class="secure-note" id="loginNote">Your secret code is checked on the server and is not stored in this HTML.</div>
@@ -78,6 +80,28 @@ body{padding:20px}.wrap{max-width:1500px;margin:0 auto}.topbar{display:flex;just
     <button class="btn primary" id="savePayBtn" style="width:100%;margin-top:5px" onclick="savePayment()">✓ Approve & Save Payment</button>
     <div class="secure-note">For Bank payment, duplicate Transaction ID will be rejected by the server. The Admin Code is verified server-side and is never saved into Payments.</div>
     <div class="history" id="historyBox"><h3>Payment History</h3><div id="paymentHistory">Loading…</div></div>
+  </div>
+</div>
+
+<div class="overlay hidden" id="batchOverlay">
+  <div class="modalbox">
+    <div class="modalhead"><div><h2>Batch Payment</h2><p id="batchInfo">Clear selected invoices with one customer payment.</p></div><button class="close" onclick="closeBatchPayment()">×</button></div>
+    <div class="batch-list" id="batchList"></div>
+    <div class="batch-total"><span>Total Outstanding</span><span id="batchTotal">$0.00</span></div>
+    <div class="grid2">
+      <div class="field"><label>Payment Date</label><input type="date" id="batchDate"></div>
+      <div class="field"><label>Payment Method</label><select id="batchMethod" onchange="toggleBatchBankFields()"><option value="Cash">Cash</option><option value="Bank">Bank</option></select></div>
+    </div>
+    <div class="bankfields" id="batchBankFields">
+      <div class="field"><label>Bank Name</label><input id="batchBank" placeholder="e.g. ABA, ACLEDA"></div>
+      <div class="field"><label>Transaction ID <span style="color:#c93c46">*</span></label><input id="batchTransactionId" autocomplete="off" placeholder="One unique Transaction ID for the whole batch"></div>
+      <div class="field"><label>Bank Reference / Note</label><input id="batchBankReference" placeholder="Optional"></div>
+    </div>
+    <div class="field"><label>Payment Note</label><textarea id="batchNote" rows="2" placeholder="Optional"></textarea></div>
+    <div class="field"><label>Admin Code <span style="color:#c93c46">*</span></label><input id="batchAdminCode" type="password" autocomplete="off" placeholder="One Admin Code approves the whole batch"></div>
+    <div class="formerror" id="batchError"></div>
+    <button class="btn batch-btn" id="saveBatchBtn" style="width:100%;margin-top:5px" onclick="saveBatchPayment()">✓ Approve & Clear Selected Invoices</button>
+    <div class="secure-note">One payment, one Admin approval, and one Bank Transaction ID can clear all selected invoices. The server recalculates every outstanding balance before saving.</div>
   </div>
 </div>
 
@@ -120,8 +144,11 @@ function resolveARView(){
 }
 const VIEW=resolveARView();
 const SESSION_KEY=VIEW==='all'?'bb_ar_admin_session':'bb_ar_salesman_session';
+const DEVICE_KEY=VIEW==='all'?'bb_ar_admin_device':'bb_ar_salesman_device';
+const DEVICE_ROLE=VIEW==='all'?'admin':'salesman';
 const $=id=>document.getElementById(id);
 let sessionToken=sessionStorage.getItem(SESSION_KEY)||'';
+let deviceToken=localStorage.getItem(DEVICE_KEY)||'';
 let sessionProfile=null,rows=[],revision='',currentInvoice=null,syncTimer=null;
 const selectedInvoices=new Set();
 let visibleRows=[];
@@ -138,10 +165,12 @@ async function apiPost(params){
 }
 function setLoginError(msg){$('loginError').textContent=msg||'';$('loginError').classList.toggle('show',!!msg)}
 function setPaymentError(msg){$('paymentError').textContent=msg||'';$('paymentError').classList.toggle('show',!!msg)}
+function setBatchError(msg){$('batchError').textContent=msg||'';$('batchError').classList.toggle('show',!!msg)}
 
 function configureView(){
   const salesmanMode=VIEW==='your';
   $('summaryBtn').hidden=!salesmanMode;
+  $('batchBtn').hidden=!salesmanMode;
   $('selectHead').hidden=!salesmanMode;
   if(VIEW==='all'){
     $('pageTitle').textContent='All Receivable';
@@ -151,7 +180,7 @@ function configureView(){
     $('loginText').textContent='Enter an active Admin Code to review company-wide receivables.';
     $('loginLabel').textContent='Admin Code';
     $('accessCode').placeholder='Enter admin code';
-    $('loginNote').textContent='Admin Code is verified server-side and is not stored in this HTML.';
+    $('loginNote').textContent='Your Admin Code is never stored. If Remember me is checked, only a revocable device token is saved on this device.';
   }else{
     $('pageTitle').textContent='Your Receivable';
     $('pageSubtitle').textContent='Credit invoices from Location Codes assigned to your Salesman ID.';
@@ -160,18 +189,20 @@ function configureView(){
     $('loginText').textContent='Enter your Salesman Code. The server will load only Location Codes assigned to your Salesman ID.';
     $('loginLabel').textContent='Salesman Code';
     $('accessCode').placeholder='Enter salesman code';
-    $('loginNote').textContent='Salesman Code is verified server-side and is not stored in this HTML.';
+    $('loginNote').textContent='Your Salesman Code is never stored. If Remember me is checked, only a revocable device token is saved on this device.';
   }
 }
 
 async function login(){
-  const code=$('accessCode').value.trim();
+  const code=$('accessCode').value.trim(),remember=$('rememberDevice').checked;
   if(!code){setLoginError(VIEW==='all'?'Please enter Admin Code.':'Please enter Salesman Code.');return}
   const btn=$('loginBtn');btn.disabled=true;btn.textContent='Checking…';setLoginError('');
   try{
-    const data=VIEW==='all'?await apiPost({action:'arAdminLogin',adminCode:code}):await apiPost({action:'arLogin',salesmanCode:code});
+    const data=VIEW==='all'?await apiPost({action:'arAdminLogin',adminCode:code,rememberDevice:remember}):await apiPost({action:'arLogin',salesmanCode:code,rememberDevice:remember});
     if(!data||!data.success||!data.authorized)throw new Error(data?.error||'Access denied.');
     sessionToken=data.sessionToken;sessionProfile=data;sessionStorage.setItem(SESSION_KEY,sessionToken);
+    if(remember&&data.deviceToken){deviceToken=data.deviceToken;localStorage.setItem(DEVICE_KEY,deviceToken)}
+    else if(!remember){deviceToken='';localStorage.removeItem(DEVICE_KEY)}
     $('accessCode').value='';$('loginOverlay').classList.add('hidden');$('logoutBtn').hidden=false;
     applyProfile(data);await loadAR(true);startSync();
   }catch(e){sessionToken='';sessionStorage.removeItem(SESSION_KEY);setLoginError(e.message||'Access denied.');}
@@ -199,13 +230,22 @@ function applyProfile(p){
 }
 
 async function restoreSession(){
-  if(!sessionToken){$('loginOverlay').classList.remove('hidden');return}
-  try{await loadAR(true);$('loginOverlay').classList.add('hidden');$('logoutBtn').hidden=false;startSync()}catch(e){sessionToken='';sessionStorage.removeItem(SESSION_KEY);$('loginOverlay').classList.remove('hidden');setLoginError('Session expired or access changed. Please sign in again.')}
+  if(sessionToken){
+    try{await loadAR(true);$('loginOverlay').classList.add('hidden');$('logoutBtn').hidden=false;startSync();return}catch(e){sessionToken='';sessionStorage.removeItem(SESSION_KEY)}
+  }
+  if(deviceToken){
+    try{
+      const data=await apiPost({action:'arDeviceLogin',deviceToken,role:DEVICE_ROLE});
+      if(!data||!data.success||!data.authorized)throw new Error(data?.error||'Remembered access failed.');
+      sessionToken=data.sessionToken;sessionProfile=data;sessionStorage.setItem(SESSION_KEY,sessionToken);applyProfile(data);await loadAR(true);$('loginOverlay').classList.add('hidden');$('logoutBtn').hidden=false;startSync();return;
+    }catch(e){deviceToken='';localStorage.removeItem(DEVICE_KEY)}
+  }
+  $('loginOverlay').classList.remove('hidden');
 }
 async function logout(){
-  const token=sessionToken;sessionToken='';sessionProfile=null;rows=[];revision='';sessionStorage.removeItem(SESSION_KEY);clearInterval(syncTimer);syncTimer=null;
-  if(token){try{await apiPost({action:'arLogout',sessionToken:token})}catch(_){}}
-  selectedInvoices.clear();visibleRows=[];updateSummaryControls();$('accessPill').textContent='Not signed in';$('locationPill').textContent='0 locations';$('logoutBtn').hidden=true;$('arBody').innerHTML='<tr><td colspan="11" class="empty">Sign in to view receivables.</td></tr>';$('loginOverlay').classList.remove('hidden');configureView();
+  const token=sessionToken,remembered=deviceToken;sessionToken='';deviceToken='';sessionProfile=null;rows=[];revision='';sessionStorage.removeItem(SESSION_KEY);localStorage.removeItem(DEVICE_KEY);clearInterval(syncTimer);syncTimer=null;
+  if(token||remembered){try{await apiPost({action:'arLogout',sessionToken:token,deviceToken:remembered})}catch(_){}}
+  selectedInvoices.clear();visibleRows=[];updateSummaryControls();$('accessPill').textContent='Not signed in';$('locationPill').textContent='0 locations';$('logoutBtn').hidden=true;$('arBody').innerHTML='<tr><td colspan="11" class="empty">Sign in to view receivables.</td></tr>';$('rememberDevice').checked=false;$('loginOverlay').classList.remove('hidden');configureView();
 }
 
 async function loadAR(force=false){
@@ -228,11 +268,13 @@ function toggleInvoice(invoiceNo,checked){if(checked)selectedInvoices.add(String
 function toggleSelectAll(checked){visibleRows.forEach(r=>{const k=String(r.invoiceNo);if(checked)selectedInvoices.add(k);else selectedInvoices.delete(k)});renderRows()}
 function updateSummaryControls(){
   if(VIEW!=='your')return;
-  const count=selectedInvoices.size,btn=$('summaryBtn'),all=$('selectAllBox');
+  const count=selectedInvoices.size,btn=$('summaryBtn'),batch=$('batchBtn'),all=$('selectAllBox');
   btn.textContent=`🧾 Summary Invoice (${count})`;btn.disabled=count===0;
-  const visibleKeys=visibleRows.map(r=>String(r.invoiceNo));const selectedVisible=visibleKeys.filter(k=>selectedInvoices.has(k)).length;
+  batch.textContent=`💰 Receive Selected (${count})`;batch.disabled=count===0;
+  const visibleKeys=visibleRows.map(r=>String(r.invoiceNo)),selectedVisible=visibleKeys.filter(k=>selectedInvoices.has(k)).length;
   all.checked=visibleKeys.length>0&&selectedVisible===visibleKeys.length;all.indeterminate=selectedVisible>0&&selectedVisible<visibleKeys.length;
 }
+
 function selectedSummaryRows(){return rows.filter(r=>selectedInvoices.has(String(r.invoiceNo)))}
 async function getMasterCustomerContact_(row){
   const fallback={phone:row?.customerPhone||'',address:row?.customerAddress||''};
@@ -289,6 +331,31 @@ function printSummary(){window.print()}
 async function saveSummaryPDF(){
   const picked=selectedSummaryRows();if(!picked.length)return;const customer=(picked[0].customer||'Customer').replace(/[^a-z0-9]+/gi,'_').replace(/^_|_$/g,'');const filename=`Customer_Invoice_Summary_${customer}_${today()}.pdf`;const btn=$('savePdfBtn');btn.disabled=true;const old=btn.textContent;btn.textContent='Saving PDF…';
   try{if(typeof html2pdf!=='function')throw new Error('PDF library is not available.');await html2pdf().set({margin:0,filename,image:{type:'jpeg',quality:.98},html2canvas:{scale:2,useCORS:true},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},pagebreak:{mode:['avoid-all','css','legacy']}}).from($('summarySheet')).save()}catch(e){alert('Could not save PDF directly. Please use Print A4 and choose “Save as PDF” in your browser.')}finally{btn.disabled=false;btn.textContent=old}
+}
+
+
+function selectedPaymentRows(){return rows.filter(r=>selectedInvoices.has(String(r.invoiceNo)))}
+function openBatchPayment(){
+  const picked=selectedPaymentRows();if(!picked.length)return alert('Please check at least one invoice first.');
+  const customers=[...new Set(picked.map(r=>String(r.customer||'').trim().toLowerCase()))];if(customers.length!==1)return alert('Batch payment can only clear invoices for one customer at a time.');
+  const currencies=[...new Set(picked.map(r=>String(r.currency||'USD').toUpperCase()))];if(currencies.length!==1)return alert('Batch payment can only clear invoices with the same currency.');
+  const currency=currencies[0],total=picked.reduce((s,r)=>s+num(r.outstanding),0);
+  $('batchInfo').textContent=`${picked[0].customer} · ${picked.length} invoice${picked.length===1?'':'s'} · one payment`;
+  $('batchList').innerHTML=picked.map(r=>`<div class="batch-item"><span><strong>${esc(r.invoiceNo)}</strong></span><span>${money(r.outstanding,r.currency)}</span></div>`).join('');
+  $('batchTotal').textContent=money(total,currency);$('batchDate').value=today();$('batchMethod').value='Cash';$('batchBank').value='';$('batchTransactionId').value='';$('batchBankReference').value='';$('batchNote').value='';$('batchAdminCode').value='';setBatchError('');toggleBatchBankFields();$('batchOverlay').classList.remove('hidden');
+}
+function closeBatchPayment(){$('batchOverlay').classList.add('hidden')}
+function toggleBatchBankFields(){$('batchBankFields').classList.toggle('show',$('batchMethod').value==='Bank')}
+async function saveBatchPayment(){
+  const picked=selectedPaymentRows();if(!picked.length)return setBatchError('No invoices are selected.');
+  const method=$('batchMethod').value,tx=$('batchTransactionId').value.trim(),admin=$('batchAdminCode').value.trim();setBatchError('');
+  if(method==='Bank'&&!$('batchBank').value.trim())return setBatchError('Bank Name is required.');if(method==='Bank'&&!tx)return setBatchError('Transaction ID is required for Bank payment.');if(!admin)return setBatchError('Admin Code is required to approve the whole batch.');
+  const btn=$('saveBatchBtn');btn.disabled=true;btn.textContent='Saving Batch…';
+  try{
+    const paymentData={sessionToken,adminCode:admin,invoiceNos:picked.map(r=>r.invoiceNo),paymentDate:$('batchDate').value,paymentMethod:method,bankPayment:method==='Bank'?$('batchBank').value.trim():'',transactionId:method==='Bank'?tx:'',bankReference:method==='Bank'?$('batchBankReference').value.trim():'',note:$('batchNote').value.trim()};
+    const d=await apiPost({action:'arBatchPayment',paymentData:JSON.stringify(paymentData)});if(!d||!d.success)throw new Error(d?.error||'Batch payment failed.');
+    closeBatchPayment();selectedInvoices.clear();await loadAR(true);alert(`Batch payment saved successfully.\nInvoices cleared: ${d.invoiceCount||picked.length}\nTotal: ${money(d.totalAmount,d.currency)}\nApproved by: ${d.approvedBy||'Admin'}\nPayment ID: ${d.paymentId||''}`);
+  }catch(e){setBatchError(e.message||'Batch payment failed. Nothing was changed.')}finally{btn.disabled=false;btn.textContent='✓ Approve & Clear Selected Invoices';$('batchAdminCode').value=''}
 }
 
 async function openPayment(invoiceNo){
