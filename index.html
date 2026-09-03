@@ -168,14 +168,14 @@ function setPaymentError(msg){$('paymentError').textContent=msg||'';$('paymentEr
 function setBatchError(msg){$('batchError').textContent=msg||'';$('batchError').classList.toggle('show',!!msg)}
 
 function configureView(){
-  const salesmanMode=VIEW==='your';
-  $('summaryBtn').hidden=!salesmanMode;
-  $('batchBtn').hidden=!salesmanMode;
-  $('selectHead').hidden=!salesmanMode;
+  // Summary + batch payment are available in both Admin and Salesman receivable views.
+  $('summaryBtn').hidden=false;
+  $('batchBtn').hidden=false;
+  $('selectHead').hidden=false;
   if(VIEW==='all'){
     $('pageTitle').textContent='All Receivable';
     $('pageSubtitle').textContent='Company-wide Credit invoices from all active Location Codes.';
-    $('viewBanner').textContent='All Receivable = Admin Access only. Tracks every open Credit invoice by Location Code.';
+    $('viewBanner').textContent='All Receivable = Admin Access only. Select invoices to create a Summary Invoice or process one Batch Payment.';
     $('loginTitle').textContent='🔐 Admin Access';
     $('loginText').textContent='Enter an active Admin Code to review company-wide receivables.';
     $('loginLabel').textContent='Admin Code';
@@ -260,14 +260,13 @@ function renderRows(){
   visibleRows=rows.filter(r=>{if(q&&!(`${r.invoiceNo} ${r.customer}`.toLowerCase().includes(q)))return false;if(loc&&String(r.locationCode).toLowerCase()!==loc)return false;if(stat&&r.arStatus!==stat)return false;return true});
   let out=0,over=0;const customers=new Set();visibleRows.forEach(r=>{out+=num(r.outstanding);if(r.arStatus==='Overdue')over+=num(r.outstanding);if(r.customer)customers.add(r.customer.toLowerCase())});
   $('sumOutstanding').textContent=money(out);$('sumOverdue').textContent=money(over);$('sumInvoices').textContent=visibleRows.length;$('sumCustomers').textContent=customers.size;$('rowCount').textContent=`${visibleRows.length} record${visibleRows.length===1?'':'s'}`;
-  if(!visibleRows.length){$('arBody').innerHTML=`<tr><td colspan="${VIEW==='your'?11:10}" class="empty">No open Credit invoices found for this view.</td></tr>`;updateSummaryControls();return}
-  $('arBody').innerHTML=visibleRows.map(r=>`<tr>${VIEW==='your'?`<td class="checkcell"><input class="rowcheck" type="checkbox" ${selectedInvoices.has(String(r.invoiceNo))?'checked':''} onchange='toggleInvoice(${JSON.stringify(String(r.invoiceNo))},this.checked)' title="Include ${esc(r.invoiceNo)} in summary"></td>`:''}<td><strong>${esc(r.invoiceNo)}</strong></td><td>${esc(String(r.invoiceDate||'').slice(0,10))}</td><td>${esc(r.dueDate||'-')}</td><td>${esc(r.customer)}</td><td>${esc(r.locationName||r.locationCode)}<br><small>${esc(r.locationCode)}</small></td><td class="money">${money(r.grandTotal,r.currency)}</td><td class="money">${money(r.amountPaid,r.currency)}</td><td class="money"><strong>${money(r.outstanding,r.currency)}</strong></td><td><span class="status ${r.arStatus.toLowerCase()}">${esc(r.arStatus)}</span></td><td><button class="btn primary" onclick='openPayment(${JSON.stringify(r.invoiceNo)})'>Receive</button></td></tr>`).join('');
+  if(!visibleRows.length){$('arBody').innerHTML='<tr><td colspan="11" class="empty">No open Credit invoices found for this view.</td></tr>';updateSummaryControls();return}
+  $('arBody').innerHTML=visibleRows.map(r=>`<tr><td class="checkcell"><input class="rowcheck" type="checkbox" ${selectedInvoices.has(String(r.invoiceNo))?'checked':''} onchange='toggleInvoice(${JSON.stringify(String(r.invoiceNo))},this.checked)' title="Select ${esc(r.invoiceNo)} for summary or batch payment"></td><td><strong>${esc(r.invoiceNo)}</strong></td><td>${esc(String(r.invoiceDate||'').slice(0,10))}</td><td>${esc(r.dueDate||'-')}</td><td>${esc(r.customer)}</td><td>${esc(r.locationName||r.locationCode)}<br><small>${esc(r.locationCode)}</small></td><td class="money">${money(r.grandTotal,r.currency)}</td><td class="money">${money(r.amountPaid,r.currency)}</td><td class="money"><strong>${money(r.outstanding,r.currency)}</strong></td><td><span class="status ${r.arStatus.toLowerCase()}">${esc(r.arStatus)}</span></td><td><button class="btn primary" onclick='openPayment(${JSON.stringify(r.invoiceNo)})'>Receive</button></td></tr>`).join('');
   updateSummaryControls();
 }
 function toggleInvoice(invoiceNo,checked){if(checked)selectedInvoices.add(String(invoiceNo));else selectedInvoices.delete(String(invoiceNo));updateSummaryControls()}
 function toggleSelectAll(checked){visibleRows.forEach(r=>{const k=String(r.invoiceNo);if(checked)selectedInvoices.add(k);else selectedInvoices.delete(k)});renderRows()}
 function updateSummaryControls(){
-  if(VIEW!=='your')return;
   const count=selectedInvoices.size,btn=$('summaryBtn'),batch=$('batchBtn'),all=$('selectAllBox');
   btn.textContent=`🧾 Summary Invoice (${count})`;btn.disabled=count===0;
   batch.textContent=`💰 Receive Selected (${count})`;batch.disabled=count===0;
@@ -309,7 +308,7 @@ async function openSummary(){
 }
 function closeSummary(){$('summaryOverlay').classList.add('hidden')}
 function buildSummary(picked,contact){
-  const first=picked[0],customer=first.customer||'-',salesman=sessionProfile?.salesmanName||'Salesman';
+  const first=picked[0],customer=first.customer||'-',preparedBy=sessionProfile?.adminName||sessionProfile?.salesmanName||'Authorized User';
   const phone=(contact&&contact.phone)||first.customerPhone||'-';
   const address=(contact&&contact.address)||first.customerAddress||'-';
   const currencies=[...new Set(picked.map(r=>r.currency||'USD'))];
@@ -325,7 +324,7 @@ function buildSummary(picked,contact){
     grandOutstanding=`<div class="sum-grand-multi">${currencies.map(c=>`<div class="row"><span>TOTAL OUTSTANDING (${esc(c)})</span><span>${money(totals[c],c)}</span></div>`).join('')}</div>`;
   }
 
-  $('summarySheet').innerHTML=`<div class="sum-top"><div class="sum-brand"><h1>BIG BROTHER</h1><p>Ready to be your partner</p><div class="sum-contact">Phnom Penh, Cambodia<br>010 650 327, 070 998 988<br>angsokkhey11@gmail.com</div></div><div class="sum-meta"><div><strong>Summary Date:</strong> ${esc(today())}</div><div><strong>Prepared By:</strong> ${esc(salesman)}</div><div><strong>Selected Invoices:</strong> ${picked.length}</div></div></div><div class="sum-divider"></div><div class="sum-title">CUSTOMER INVOICE SUMMARY</div><div class="sum-customer"><div class="sum-box"><strong>Customer</strong><div class="sum-customer-name">${esc(customer)}</div></div><div class="sum-box"><strong>Customer Contact</strong><div class="sum-contact-line"><span class="sum-contact-icon">☎</span><span>${esc(phone)}</span></div><div class="sum-contact-line"><span class="sum-contact-icon">●</span><span>${esc(address)}</span></div></div></div><table class="sum-table"><thead><tr><th style="width:5%">#</th><th style="width:19%">Invoice No</th><th style="width:16%">Date</th><th style="width:16%">Due Date</th><th style="width:16%;text-align:right">Grand Total</th><th style="width:13%;text-align:right">Paid</th><th style="width:15%;text-align:right">Outstanding</th></tr></thead><tbody>${picked.map((r,i)=>`<tr><td class="center">${i+1}</td><td><strong>${esc(r.invoiceNo)}</strong></td><td>${esc(String(r.invoiceDate||'').slice(0,10))}</td><td>${esc(r.dueDate||'-')}</td><td class="money">${money(r.grandTotal,r.currency)}</td><td class="money">${money(r.amountPaid,r.currency)}</td><td class="money"><strong>${money(r.outstanding,r.currency)}</strong></td></tr>`).join('')}</tbody></table>${grandOutstanding}<div class="sum-footer"><span>Customer Invoice Summary generated from open Credit receivables selected by the salesman.</span><span>BIG BROTHER</span></div>`;
+  $('summarySheet').innerHTML=`<div class="sum-top"><div class="sum-brand"><h1>BIG BROTHER</h1><p>Ready to be your partner</p><div class="sum-contact">Phnom Penh, Cambodia<br>010 650 327, 070 998 988<br>angsokkhey11@gmail.com</div></div><div class="sum-meta"><div><strong>Summary Date:</strong> ${esc(today())}</div><div><strong>Prepared By:</strong> ${esc(preparedBy)}</div><div><strong>Selected Invoices:</strong> ${picked.length}</div></div></div><div class="sum-divider"></div><div class="sum-title">CUSTOMER INVOICE SUMMARY</div><div class="sum-customer"><div class="sum-box"><strong>Customer</strong><div class="sum-customer-name">${esc(customer)}</div></div><div class="sum-box"><strong>Customer Contact</strong><div class="sum-contact-line"><span class="sum-contact-icon">☎</span><span>${esc(phone)}</span></div><div class="sum-contact-line"><span class="sum-contact-icon">●</span><span>${esc(address)}</span></div></div></div><table class="sum-table"><thead><tr><th style="width:5%">#</th><th style="width:19%">Invoice No</th><th style="width:16%">Date</th><th style="width:16%">Due Date</th><th style="width:16%;text-align:right">Grand Total</th><th style="width:13%;text-align:right">Paid</th><th style="width:15%;text-align:right">Outstanding</th></tr></thead><tbody>${picked.map((r,i)=>`<tr><td class="center">${i+1}</td><td><strong>${esc(r.invoiceNo)}</strong></td><td>${esc(String(r.invoiceDate||'').slice(0,10))}</td><td>${esc(r.dueDate||'-')}</td><td class="money">${money(r.grandTotal,r.currency)}</td><td class="money">${money(r.amountPaid,r.currency)}</td><td class="money"><strong>${money(r.outstanding,r.currency)}</strong></td></tr>`).join('')}</tbody></table>${grandOutstanding}<div class="sum-footer"><span>Customer Invoice Summary generated from selected open Credit receivables.</span><span>BIG BROTHER</span></div>`;
 }
 function printSummary(){window.print()}
 async function saveSummaryPDF(){
