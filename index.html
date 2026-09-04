@@ -112,9 +112,13 @@ body{padding:20px}.wrap{max-width:1500px;margin:0 auto}.topbar{display:flex;just
     <div class="batch-list" id="requestReviewList"></div>
     <div class="batch-total"><span>Requested Total</span><span id="requestReviewTotal">$0.00</span></div>
     <div id="requestReviewMeta" style="font-size:12px;line-height:1.7;color:#50647b;margin-bottom:12px"></div>
+    <div class="field" style="margin-top:12px"><label>Reject Reason <span style="font-weight:400;color:#7a8798">(optional)</span></label><textarea id="rejectReason" rows="2" placeholder="Example: Wrong amount, wrong transaction ID, customer has not paid yet"></textarea></div>
     <div class="formerror" id="requestReviewError"></div>
-    <button class="btn batch-btn" id="clearRequestBtn" style="width:100%;margin-top:5px" onclick="clearRequest()">✓ Clear Request & Save Payment</button>
-    <div class="secure-note">This action uses the signed-in Admin session. The server rechecks the request, invoice balances, permissions, and Bank Transaction ID before saving the payment.</div>
+    <div style="display:grid;grid-template-columns:1fr 1.4fr;gap:8px;margin-top:5px">
+      <button class="btn danger" id="rejectRequestBtn" onclick="rejectRequest()">✕ Reject Request</button>
+      <button class="btn batch-btn" id="clearRequestBtn" onclick="clearRequest()">✓ Clear Request & Save Payment</button>
+    </div>
+    <div class="secure-note">Reject releases the invoice back to the salesman without changing its balance. Clear saves the real payment and reduces the receivable.</div>
   </div>
 </div>
 
@@ -499,12 +503,27 @@ async function saveBatchPayment(){
 }
 
 async function openRequestReview(requestId){
-  if(VIEW!=='all'||!requestId)return;currentRequest=null;$('requestReviewError').classList.remove('show');$('requestReviewOverlay').classList.remove('hidden');$('requestReviewInfo').textContent='Loading request…';$('requestReviewList').innerHTML='';$('requestReviewMeta').innerHTML='';
+  if(VIEW!=='all'||!requestId)return;currentRequest=null;$('requestReviewError').classList.remove('show');$('rejectReason').value='';$('requestReviewOverlay').classList.remove('hidden');$('requestReviewInfo').textContent='Loading request…';$('requestReviewList').innerHTML='';$('requestReviewMeta').innerHTML='';
   try{const d=await apiPost({action:'arRequestDetail',sessionToken,requestId});if(!d||!d.success)throw new Error(d?.error||'Could not load request.');currentRequest=d.request;const r=currentRequest,total=(r.allocations||[]).reduce((s,a)=>s+num(a.requestedAmount),0);$('requestReviewInfo').textContent=`${r.requestId} · ${r.customer} · requested by ${r.salesmanName||'Salesman'}`;$('requestReviewList').innerHTML=(r.allocations||[]).map(a=>`<div class="batch-item"><span><strong>${esc(a.invoiceNo)}</strong></span><span>${money(a.requestedAmount,a.currency||r.currency)}</span></div>`).join('');$('requestReviewTotal').textContent=money(total,r.currency);$('requestReviewMeta').innerHTML=`<strong>Payment Method:</strong> ${esc(r.paymentMethod)}${r.bankPayment?`<br><strong>Bank:</strong> ${esc(r.bankPayment)}`:''}${r.transactionId?`<br><strong>Transaction ID:</strong> ${esc(r.transactionId)}`:''}${r.bankReference?`<br><strong>Bank Reference:</strong> ${esc(r.bankReference)}`:''}${r.note?`<br><strong>Note:</strong> ${esc(r.note)}`:''}<br><strong>Request Date:</strong> ${esc(r.requestDate||'-')}`;}catch(e){$('requestReviewInfo').textContent='Could not load request';$('requestReviewError').textContent=e.message;$('requestReviewError').classList.add('show')}
 }
 function closeRequestReview(){$('requestReviewOverlay').classList.add('hidden');currentRequest=null}
 async function clearRequest(){
   if(!currentRequest)return;const btn=$('clearRequestBtn');btn.disabled=true;btn.textContent='Clearing Request…';$('requestReviewError').classList.remove('show');try{const d=await apiPost({action:'arClearRequest',requestData:JSON.stringify({sessionToken,requestId:currentRequest.requestId})});if(!d||!d.success)throw new Error(d?.error||'Could not clear request.');closeRequestReview();selectedInvoices.clear();await loadAR(true);alert(`Request cleared successfully.\nPayment ID: ${d.paymentId||''}\nInvoices: ${d.invoiceCount||0}\nTotal: ${money(d.totalAmount,d.currency)}`)}catch(e){$('requestReviewError').textContent=e.message||'Could not clear request.';$('requestReviewError').classList.add('show')}finally{btn.disabled=false;btn.textContent='✓ Clear Request & Save Payment'}
+}
+
+
+async function rejectRequest(){
+  if(!currentRequest)return;
+  const btn=$('rejectRequestBtn'),clearBtn=$('clearRequestBtn'),reason=$('rejectReason').value.trim();
+  if(!confirm(`Reject request ${currentRequest.requestId}?\n\nThe invoice balance will NOT change and the salesman can request it again.`))return;
+  btn.disabled=true;clearBtn.disabled=true;btn.textContent='Rejecting…';$('requestReviewError').classList.remove('show');
+  try{
+    const d=await apiPost({action:'arRejectRequest',requestData:JSON.stringify({sessionToken,requestId:currentRequest.requestId,reason})});
+    if(!d||!d.success)throw new Error(d?.error||'Could not reject request.');
+    closeRequestReview();selectedInvoices.clear();await loadAR(true);
+    alert(`Request rejected.\nRequest ID: ${d.requestId||''}\nThe invoice is available to the salesman again.`);
+  }catch(e){$('requestReviewError').textContent=e.message||'Could not reject request.';$('requestReviewError').classList.add('show')}
+  finally{btn.disabled=false;clearBtn.disabled=false;btn.textContent='✕ Reject Request';}
 }
 
 function startSync(){clearInterval(syncTimer);syncTimer=setInterval(async()=>{if(document.hidden||!sessionToken)return;try{const d=await apiPost({action:'arRevision',sessionToken});if(d&&d.success&&d.revision!==revision)await loadAR(false)}catch(e){if(String(e.message).toLowerCase().includes('session')||String(e.message).toLowerCase().includes('inactive')){await logout();setLoginError('Access session expired or was disabled. Please sign in again.')}}},20000)}
