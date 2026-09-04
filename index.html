@@ -240,18 +240,47 @@ function applyProfile(p){
 }
 
 async function restoreSession(){
-  // A remembered device is the strongest restore path because the server
-  // re-checks the CURRENT Admin/Salesman secret code signature every time.
+  // FAST PATH: on a normal refresh, use the existing session first.
+  // Sales Database V10 re-validates the CURRENT Admin/Salesman credential
+  // signature inside arRequireSession_ on every loadAR request, so this is
+  // still secure if the secret code was changed in Master Database.
+  if(sessionToken){
+    $('loginOverlay').classList.add('hidden');
+    try{
+      await loadAR(true);
+      setLoginError('');
+      $('logoutBtn').hidden=false;
+      startSync();
+      return;
+    }catch(e){
+      sessionToken='';
+      sessionStorage.removeItem(SESSION_KEY);
+      // Do not discard a remembered-device token yet. It may create a fresh
+      // session after an Apps Script cache/session expiry.
+    }
+  }
+
+  // PERSISTENT FALLBACK: used after browser/tab restart or session expiry.
   if(deviceToken){
     $('rememberDevice').checked=true;
     $('loginOverlay').classList.remove('hidden');
-    setLoginError('Checking remembered access…');
+    $('accessCode').disabled=true;
+    $('loginBtn').disabled=true;
+    $('loginBtn').textContent='Signing in…';
+    setLoginError('Remembered device found. Signing you in automatically…');
     try{
       const data=await apiPost({action:'arDeviceLogin',deviceToken,role:DEVICE_ROLE});
       if(!data||!data.success||!data.authorized)throw new Error(data?.error||'Remembered access failed.');
-      sessionToken=data.sessionToken;sessionProfile=data;sessionStorage.setItem(SESSION_KEY,sessionToken);
-      applyProfile(data);await loadAR(true);
-      setLoginError('');$('loginOverlay').classList.add('hidden');$('logoutBtn').hidden=false;startSync();return;
+      sessionToken=data.sessionToken;
+      sessionProfile=data;
+      sessionStorage.setItem(SESSION_KEY,sessionToken);
+      applyProfile(data);
+      await loadAR(true);
+      setLoginError('');
+      $('loginOverlay').classList.add('hidden');
+      $('logoutBtn').hidden=false;
+      startSync();
+      return;
     }catch(e){
       deviceToken='';
       localStorage.removeItem(DEVICE_KEY);
@@ -259,21 +288,16 @@ async function restoreSession(){
       sessionToken='';
       sessionStorage.removeItem(SESSION_KEY);
       $('rememberDevice').checked=false;
-      setLoginError('Your saved access is no longer valid. The secret code may have changed. Please enter the current code.');
-      $('loginOverlay').classList.remove('hidden');
-      return;
+      configureView();
+      setLoginError('Your saved access is no longer valid. The secret code or access settings may have changed. Please enter the current code.');
+    }finally{
+      $('accessCode').disabled=false;
+      $('loginBtn').disabled=false;
+      $('loginBtn').textContent='Sign In';
     }
   }
 
-  // Temporary same-tab/session restore when Remember me was not enabled.
-  if(sessionToken){
-    try{
-      await loadAR(true);setLoginError('');$('loginOverlay').classList.add('hidden');$('logoutBtn').hidden=false;startSync();return;
-    }catch(e){
-      sessionToken='';sessionStorage.removeItem(SESSION_KEY);
-      setLoginError('Session expired or access changed. Please sign in again.');
-    }
-  }
+  // Only show the normal code-entry state when neither restore path worked.
   $('loginOverlay').classList.remove('hidden');
 }
 async function logout(){
@@ -413,7 +437,9 @@ async function savePayment(){
 }
 function startSync(){clearInterval(syncTimer);syncTimer=setInterval(async()=>{if(document.hidden||!sessionToken)return;try{const d=await apiPost({action:'arRevision',sessionToken});if(d&&d.success&&d.revision!==revision)await loadAR(false)}catch(e){if(String(e.message).toLowerCase().includes('session')||String(e.message).toLowerCase().includes('inactive')){await logout();setLoginError('Access session expired or was disabled. Please sign in again.')}}},20000)}
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&sessionToken)loadAR(false).catch(()=>{})});
-configureView();restoreSession();
+configureView();
+// V3.10: fast refresh restore -> remembered-device fallback -> manual login.
+restoreSession();
 </script>
 </body>
 </html>
