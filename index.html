@@ -129,6 +129,8 @@ body{padding:20px}.wrap{max-width:1500px;margin:0 auto}.topbar{display:flex;just
       <button class="btn secondary" onclick="closeSummary()">✕ Close</button>
       <button class="btn primary" onclick="printSummary()">🖨 Print A4</button>
       <button class="btn summary-btn" id="savePdfBtn" onclick="saveSummaryPDF()">💾 Save PDF</button>
+      <button class="btn primary" id="shareSummaryPictureBtn" onclick="shareSummaryPictureToTelegram()">✈️ Share Picture</button>
+      <button class="btn primary" id="shareSummaryPdfBtn" onclick="shareSummaryPDFToTelegram()">✈️ Share PDF</button>
     </div>
     <div class="a4-sheet" id="summarySheet"></div>
   </div>
@@ -406,9 +408,43 @@ function buildSummary(picked,contact){
   $('summarySheet').innerHTML=`<div class="sum-top"><div class="sum-brand"><h1>BIG BROTHER</h1><p>Ready to be your partner</p><div class="sum-contact">Phnom Penh, Cambodia<br>010 650 327, 070 998 988<br>angsokkhey11@gmail.com</div></div><div class="sum-meta"><div><strong>Summary Date:</strong> ${esc(today())}</div><div><strong>Prepared By:</strong> ${esc(preparedBy)}</div><div><strong>Selected Invoices:</strong> ${picked.length}</div></div></div><div class="sum-divider"></div><div class="sum-title">CUSTOMER INVOICE SUMMARY</div><div class="sum-customer"><div class="sum-box"><strong>Customer</strong><div class="sum-customer-name">${esc(customer)}</div></div><div class="sum-box"><strong>Customer Contact</strong><div class="sum-contact-line"><span class="sum-contact-icon">☎</span><span>${esc(phone)}</span></div><div class="sum-contact-line"><span class="sum-contact-icon">●</span><span>${esc(address)}</span></div></div></div><table class="sum-table"><thead><tr><th style="width:5%">#</th><th style="width:19%">Invoice No</th><th style="width:16%">Date</th><th style="width:16%">Due Date</th><th style="width:16%;text-align:right">Grand Total</th><th style="width:13%;text-align:right">Paid</th><th style="width:15%;text-align:right">Outstanding</th></tr></thead><tbody>${picked.map((r,i)=>`<tr><td class="center">${i+1}</td><td><strong>${esc(r.invoiceNo)}</strong></td><td>${esc(String(r.invoiceDate||'').slice(0,10))}</td><td>${esc(r.dueDate||'-')}</td><td class="money">${money(r.grandTotal,r.currency)}</td><td class="money">${money(r.amountPaid,r.currency)}</td><td class="money"><strong>${money(r.outstanding,r.currency)}</strong></td></tr>`).join('')}</tbody></table>${grandOutstanding}<div class="sum-footer"><span>Customer Invoice Summary generated from selected open Credit receivables.</span><span>BIG BROTHER</span></div>`;
 }
 function printSummary(){window.print()}
+function summaryFileBase(){
+  const picked=selectedSummaryRows();
+  const customer=((picked[0]&&picked[0].customer)||'Customer').replace(/[^a-z0-9]+/gi,'_').replace(/^_|_$/g,'')||'Customer';
+  return `BIG_BROTHER_Customer_Invoice_Summary_${customer}_${today()}`;
+}
+async function createSummaryImageBlob(){
+  if(typeof html2canvas!=='function')throw new Error('Image library is not available.');
+  const canvas=await html2canvas($('summarySheet'),{scale:2,useCORS:true,backgroundColor:'#ffffff'});
+  return await new Promise((resolve,reject)=>canvas.toBlob(blob=>blob?resolve(blob):reject(new Error('Could not create summary image.')),'image/png',1));
+}
+async function createSummaryPdfBlob(){
+  if(typeof html2pdf!=='function')throw new Error('PDF library is not available.');
+  return await html2pdf().set({margin:0,image:{type:'jpeg',quality:.98},html2canvas:{scale:2,useCORS:true},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},pagebreak:{mode:['avoid-all','css','legacy']}}).from($('summarySheet')).outputPdf('blob');
+}
 async function saveSummaryPDF(){
-  const picked=selectedSummaryRows();if(!picked.length)return;const customer=(picked[0].customer||'Customer').replace(/[^a-z0-9]+/gi,'_').replace(/^_|_$/g,'');const filename=`Customer_Invoice_Summary_${customer}_${today()}.pdf`;const btn=$('savePdfBtn');btn.disabled=true;const old=btn.textContent;btn.textContent='Saving PDF…';
-  try{if(typeof html2pdf!=='function')throw new Error('PDF library is not available.');await html2pdf().set({margin:0,filename,image:{type:'jpeg',quality:.98},html2canvas:{scale:2,useCORS:true},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},pagebreak:{mode:['avoid-all','css','legacy']}}).from($('summarySheet')).save()}catch(e){alert('Could not save PDF directly. Please use Print A4 and choose “Save as PDF” in your browser.')}finally{btn.disabled=false;btn.textContent=old}
+  const picked=selectedSummaryRows();if(!picked.length)return;const btn=$('savePdfBtn');btn.disabled=true;const old=btn.textContent;btn.textContent='Saving PDF…';
+  try{const blob=await createSummaryPdfBlob();const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=summaryFileBase()+'.pdf';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),5000)}catch(e){alert('Could not save PDF directly. Please use Print A4 and choose “Save as PDF” in your browser.')}finally{btn.disabled=false;btn.textContent=old}
+}
+async function shareFileToTelegram(file,title,fallbackMessage){
+  if(navigator.share && (!navigator.canShare || navigator.canShare({files:[file]}))){
+    try{await navigator.share({files:[file],title});return}catch(e){if(e?.name==='AbortError')return}
+  }
+  const url=URL.createObjectURL(file),a=document.createElement('a');
+  a.href=url;a.download=file.name;document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),5000);
+  window.open('https://web.telegram.org/','_blank','noopener');
+  alert(fallbackMessage);
+}
+async function shareSummaryPictureToTelegram(){
+  const picked=selectedSummaryRows();if(!picked.length)return;
+  const btn=$('shareSummaryPictureBtn'),old=btn.textContent;btn.disabled=true;btn.textContent='Preparing Picture…';
+  try{const blob=await createSummaryImageBlob();const file=new File([blob],summaryFileBase()+'.png',{type:'image/png'});await shareFileToTelegram(file,'BIG BROTHER Customer Invoice Summary','Customer Invoice Summary picture saved. Open Telegram and attach the saved picture.')}catch(e){if(e?.name!=='AbortError')alert(e.message||'Could not share the summary picture.')}finally{btn.disabled=false;btn.textContent=old}
+}
+async function shareSummaryPDFToTelegram(){
+  const picked=selectedSummaryRows();if(!picked.length)return;
+  const btn=$('shareSummaryPdfBtn'),old=btn.textContent;btn.disabled=true;btn.textContent='Preparing PDF…';
+  try{const blob=await createSummaryPdfBlob();const file=new File([blob],summaryFileBase()+'.pdf',{type:'application/pdf'});await shareFileToTelegram(file,'BIG BROTHER Customer Invoice Summary PDF','Customer Invoice Summary PDF saved. Open Telegram and attach the saved PDF.')}catch(e){if(e?.name!=='AbortError')alert(e.message||'Could not share the summary PDF.')}finally{btn.disabled=false;btn.textContent=old}
 }
 
 
