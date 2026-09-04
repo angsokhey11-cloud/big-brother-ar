@@ -181,7 +181,7 @@ function configureView(){
     $('loginText').textContent='Enter an active Admin Code to review company-wide receivables.';
     $('loginLabel').textContent='Admin Code';
     $('accessCode').placeholder='Enter admin code';
-    $('loginNote').textContent='Your Admin Code is never stored. If Remember me is checked, only a revocable device token is saved on this device.';
+    $('loginNote').textContent='Your Admin Code is never stored. If Remember me is checked, only a revocable device token is saved on this device. If the secret code changes in Master Database, remembered access is automatically invalidated.';
   }else{
     $('pageTitle').textContent='Your Receivable';
     $('pageSubtitle').textContent='Credit invoices from Location Codes assigned to your Salesman ID.';
@@ -190,8 +190,9 @@ function configureView(){
     $('loginText').textContent='Enter your Salesman Code. The server will load only Location Codes assigned to your Salesman ID.';
     $('loginLabel').textContent='Salesman Code';
     $('accessCode').placeholder='Enter salesman code';
-    $('loginNote').textContent='Your Salesman Code is never stored. If Remember me is checked, only a revocable device token is saved on this device.';
+    $('loginNote').textContent='Your Salesman Code is never stored. If Remember me is checked, only a revocable device token is saved on this device. If the secret code changes in Master Database, remembered access is automatically invalidated.';
   }
+  $('rememberDevice').checked=!!deviceToken;
 }
 
 async function login(){
@@ -201,15 +202,23 @@ async function login(){
   try{
     const data=VIEW==='all'?await apiPost({action:'arAdminLogin',adminCode:code,rememberDevice:remember}):await apiPost({action:'arLogin',salesmanCode:code,rememberDevice:remember});
     if(!data||!data.success||!data.authorized)throw new Error(data?.error||'Access denied.');
+    if(remember && !data.deviceToken) throw new Error('Remember me was requested, but the server did not return a remembered-device token. Deploy Sales Database V10 and try again.');
     sessionToken=data.sessionToken;sessionProfile=data;sessionStorage.setItem(SESSION_KEY,sessionToken);
-    if(remember&&data.deviceToken){deviceToken=data.deviceToken;localStorage.setItem(DEVICE_KEY,deviceToken)}
-    else if(!remember){deviceToken='';localStorage.removeItem(DEVICE_KEY)}
+    if(remember){
+      deviceToken=data.deviceToken;
+      localStorage.setItem(DEVICE_KEY,deviceToken);
+      localStorage.setItem(DEVICE_KEY+'_saved_at',String(Date.now()));
+    }else{
+      deviceToken='';
+      localStorage.removeItem(DEVICE_KEY);
+      localStorage.removeItem(DEVICE_KEY+'_saved_at');
+    }
     $('accessCode').value='';$('loginOverlay').classList.add('hidden');$('logoutBtn').hidden=false;
     applyProfile(data);await loadAR(true);startSync();
-  }catch(e){sessionToken='';sessionStorage.removeItem(SESSION_KEY);setLoginError(e.message||'Access denied.');}
-  finally{btn.disabled=false;btn.textContent='Sign In'}
+  }catch(e){
+    sessionToken='';sessionStorage.removeItem(SESSION_KEY);setLoginError(e.message||'Access denied.');
+  } finally{btn.disabled=false;btn.textContent='Sign In'}
 }
-
 function applyProfile(p){
   sessionProfile=p;const locs=Array.isArray(p.locations)?p.locations:[];
   if((p.role||'')==='admin'){
@@ -231,20 +240,44 @@ function applyProfile(p){
 }
 
 async function restoreSession(){
-  if(sessionToken){
-    try{await loadAR(true);$('loginOverlay').classList.add('hidden');$('logoutBtn').hidden=false;startSync();return}catch(e){sessionToken='';sessionStorage.removeItem(SESSION_KEY)}
-  }
+  // A remembered device is the strongest restore path because the server
+  // re-checks the CURRENT Admin/Salesman secret code signature every time.
   if(deviceToken){
+    $('rememberDevice').checked=true;
+    $('loginOverlay').classList.remove('hidden');
+    setLoginError('Checking remembered access…');
     try{
       const data=await apiPost({action:'arDeviceLogin',deviceToken,role:DEVICE_ROLE});
       if(!data||!data.success||!data.authorized)throw new Error(data?.error||'Remembered access failed.');
-      sessionToken=data.sessionToken;sessionProfile=data;sessionStorage.setItem(SESSION_KEY,sessionToken);applyProfile(data);await loadAR(true);$('loginOverlay').classList.add('hidden');$('logoutBtn').hidden=false;startSync();return;
-    }catch(e){deviceToken='';localStorage.removeItem(DEVICE_KEY)}
+      sessionToken=data.sessionToken;sessionProfile=data;sessionStorage.setItem(SESSION_KEY,sessionToken);
+      applyProfile(data);await loadAR(true);
+      setLoginError('');$('loginOverlay').classList.add('hidden');$('logoutBtn').hidden=false;startSync();return;
+    }catch(e){
+      deviceToken='';
+      localStorage.removeItem(DEVICE_KEY);
+      localStorage.removeItem(DEVICE_KEY+'_saved_at');
+      sessionToken='';
+      sessionStorage.removeItem(SESSION_KEY);
+      $('rememberDevice').checked=false;
+      setLoginError('Your saved access is no longer valid. The secret code may have changed. Please enter the current code.');
+      $('loginOverlay').classList.remove('hidden');
+      return;
+    }
+  }
+
+  // Temporary same-tab/session restore when Remember me was not enabled.
+  if(sessionToken){
+    try{
+      await loadAR(true);setLoginError('');$('loginOverlay').classList.add('hidden');$('logoutBtn').hidden=false;startSync();return;
+    }catch(e){
+      sessionToken='';sessionStorage.removeItem(SESSION_KEY);
+      setLoginError('Session expired or access changed. Please sign in again.');
+    }
   }
   $('loginOverlay').classList.remove('hidden');
 }
 async function logout(){
-  const token=sessionToken,remembered=deviceToken;sessionToken='';deviceToken='';sessionProfile=null;rows=[];revision='';sessionStorage.removeItem(SESSION_KEY);localStorage.removeItem(DEVICE_KEY);clearInterval(syncTimer);syncTimer=null;
+  const token=sessionToken,remembered=deviceToken;sessionToken='';deviceToken='';sessionProfile=null;rows=[];revision='';sessionStorage.removeItem(SESSION_KEY);localStorage.removeItem(DEVICE_KEY);localStorage.removeItem(DEVICE_KEY+'_saved_at');clearInterval(syncTimer);syncTimer=null;
   if(token||remembered){try{await apiPost({action:'arLogout',sessionToken:token,deviceToken:remembered})}catch(_){}}
   selectedInvoices.clear();visibleRows=[];updateSummaryControls();$('accessPill').textContent='Not signed in';$('locationPill').textContent='0 locations';$('logoutBtn').hidden=true;$('arBody').innerHTML='<tr><td colspan="11" class="empty">Sign in to view receivables.</td></tr>';$('rememberDevice').checked=false;$('loginOverlay').classList.remove('hidden');configureView();
 }
