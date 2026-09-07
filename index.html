@@ -3,1012 +3,2520 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BIG BROTHER - Account Receivable</title>
+<title>BIG BROTHER — Admin Work V6.1 Vault Includes Receivable Cash</title>
 <style>
-:root{--bg:#f4f7fb;--card:#fff;--line:#dfe6ef;--text:#17304f;--muted:#6d7d91;--blue:#1f5fbf;--blue2:#174b98;--green:#198754;--red:#c93c46;--amber:#b67a00;--shadow:0 10px 28px rgba(20,48,82,.08)}
-*{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text)}
-body{padding:20px}.wrap{max-width:1500px;margin:0 auto}.topbar{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:18px}.topbar h1{margin:0 0 5px;font-size:28px}.subtitle{margin:0;color:var(--muted)}.userbox{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}.pill{padding:8px 12px;border:1px solid #c9d8ec;border-radius:999px;background:#edf5ff;color:#245da8;font-size:12px;font-weight:700}.logout{border:1px solid #cfd8e4;background:#fff;color:#4e6076;border-radius:9px;padding:8px 12px;cursor:pointer;font-weight:700}.cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin-bottom:16px}.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:15px;box-shadow:var(--shadow)}.card small{display:block;color:var(--muted);font-weight:700;margin-bottom:7px}.card strong{font-size:24px}.card.red strong{color:var(--red)}.currency-totals{display:flex;flex-direction:column;gap:5px}.currency-line{display:flex;align-items:baseline;justify-content:space-between;gap:10px}.currency-line .ccy{font-size:11px;font-weight:800;color:var(--muted);letter-spacing:.45px}.currency-line .amt{font-size:21px;font-weight:800;color:var(--text);white-space:nowrap}.card.red .currency-line .amt{color:var(--red)}
-.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}.filters{padding:14px;display:grid;grid-template-columns:1fr 1.2fr 1fr 1fr 1fr auto auto auto;gap:10px;border-bottom:1px solid var(--line)}input,select,textarea{width:100%;border:1px solid #cbd6e3;border-radius:9px;padding:10px 11px;font:inherit;color:var(--text);background:#fff}input:focus,select:focus,textarea:focus{outline:2px solid rgba(31,95,191,.14);border-color:#6f9ed8}.btn{border:0;border-radius:9px;padding:10px 14px;font-weight:700;cursor:pointer}.btn.primary{background:var(--blue);color:#fff}.btn.primary:hover{background:var(--blue2)}.btn.secondary{background:#eef3f8;color:#284761}.btn.danger{background:#fff0f1;color:var(--red)}.btn:disabled{opacity:.55;cursor:not-allowed}
-.tablewrap{overflow:auto}table{width:100%;border-collapse:collapse;min-width:1080px}th,td{padding:11px 10px;border-bottom:1px solid #e7edf4;text-align:left;font-size:13px;white-space:nowrap}th{background:#f7f9fc;color:#53657a;font-size:12px;position:sticky;top:0}tbody tr:hover{background:#f9fbfe}.money{text-align:right;font-variant-numeric:tabular-nums}.status{display:inline-block;padding:5px 8px;border-radius:999px;font-size:11px;font-weight:800}.status.overdue{background:#fff0f1;color:var(--red)}.status.outstanding{background:#fff7df;color:#966200}.status.processing{background:#e9f2ff;color:#1f5fbf}.empty{text-align:center;color:var(--muted);padding:30px}.foot{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:11px 14px;color:var(--muted);font-size:12px}
-.overlay{position:fixed;inset:0;background:rgba(10,27,48,.68);display:flex;align-items:center;justify-content:center;padding:18px;z-index:9999}.overlay.hidden{display:none}.loginbox,.modalbox{width:min(460px,100%);background:#fff;border-radius:16px;padding:22px;box-shadow:0 25px 70px rgba(0,0,0,.25)}.loginbox h2,.modalbox h2{margin:0 0 7px}.loginbox p,.modalbox p{color:var(--muted);margin:0 0 16px;line-height:1.5}.field{margin-bottom:12px}.field label{display:block;font-size:12px;font-weight:800;color:#556a82;margin-bottom:5px}.loginerror,.formerror{display:none;margin-top:10px;padding:9px 10px;background:#fff0f1;color:var(--red);border-radius:8px;font-size:12px}.loginerror.show,.formerror.show{display:block}.modalhead{display:flex;justify-content:space-between;align-items:center;gap:10px}.close{border:0;background:#eef2f7;width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:18px}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.bankfields{display:none}.bankfields.show{display:block}.cashfields{display:none;border:1px solid #cfe8d8;background:#f2fbf5;border-radius:10px;padding:10px;margin-bottom:12px}.cashfields.show{display:block}.salesman-bank-note{display:none;margin:-2px 0 12px;padding:9px 10px;border:1px solid #cfe0f5;background:#f3f8ff;border-radius:9px;color:#345a84;font-size:11px;line-height:1.45}.salesman-bank-note.show{display:block}.full-amount-row{display:flex;justify-content:flex-end;margin:-5px 0 10px}.full-amount-btn{border:1px solid #b9d3f2;background:#eef6ff;color:#1f5fbf;border-radius:8px;padding:7px 10px;font-size:11px;font-weight:900;cursor:pointer}.full-amount-btn:hover{background:#dfeeff}.direct-request-note{display:none;padding:10px 11px;margin:0 0 12px;border:1px solid #cfe0f5;background:#f3f8ff;border-radius:9px;color:#315b88;font-size:11px;line-height:1.45}.direct-request-note.show{display:block}.admin-decision{border:1px solid #d7e3f1;background:#f8fbff;border-radius:10px;padding:11px;margin:10px 0 12px}.admin-decision h4{margin:0 0 8px;font-size:13px;color:#17365d}.cash-note{font-size:11px;color:#47705a;line-height:1.45;margin-top:-2px}.cashfields .grid2{margin-top:8px}.history{margin-top:15px;border-top:1px solid var(--line);padding-top:12px}.history h3{margin:0 0 8px;font-size:15px}.historyitem{border:1px solid var(--line);border-radius:9px;padding:9px 10px;margin-bottom:7px;font-size:12px}.historyitem strong{font-size:13px}.secure-note{font-size:11px;color:var(--muted);margin-top:8px}.remember-row{display:flex;align-items:center;gap:8px;margin:8px 0 14px;font-size:12px;color:#50647b}.remember-row input{width:16px;height:16px;margin:0;accent-color:var(--blue)}.batch-btn{background:#198754;color:#fff}.batch-btn:hover{background:#146c43}.batch-list{max-height:180px;overflow:auto;border:1px solid var(--line);border-radius:9px;margin:8px 0 12px}.batch-item{display:flex;justify-content:space-between;gap:10px;padding:8px 10px;border-bottom:1px solid #edf1f5;font-size:12px}.batch-item:last-child{border-bottom:0}.batch-total{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:10px 12px;background:#eef8f2;border:1px solid #cfe8d8;border-radius:9px;margin-bottom:12px;font-weight:800;color:#146c43}.view-banner{padding:10px 14px;background:#eef5ff;border-bottom:1px solid #d6e5f7;color:#245da8;font-size:12px;font-weight:700}.checkcell{width:42px;text-align:center}.rowcheck,.selectall{width:17px;height:17px;cursor:pointer;accent-color:var(--blue)}.summary-btn{background:#173f77;color:#fff}.summary-btn:hover{background:#102f5a}.summary-modal{width:min(1180px,96vw);max-height:94vh;overflow:auto;background:#eef2f7;border-radius:16px;padding:16px;box-shadow:0 25px 70px rgba(0,0,0,.3)}.summary-actions{display:flex;justify-content:flex-end;gap:8px;margin-bottom:12px;position:sticky;top:0;z-index:3;background:#eef2f7;padding:2px 0 10px}.a4-sheet{width:210mm;min-height:297mm;margin:0 auto;background:#fff;padding:12mm 12mm 14mm;color:#152b46;box-shadow:0 5px 22px rgba(0,0,0,.12)}.sum-top{display:flex;justify-content:space-between;gap:18px;align-items:flex-start}.sum-brand h1{font-size:26px;line-height:1.05;margin:0;color:#143d78;letter-spacing:.5px}.sum-brand p{margin:4px 0 0;font-size:13px;color:#304b69;font-weight:700}.sum-contact{margin-top:8px;font-size:12px;line-height:1.5;color:#324b67}.sum-meta{font-size:12px;line-height:1.55;text-align:right;min-width:220px}.sum-meta strong{color:#132f56}.sum-divider{height:2px;background:#24354a;margin:12px 0 16px}.sum-title{text-align:center;font-size:18px;font-weight:900;letter-spacing:.8px;color:#143d78;margin:4px 0 16px}.sum-customer{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;font-size:12px}.sum-box{border:1px solid #cfd9e6;border-radius:10px;padding:12px 14px;min-height:82px}.sum-box strong{display:block;font-size:11px;color:#1e4f9d;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px}.sum-customer-name{font-size:16px;font-weight:800;color:#152b46}.sum-contact-line{display:flex;gap:8px;align-items:flex-start;margin:5px 0;font-size:12px;line-height:1.45}.sum-contact-icon{width:18px;flex:0 0 18px;color:#1f5fbf;font-weight:900}.sum-table{width:100%;min-width:0;border-collapse:collapse}.sum-table th,.sum-table td{font-size:11px;padding:9px 7px;border-bottom:1px solid #dfe6ef;white-space:normal}.sum-table th{background:#2456a6;color:#fff;position:static;text-transform:uppercase;font-size:10.5px;letter-spacing:.35px}.sum-table td.money{text-align:right;font-variant-numeric:tabular-nums}.sum-table td.center{text-align:center}.sum-grand{margin:16px 0 0 auto;width:44%;border-top:3px solid #2456a6;padding:11px 6px 0;display:flex;justify-content:space-between;gap:18px;align-items:baseline;color:#143d78}.sum-grand .label{font-size:15px;font-weight:900}.sum-grand .value{font-size:21px;font-weight:900;white-space:nowrap}.sum-grand-multi{margin:16px 0 0 auto;width:44%;border-top:3px solid #2456a6;padding-top:7px}.sum-grand-multi .row{display:flex;justify-content:space-between;gap:14px;padding:5px 6px;font-size:13px;font-weight:900;color:#143d78}.sum-footer{margin-top:24px;padding-top:10px;border-top:1px solid #dfe6ef;font-size:10px;color:#738195;display:flex;justify-content:space-between;gap:20px}.sum-small{font-size:10px;color:#7a8798}@media print{body>*{display:none!important}#summaryOverlay{display:block!important;position:static!important;background:#fff!important;padding:0!important}#summaryOverlay .summary-modal{display:block!important;width:auto!important;max-height:none!important;overflow:visible!important;background:#fff!important;padding:0!important;box-shadow:none!important}#summaryOverlay .summary-actions{display:none!important}.a4-sheet{box-shadow:none!important;margin:0!important;width:210mm!important;min-height:297mm!important}@page{size:A4;margin:0}}
+:root{
+  --bg:#f4f7fb;--card:#fff;--line:#dfe6ef;--text:#17304f;--muted:#6d7d91;
+  --blue:#1f5fbf;--blue2:#174b98;--green:#198754;--red:#c93c46;--amber:#b67a00;
+  --shadow:0 10px 28px rgba(20,48,82,.08)
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text)}
+body{padding:20px}
+.wrap{max-width:1500px;margin:0 auto}
+.topbar{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:16px}
+.topbar h1{margin:0 0 5px;font-size:28px}
+.subtitle{margin:0;color:var(--muted)}
+.userbox{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+.pill{padding:8px 12px;border:1px solid #c9d8ec;border-radius:999px;background:#edf5ff;color:#245da8;font-size:12px;font-weight:800}
+.logout{border:1px solid #cfd8e4;background:#fff;color:#4e6076;border-radius:9px;padding:8px 12px;cursor:pointer;font-weight:700}
+.cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin-bottom:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:15px;box-shadow:var(--shadow)}
+.card small{display:block;color:var(--muted);font-weight:700;margin-bottom:7px}
+.card strong{font-size:24px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
+.view-banner{padding:10px 14px;background:#eef5ff;border-bottom:1px solid #d6e5f7;color:#245da8;font-size:12px;font-weight:700}
+.filters{padding:14px;display:grid;grid-template-columns:1.4fr 1.2fr 1fr auto auto;gap:10px;border-bottom:1px solid var(--line)}
+input,select,textarea{width:100%;border:1px solid #cbd6e3;border-radius:9px;padding:10px 11px;font:inherit;color:var(--text);background:#fff}
+input:focus,select:focus,textarea:focus{outline:2px solid rgba(31,95,191,.14);border-color:#6f9ed8}
+.btn{border:0;border-radius:9px;padding:10px 14px;font-weight:700;cursor:pointer}
+.btn.primary{background:var(--blue);color:#fff}.btn.primary:hover{background:var(--blue2)}
+.btn.secondary{background:#eef3f8;color:#284761}.btn.danger{background:#fff0f1;color:var(--red)}
+.btn.success{background:var(--green);color:#fff}.btn:disabled{opacity:.55;cursor:not-allowed}
+.tablewrap{overflow:auto}
+table{width:100%;border-collapse:collapse;min-width:1180px}
+th,td{padding:11px 10px;border-bottom:1px solid #e7edf4;text-align:left;font-size:13px;white-space:nowrap}
+th{background:#f7f9fc;color:#53657a;font-size:12px;position:sticky;top:0;z-index:1}
+tbody tr:hover{background:#f9fbfe}
+.money{text-align:right;font-variant-numeric:tabular-nums}.center{text-align:center}
+.status{display:inline-block;padding:5px 8px;border-radius:999px;font-size:11px;font-weight:800}
+.status.processing{background:#e9f2ff;color:#1f5fbf}
+.empty{text-align:center;color:var(--muted);padding:30px}
+.foot{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:11px 14px;color:var(--muted);font-size:12px}
+.placeholder{padding:70px 20px;text-align:center;color:var(--muted)}
+.placeholder h2{color:#17304f;margin:0 0 8px}
+.overlay{position:fixed;inset:0;background:rgba(10,27,48,.68);display:flex;align-items:center;justify-content:center;padding:18px;z-index:9999}
+.overlay.hidden{display:none}
+.loginbox,.modalbox{width:min(520px,100%);background:#fff;border-radius:16px;padding:22px;box-shadow:0 25px 70px rgba(0,0,0,.25)}
+.modalbox{width:min(720px,96vw);max-height:92vh;overflow:auto}
+.loginbox h2,.modalbox h2{margin:0 0 7px}
+.loginbox p,.modalbox p{color:var(--muted);margin:0 0 16px;line-height:1.5}
+.field{margin-bottom:12px}.field label{display:block;font-size:12px;font-weight:800;color:#556a82;margin-bottom:5px}
+.loginerror,.formerror{display:none;margin-top:10px;padding:9px 10px;background:#fff0f1;color:var(--red);border-radius:8px;font-size:12px}
+.loginerror.show,.formerror.show{display:block}
+.modalhead{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.close{border:0;background:#eef2f7;width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:18px}
+.remember-row{display:flex;align-items:center;gap:8px;margin:8px 0 14px;font-size:12px;color:#50647b}
+.remember-row input{width:16px;height:16px;margin:0;accent-color:var(--blue)}
+.batch-list{max-height:240px;overflow:auto;border:1px solid var(--line);border-radius:9px;margin:8px 0 12px}
+.batch-item{display:flex;justify-content:space-between;gap:10px;padding:9px 10px;border-bottom:1px solid #edf1f5;font-size:12px}
+.batch-item:last-child{border-bottom:0}
+.batch-total{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:10px 12px;background:#eef8f2;border:1px solid #cfe8d8;border-radius:9px;margin-bottom:12px;font-weight:800;color:#146c43}
+.meta{font-size:12px;line-height:1.8;color:#50647b;margin-bottom:12px}
+.secure-note{font-size:11px;color:var(--muted);margin-top:10px}
+.actions{display:grid;grid-template-columns:1fr 1.5fr;gap:8px;margin-top:8px}
 @media(max-width:900px){.cards{grid-template-columns:repeat(2,1fr)}.filters{grid-template-columns:1fr 1fr}.topbar{flex-direction:column}.userbox{justify-content:flex-start}}
-@media(max-width:560px){body{padding:10px}.cards{grid-template-columns:1fr 1fr;gap:8px}.card{padding:11px}.card strong{font-size:18px}.filters{grid-template-columns:1fr}.grid2{grid-template-columns:1fr}.topbar h1{font-size:23px}}
+@media(max-width:560px){body{padding:10px}.cards{grid-template-columns:1fr 1fr;gap:8px}.filters{grid-template-columns:1fr}.actions{grid-template-columns:1fr}.topbar h1{font-size:23px}}
+
+/* ===== V6.3 PENDING DAILY CASH REVIEW — MOCKUP MATCH ===== */
+.dc-review-shell{
+  width:min(1460px,96vw);
+  height:min(900px,94vh);
+  background:#fff;
+  border-radius:18px;
+  box-shadow:0 28px 90px rgba(15,35,65,.32);
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+}
+.dc-review-head{
+  display:flex;
+  justify-content:space-between;
+  gap:18px;
+  align-items:flex-start;
+  padding:18px 24px 14px;
+  border-bottom:1px solid #e2e9f2;
+  background:#fff;
+  flex:0 0 auto;
+}
+.dc-review-head h2{
+  margin:0 0 4px;
+  font-size:26px;
+  color:#17365d;
+  letter-spacing:-.2px;
+}
+.dc-review-head p{
+  margin:0;
+  color:#667891;
+  font-size:14px;
+}
+.dc-review-status{
+  padding:10px 14px;
+  border-radius:12px;
+  background:#fff5dc;
+  border:1px solid #f0d48d;
+  color:#8e5c00;
+  font-weight:900;
+  white-space:nowrap;
+}
+.dc-review-body{
+  padding:14px 18px 16px;
+  overflow:auto;
+  flex:1 1 auto;
+  background:#fbfdff;
+}
+.dc-section{
+  border:1px solid #dbe5f1;
+  border-radius:14px;
+  background:#fff;
+  margin-bottom:12px;
+  overflow:hidden;
+  box-shadow:0 1px 0 rgba(20,50,90,.02);
+}
+.dc-section-title{
+  padding:10px 14px;
+  font-size:15px;
+  font-weight:900;
+  color:#183a66;
+  background:linear-gradient(180deg,#fbfdff 0%,#f5f9fe 100%);
+  border-bottom:1px solid #e2eaf3;
+}
+.dc-summary-grid{
+  display:grid;
+  grid-template-columns:repeat(7,minmax(130px,1fr));
+  gap:9px;
+  padding:10px;
+}
+.dc-summary-card{
+  border:1px solid #dbe5f1;
+  border-radius:11px;
+  padding:10px 11px;
+  background:#fff;
+  min-width:0;
+}
+.dc-summary-card small{
+  display:block;
+  color:#65758b;
+  font-weight:800;
+  font-size:11px;
+  line-height:1.15;
+  min-height:26px;
+  margin-bottom:4px;
+}
+.dc-summary-card strong{
+  display:block;
+  font-size:17px;
+  color:#15365f;
+  line-height:1.15;
+  white-space:nowrap;
+}
+.dc-summary-card.good{
+  background:#eefaf3;
+  border-color:#cdebd9;
+}
+.dc-summary-card.good strong{color:#13834f}
+.dc-summary-card.warn{
+  background:#fff8e8;
+  border-color:#f2dfac;
+}
+.dc-review-grid{
+  display:grid;
+  grid-template-columns:minmax(0,1.95fr) minmax(340px,.72fr);
+  gap:12px;
+  align-items:start;
+}
+.dc-side{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+.dc-review-table-wrap{
+  overflow:auto;
+  max-height:335px;
+}
+.dc-review-table{
+  width:100%;
+  min-width:1180px;
+  border-collapse:separate;
+  border-spacing:0;
+}
+.dc-review-table thead th{
+  position:sticky;
+  top:0;
+  z-index:2;
+  background:#f3f7fc;
+  color:#304b70;
+  font-weight:900;
+  border-bottom:1px solid #dce6f1;
+}
+.dc-review-table th,
+.dc-review-table td{
+  padding:8px 9px;
+  font-size:12px;
+  border-right:1px solid #edf1f6;
+}
+.dc-review-table th:last-child,
+.dc-review-table td:last-child{border-right:0}
+.dc-review-table tbody tr:nth-child(even){background:#fbfdff}
+.dc-review-table tbody tr:hover{background:#f4f8fd}
+.dc-review-table td strong{color:#163861}
+.dc-review-table tfoot td{
+  position:sticky;
+  bottom:0;
+  z-index:1;
+  font-weight:900;
+  background:#edf5ff;
+  color:#15365f;
+  border-top:1px solid #d8e5f3;
+}
+.dc-info-list{
+  padding:6px 12px 7px;
+}
+.dc-info-row{
+  display:flex;
+  justify-content:space-between;
+  gap:15px;
+  padding:8px 1px;
+  border-bottom:1px solid #edf1f6;
+  font-size:13px;
+}
+.dc-info-row:last-child{border-bottom:0}
+.dc-info-row span:first-child{color:#65758b}
+.dc-info-row strong{
+  text-align:right;
+  color:#15365f;
+}
+.dc-match{
+  display:inline-flex;
+  align-items:center;
+  padding:6px 10px;
+  border-radius:999px;
+  font-weight:900;
+  background:#eaf8ef;
+  color:#198754;
+}
+.dc-decision{
+  padding:10px 12px 12px;
+}
+.dc-decision .field{
+  margin-bottom:0;
+}
+.dc-decision textarea{
+  width:100%;
+  box-sizing:border-box;
+  min-height:62px;
+}
+.dc-review-actions{
+  display:grid;
+  grid-template-columns:1fr 1.5fr;
+  gap:10px;
+  margin-top:10px;
+}
+.dc-review-actions .btn{
+  min-height:42px;
+  font-weight:900;
+}
+.dc-review-shell .close{
+  width:36px;
+  height:36px;
+  border-radius:50%;
+  border:0;
+  background:#f0f3f7;
+  color:#1c3557;
+  font-size:20px;
+  cursor:pointer;
+}
+.dc-review-shell .close:hover{background:#e6ebf1}
+.dc-review-shell .note{
+  background:#fff8e9;
+  border:1px solid #f1dfad;
+  color:#8b5c00;
+  border-radius:9px;
+  padding:8px 10px;
+  font-size:12px;
+  line-height:1.4;
+}
+@media(max-width:1180px){
+  .dc-summary-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .dc-review-grid{grid-template-columns:1fr}
+  .dc-review-table-wrap{max-height:320px}
+}
+@media(max-width:760px){
+  .dc-review-shell{
+    width:98vw;
+    height:97vh;
+    border-radius:12px;
+  }
+  .dc-review-head{
+    padding:14px;
+    flex-direction:column;
+  }
+  .dc-review-head h2{font-size:21px}
+  .dc-review-status{white-space:normal}
+  .dc-review-body{padding:10px}
+  .dc-summary-grid{grid-template-columns:1fr 1fr}
+  .dc-review-actions{grid-template-columns:1fr}
+}
+
+/* ===== V6.5 VAULT REPORT — SIDE BY SIDE ===== */
+.vault-report-shell{
+  width:min(1680px,99vw);
+  height:min(960px,97vh);
+  background:#fff;
+  border-radius:16px;
+  box-shadow:0 30px 90px rgba(15,35,65,.35);
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+}
+.vr-head{
+  display:flex;
+  justify-content:space-between;
+  gap:14px;
+  align-items:flex-start;
+  padding:14px 18px;
+  border-bottom:1px solid var(--line);
+  background:#fff;
+}
+.vr-head h2{margin:0 0 3px;font-size:24px;color:#17365d}
+.vr-head p{margin:0;color:#6f7f93;font-size:12px}
+.vr-actions{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}
+.vr-actions .btn{padding:8px 12px;font-size:12px}
+.vr-toolbar{
+  display:grid;
+  grid-template-columns:1fr 1fr auto auto;
+  gap:8px;
+  padding:10px 14px;
+  border-bottom:1px solid var(--line);
+  background:#fbfdff;
+}
+.vr-toolbar .field{margin:0}
+.vr-toolbar input{height:40px}
+.vr-body{
+  padding:12px;
+  overflow:auto;
+  background:#f8fbff;
+}
+.vr-sheets{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+  align-items:start;
+}
+.vr-page{
+  background:#fff;
+  border:1px solid #dce6f1;
+  border-radius:12px;
+  overflow:hidden;
+  min-width:0;
+}
+.vr-banner{
+  padding:10px 12px;
+  font-size:15px;
+  font-weight:900;
+  color:#fff;
+  background:#0c4f82;
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  align-items:center;
+}
+.vr-banner.receivable{background:#56319a}
+.vr-summary{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:7px;
+  padding:8px;
+}
+.vr-card{
+  border:1px solid #dce6f1;
+  background:#fff;
+  border-radius:9px;
+  padding:8px 9px;
+  min-width:0;
+}
+.vr-card small{
+  display:block;
+  color:#66788f;
+  font-weight:800;
+  font-size:10px;
+  margin-bottom:3px;
+  line-height:1.15;
+}
+.vr-card strong{
+  font-size:16px;
+  color:#183a66;
+  white-space:nowrap;
+}
+.vr-table-wrap{
+  overflow:auto;
+  padding:0 8px 8px;
+}
+.vr-table{
+  width:100%;
+  min-width:0;
+  table-layout:fixed;
+  border-collapse:collapse;
+}
+.vr-table th{
+  background:#0d5a92;
+  color:#fff;
+  font-size:10px;
+  padding:6px 5px;
+  border-right:1px solid rgba(255,255,255,.25);
+  line-height:1.15;
+}
+.vr-table.receivable th{background:#5b38a0}
+.vr-table td{
+  font-size:10px;
+  padding:5px 5px;
+  border-bottom:1px solid #e5edf5;
+  border-right:1px solid #edf2f7;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.vr-table tbody tr:nth-child(even){background:#f8fbff}
+.vr-table tfoot td{
+  font-weight:900;
+  background:#edf5ff;
+  font-size:10px;
+}
+.vr-table.receivable tfoot td{background:#f2edff}
+.vr-page-count{
+  padding:5px 8px 8px;
+  color:#6f7f93;
+  font-size:10px;
+  display:flex;
+  justify-content:space-between;
+}
+.vr-final{
+  display:grid;
+  grid-template-columns:1.2fr 1fr 1fr 1fr 1.15fr;
+  gap:8px;
+  margin-top:10px;
+  padding:9px;
+  border:1px solid #d6eadb;
+  border-radius:12px;
+  background:#effaf2;
+}
+.vr-final .vr-card{background:rgba(255,255,255,.88)}
+.vr-final .total-value{
+  background:#0d7b42;
+  color:#fff;
+  border-color:#0d7b42;
+}
+.vr-final .total-value small,
+.vr-final .total-value strong{color:#fff}
+.vr-empty{
+  text-align:center;
+  padding:16px!important;
+  color:#7a8798;
+}
+@media(max-width:1180px){
+  .vr-sheets{grid-template-columns:1fr}
+  .vr-summary{grid-template-columns:repeat(4,minmax(120px,1fr))}
+  .vr-table{min-width:760px}
+}
+@media(max-width:760px){
+  .vault-report-shell{width:99vw;height:98vh;border-radius:10px}
+  .vr-head{flex-direction:column}
+  .vr-toolbar{grid-template-columns:1fr 1fr}
+  .vr-summary{grid-template-columns:1fr 1fr}
+  .vr-final{grid-template-columns:1fr 1fr}
+}
+@media print{
+  body *{visibility:hidden!important}
+  #vaultReportOverlay,#vaultReportOverlay *{visibility:visible!important}
+  #vaultReportOverlay{position:absolute!important;inset:0!important;background:#fff!important}
+  .vault-report-shell{width:100%!important;height:auto!important;box-shadow:none!important;border-radius:0!important}
+  .vr-actions,.vr-toolbar,.close{display:none!important}
+  .vr-body{overflow:visible!important;background:#fff!important;padding:0!important}
+  .vr-sheets{display:grid!important;grid-template-columns:1fr 1fr!important;gap:8px!important}
+  .vr-page{break-inside:avoid;margin:0!important}
+  .vr-final{break-inside:avoid}
+}
+/* ===== V7.0 PENDING DEPOSIT — FULL VAULT DATA ===== */
+.vault-live-note{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:9px 12px;background:#eef6ff;border-bottom:1px solid #d7e6f8;color:#1a5698;font-size:12px;font-weight:700}
+.vault-fresh{display:inline-flex;align-items:center;gap:5px;padding:5px 8px;border-radius:999px;background:#eaf8ef;color:#198754;font-size:10px;font-weight:900}
+.vault-table td,.vault-table th{white-space:nowrap}
+.vault-source{display:inline-flex;padding:5px 8px;border-radius:999px;font-size:10px;font-weight:900}
+.vault-source.daily{background:#eaf3ff;color:#185ea8}.vault-source.receivable{background:#f2edff;color:#5b38a0}
+.vault-money-usd{font-weight:900;color:#12623d}.vault-money-khr{font-weight:900;color:#7d5900}
+
+
+/* ===== V7.1 RECEIVABLE DIRECT REQUEST REVIEW ===== */
+.ar-decision{
+  border:1px solid #d8e3ef;
+  background:#f8fbff;
+  border-radius:11px;
+  padding:12px;
+  margin:12px 0;
+}
+.ar-decision-title{
+  font-size:13px;
+  font-weight:900;
+  color:#17365d;
+  margin-bottom:9px;
+}
+.ar-decision-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+.ar-method-box{
+  display:none;
+  border:1px solid #dbe5ef;
+  background:#fff;
+  border-radius:10px;
+  padding:10px;
+  margin-top:10px;
+}
+.ar-method-box.show{display:block}
+.ar-help{
+  font-size:11px;
+  color:#60758d;
+  line-height:1.45;
+  margin-top:5px;
+}
+@media(max-width:700px){
+  .ar-decision-grid{grid-template-columns:1fr}
+}
+
 </style>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 </head>
 <body>
 <div class="wrap">
   <div class="topbar">
-    <div><h1 id="pageTitle">Account Receivable</h1><p class="subtitle" id="pageSubtitle">Secure receivable view based on your assigned locations.</p></div>
-    <div class="userbox"><span class="pill" id="accessPill">Not signed in</span><span class="pill" id="locationPill">0 locations</span><button class="logout" id="logoutBtn" onclick="logout()" hidden>Logout</button></div>
+    <div>
+      <h1 id="pageTitle">Pending Receivable Request</h1>
+      <p class="subtitle" id="pageSubtitle">Receivable payment requests sent by Salespersons for Admin review.</p>
+    </div>
+    <div class="userbox">
+      <span class="pill" id="accessPill">Admin Work</span>
+      <button class="logout" id="logoutBtn" onclick="logout()" hidden>Logout</button>
+    </div>
   </div>
 
-  <div class="cards">
-    <div class="card"><small>Total Outstanding</small><div class="currency-totals"><div class="currency-line"><span class="ccy">USD</span><span class="amt" id="sumOutstandingUSD">$0.00</span></div><div class="currency-line"><span class="ccy">KHR</span><span class="amt" id="sumOutstandingKHR">៛0</span></div></div></div>
-    <div class="card red"><small>Overdue Amount</small><div class="currency-totals"><div class="currency-line"><span class="ccy">USD</span><span class="amt" id="sumOverdueUSD">$0.00</span></div><div class="currency-line"><span class="ccy">KHR</span><span class="amt" id="sumOverdueKHR">៛0</span></div></div></div>
-    <div class="card"><small>Open Invoices</small><strong id="sumInvoices">0</strong></div>
-    <div class="card"><small>Customers Owing</small><strong id="sumCustomers">0</strong></div>
+  <div id="pendingReceivableView">
+    <div class="cards">
+      <div class="card"><small>Pending Requests</small><strong id="sumRequests">0</strong></div>
+      <div class="card"><small>Requested USD</small><strong id="sumUSD">$0.00</strong></div>
+      <div class="card"><small>Requested KHR</small><strong id="sumKHR">៛0</strong></div>
+      <div class="card"><small>Invoices in Request</small><strong id="sumInvoices">0</strong></div>
+    </div>
+
+    <div class="panel">
+      <div class="view-banner">Only A/R payment requests with Status = Processing are shown here. When Admin clears or rejects a request, it disappears from this Pending list automatically.</div>
+
+      <div class="filters">
+        <input id="searchBox" placeholder="Search Request ID, Invoice No. or Customer" oninput="render()">
+        <input id="salesmanFilter" placeholder="Filter Salesperson" oninput="render()">
+        <select id="currencyFilter" onchange="render()">
+          <option value="">All currencies</option>
+          <option value="USD">USD ($)</option>
+          <option value="KHR">KHR (៛)</option>
+        </select>
+        <button class="btn secondary" onclick="clearFilters()">Clear</button>
+        <button class="btn primary" id="refreshBtn" onclick="loadPending(true)">↻ Refresh</button>
+      </div>
+
+      <div class="tablewrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Request ID</th>
+              <th>Customer</th>
+              <th>Requested By</th>
+              <th>Location</th>
+              <th class="center">Invoice Count</th>
+              <th>Payment Method</th>
+              <th>Transaction ID</th>
+              <th>Currency</th>
+              <th class="money">Requested Amount</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="requestBody">
+            <tr><td colspan="11" class="empty">Checking Admin access...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="foot">
+        <span id="rowCount">0 requests</span>
+        <span id="syncStatus">Secure Admin Work</span>
+      </div>
+    </div>
   </div>
 
-  <div class="panel">
-    <div class="view-banner" id="viewBanner">Secure Credit receivable access.</div>
-    <div class="filters">
-      <input id="searchBox" placeholder="Search invoice no." oninput="filterChanged()">
-      <input id="customerFilter" placeholder="Filter customer name" oninput="filterChanged()">
-      <select id="locationFilter" onchange="filterChanged()"><option value="">All permitted locations</option></select>
-      <select id="currencyFilter" onchange="filterChanged()"><option value="">All currencies</option><option value="USD">USD ($)</option><option value="KHR">KHR (៛)</option></select>
-      <select id="statusFilter" onchange="filterChanged()"><option value="">All status</option><option value="Outstanding">Outstanding</option><option value="Overdue">Overdue</option><option value="Processing">Processing</option></select>
-      <button class="btn summary-btn" id="summaryBtn" onclick="openSummary()" disabled hidden>🧾 Summary Invoice (0)</button>
-      <button class="btn batch-btn" id="batchBtn" onclick="openBatchPayment()" disabled hidden>💰 Receive Selected (0)</button>
-      <button class="btn secondary" onclick="loadAR(true)">↻ Refresh</button>
+
+  
+  
+  <div id="pendingDailyCashView" style="display:none">
+    <div class="cards">
+      <div class="card"><small>Pending Daily Cash Requests</small><strong id="dcCount">0</strong></div>
+      <div class="card"><small>Cash USD</small><strong id="dcUSD">$0.00</strong></div>
+      <div class="card"><small>Cash KHR</small><strong id="dcKHR">៛0</strong></div>
+      <div class="card"><small>Cash Invoices</small><strong id="dcInvoices">0</strong></div>
     </div>
-    <div class="tablewrap">
-      <table>
-        <thead><tr><th class="checkcell" id="selectHead" hidden><input class="selectall" id="selectAllBox" type="checkbox" title="Select all visible invoices" onchange="toggleSelectAll(this.checked)"></th><th>Invoice No</th><th>Date</th><th>Due Date</th><th>Customer</th><th>Location</th><th class="money">Grand Total</th><th class="money">Paid</th><th class="money">Outstanding</th><th>Status</th><th>Action</th></tr></thead>
-        <tbody id="arBody"><tr><td colspan="11" class="empty">Sign in to view receivables.</td></tr></tbody>
-      </table>
+    <div class="panel">
+      <div class="view-banner">Daily Cash Collection requests sent by Salesmen. Status shown here is Processing.</div>
+      <div class="filters">
+        <input id="dcSearch" placeholder="Search Request ID, Salesperson, Invoice or Location" oninput="renderPendingDailyCash()">
+        <input id="dcSalesman" placeholder="Filter Salesperson" oninput="renderPendingDailyCash()">
+        <span></span>
+        <button class="btn secondary" onclick="clearPendingDailyCashFilters()">Clear</button>
+        <button class="btn primary" id="dcRefreshBtn" onclick="loadPendingDailyCash(true)">↻ Refresh</button>
+      </div>
+      <div class="tablewrap">
+        <table>
+          <thead><tr>
+            <th>Request ID</th><th>Request Date</th><th>Requested By</th>
+            <th class="center">Groups</th><th class="center">Invoices</th>
+            <th class="money">Cash USD</th><th class="money">Cash KHR</th>
+            <th>Status</th><th>Action</th>
+          </tr></thead>
+          <tbody id="pendingDailyCashBody"><tr><td colspan="9" class="empty">Loading Pending Daily Cash Requests...</td></tr></tbody>
+        </table>
+      </div>
+      <div class="foot"><span id="dcRowCount">0 requests</span><span id="dcSyncStatus">Secure Admin Work</span></div>
     </div>
-    <div class="foot"><span id="rowCount">0 records</span><span id="syncStatus">Secure A/R</span></div>
+  </div>
+
+
+
+
+  
+  
+  <div id="pendingDepositView" style="display:none">
+    <div class="cards">
+      <div class="card"><small>Cash Vault USD</small><strong id="vaultUSD">$0.00</strong></div>
+      <div class="card"><small>Cash Vault KHR</small><strong id="vaultKHR">៛0</strong></div>
+      <div class="card"><small>Vault Status</small><strong id="vaultStatus" style="font-size:16px">Loading…</strong></div>
+      <div class="card"><small>Vault Deposit</small>
+        <button class="btn success" onclick="openVaultDeposit()">Deposit Vault Cash</button>
+        <button class="btn primary" onclick="openVaultReport()">📊 Vault Report</button>
+      </div>
+    </div>
+
+    <div class="cards">
+      <div class="card"><small>Daily Cash in Vault — USD</small><strong id="vaultDailyUSD">$0.00</strong></div>
+      <div class="card"><small>Daily Cash in Vault — KHR</small><strong id="vaultDailyKHR">៛0</strong></div>
+      <div class="card"><small>Receivable Cash — USD</small><strong id="vaultReceivableUSD">$0.00</strong></div>
+      <div class="card"><small>Receivable Cash — KHR</small><strong id="vaultReceivableKHR">៛0</strong></div>
+    </div>
+
+    <div class="cards">
+      <div class="card"><small>Vault Pending Entries</small><strong id="pdCount">0</strong></div>
+      <div class="card"><small>Pending Vault USD</small><strong id="pdUSD">$0.00</strong></div>
+      <div class="card"><small>Pending Vault KHR</small><strong id="pdKHR">៛0</strong></div>
+      <div class="card"><small>Sources</small><strong style="font-size:16px">Daily Cash + Receivable Cash</strong></div>
+    </div>
+
+    <div class="panel">
+      <div class="vault-live-note">
+        <span>All physical cash currently inside Vault and waiting for the next full company bank deposit.</span>
+        <span class="vault-fresh" id="vaultFreshState">● Live Vault</span>
+      </div>
+
+      <div class="filters">
+        <input id="pdSearch" placeholder="Search Date, Source, Payment/Close ID, Customer, Salesperson, Location" oninput="renderPendingDeposit()">
+        <input id="pdSalesman" placeholder="Filter Salesperson" oninput="renderPendingDeposit()">
+        <select id="pdSource" onchange="renderPendingDeposit()">
+          <option value="">All Sources</option>
+          <option value="Daily Cash">Daily Cash</option>
+          <option value="Receivable Cash">Receivable Cash</option>
+        </select>
+        <button class="btn secondary" onclick="clearPendingDepositFilters()">Clear</button>
+        <button class="btn primary" id="pdRefreshBtn" onclick="loadPendingDeposit(true)">↻ Refresh</button>
+      </div>
+
+      <div class="tablewrap">
+        <table class="vault-table">
+          <thead><tr>
+            <th>No.</th><th>Entry Date</th><th>Source</th><th>Reference</th><th>Customer</th><th>Salesperson</th>
+            <th>Location</th><th class="center">Invoices</th><th class="money">Cash USD</th><th class="money">Cash KHR</th><th>Status</th>
+          </tr></thead>
+          <tbody id="pendingDepositBody"><tr><td colspan="11" class="empty">Loading Vault Pending Data...</td></tr></tbody>
+        </table>
+      </div>
+      <div class="foot"><span id="pdRowCount">0 vault entries</span><span id="pdSyncStatus">Fast Vault Sync</span></div>
+    </div>
+  </div>
+
+
+
+  
+  
+  <div id="depositHistoryView" style="display:none">
+    <div class="cards">
+      <div class="card"><small>Deposited Payments</small><strong id="dhCount">0</strong></div>
+      <div class="card"><small>USD</small><strong id="dhUSD">$0.00</strong></div>
+      <div class="card"><small>KHR</small><strong id="dhKHR">៛0</strong></div>
+      <div class="card"><small>Source</small><strong style="font-size:18px">Receivable</strong></div>
+    </div>
+    <div class="panel">
+      <div class="view-banner">Completed company deposits. Includes Receivable payments and Daily Cash Collection deposited to bank.</div>
+      <div class="filters">
+        <input id="dhSearch" placeholder="Search Deposit ID, Payment ID, Customer, Bank or Transaction ID" oninput="renderDepositHistory()">
+        <input id="dhSalesman" placeholder="Filter Salesperson" oninput="renderDepositHistory()">
+        <span></span>
+        <button class="btn secondary" onclick="clearDepositHistoryFilters()">Clear</button>
+        <button class="btn primary" id="dhRefreshBtn" onclick="loadDepositHistory(true)">↻ Refresh</button>
+      </div>
+      <div class="tablewrap">
+        <table>
+          <thead><tr>
+            <th>Deposit ID</th><th>Source</th><th>Deposited At</th><th>Payment ID</th><th>Customer</th><th>Method</th>
+            <th>Company Bank</th><th>Reference</th><th class="money">Amount</th><th>Deposited By</th>
+          </tr></thead>
+          <tbody id="depositHistoryBody"><tr><td colspan="10" class="empty">Loading Deposit History...</td></tr></tbody>
+        </table>
+      </div>
+      <div class="foot"><span id="dhRowCount">0 deposits</span><span id="dhSyncStatus">Secure Admin Work</span></div>
+    </div>
+  </div>
+
+
+
+  <div id="placeholderView" class="panel" style="display:none">
+    <div class="placeholder">
+      <h2 id="placeholderTitle">Admin Work</h2>
+      <p>This section is ready for the next workflow.</p>
+    </div>
   </div>
 </div>
 
-<div class="overlay" id="loginOverlay">
+<div class="overlay hidden" id="loginOverlay">
   <div class="loginbox">
-    <h2 id="loginTitle">🔐 Secure Access</h2>
-    <p id="loginText">Enter your access code.</p>
-    <div class="field"><label id="loginLabel">Access Code</label><input id="accessCode" type="password" autocomplete="off" placeholder="Enter code" onkeydown="if(event.key==='Enter')login()"></div>
-    <label class="remember-row"><input id="rememberDevice" type="checkbox"> Remember me on this device</label>
+    <h2>🔐 Admin Access</h2>
+    <p>Enter your active Admin Code to review Pending Receivable Requests.</p>
+    <div class="field">
+      <label>Admin Code</label>
+      <input id="accessCode" type="password" placeholder="Enter admin code" onkeydown="if(event.key==='Enter')login()">
+    </div>
+    <label class="remember-row"><input type="checkbox" id="rememberDevice"> Remember me on this device</label>
     <button class="btn primary" id="loginBtn" style="width:100%" onclick="login()">Sign In</button>
     <div class="loginerror" id="loginError"></div>
-    <div class="secure-note" id="loginNote">Your secret code is checked on the server and is not stored in this HTML.</div>
   </div>
 </div>
 
-<div class="overlay hidden" id="paymentOverlay">
+<div class="overlay hidden" id="reviewOverlay">
   <div class="modalbox">
-    <div class="modalhead"><div><h2>Receive Payment</h2><p id="paymentInfo"></p></div><button class="close" onclick="closePayment()">×</button></div>
-    <div class="grid2">
-      <div class="field"><label>Payment Date</label><input type="date" id="payDate"></div>
-      <div class="field"><label>Receivable Amount to Clear</label><input type="number" min="0" step="0.01" id="payAmount"></div>
-    <div class="full-amount-row" id="singleFullAmountRow">
-      <button type="button" class="full-amount-btn" onclick="fillFullOutstanding()">✓ Full Outstanding Amount</button>
-    </div>
-    </div>
-    <div id="singlePaymentMethodArea">
-      <div class="field"><label>Payment Method</label><select id="payMethod" onchange="toggleBankFields()"><option value="Cash">Cash</option><option value="Bank">Bank</option></select></div>
-    </div>
-    <div class="direct-request-note" id="singleDirectRequestNote">
-      <strong>Direct Request</strong><br>
-      Send the Receivable amount directly to Admin. You do not need to choose Cash/Bank or enter a Transaction ID. Admin will work with you, verify the bank slip or physical cash, then choose the final Payment Method before clearing.
-    </div>
-    <div class="salesman-bank-note" id="singleBankOnlyNote">
-      Salesman payment requests are Bank only. If the customer pays Cash, bring the physical cash directly to the Accountant and the Accountant will clear the Receivable.
-    </div>
-    <div class="cashfields" id="cashReceiptFields">
-      <strong style="font-size:13px;color:#146c43">Physical Receivable Cash Received</strong>
-      <div class="cash-note">Admin enters the real cash received. No exchange rate is required. Check the USD/KHR amounts manually against the receivable before approving.</div>
-      <div class="grid2">
-        <div class="field" style="margin-bottom:0"><label>Amount in USD</label><input id="payCashUSD" type="number" min="0" step="0.01" value="0"></div>
-        <div class="field" style="margin-bottom:0"><label>Amount in KHR</label><input id="payCashKHR" type="number" min="0" step="100" value="0"></div>
+    <div class="modalhead">
+      <div>
+        <h2>Review Receivable Request</h2>
+        <p id="reviewInfo">Loading request...</p>
       </div>
+      <button class="close" onclick="closeReview()">×</button>
     </div>
-    <div class="bankfields" id="bankFields">
-      <div class="field"><label>Bank Name</label><input id="payBank" placeholder="e.g. ABA, ACLEDA"></div>
-      <div class="field"><label>Transaction ID <span style="color:#c93c46">*</span></label><input id="transactionId" autocomplete="off" placeholder="Required and must be unique"></div>
-      <div class="field"><label>Bank Reference / Note</label><input id="bankReference" placeholder="Optional"></div>
-    </div>
-    <div class="field"><label>Payment Note</label><textarea id="payNote" rows="2" placeholder="Optional"></textarea></div>
-    <div class="field" id="singleAdminField"><label>Admin Code <span style="color:#c93c46">*</span></label><input id="adminCode" type="password" autocomplete="off" placeholder="Required to approve and clear payment"></div>
-    <div class="formerror" id="paymentError"></div>
-    <button class="btn primary" id="savePayBtn" style="width:100%;margin-top:5px" onclick="savePayment()">✓ Approve & Save Payment</button>
-    <div class="secure-note">For Bank payment, duplicate Transaction ID will be rejected by the server. The Admin Code is verified server-side and is never saved into Payments.</div>
-    <div class="history" id="historyBox"><h3>Payment History</h3><div id="paymentHistory">Loading…</div></div>
-  </div>
-</div>
 
-<div class="overlay hidden" id="batchOverlay">
-  <div class="modalbox">
-    <div class="modalhead"><div><h2>Batch Payment</h2><p id="batchInfo">Clear selected invoices with one customer payment.</p></div><button class="close" onclick="closeBatchPayment()">×</button></div>
-    <div class="batch-list" id="batchList"></div>
-    <div class="batch-total"><span>Total Outstanding</span><span id="batchTotal">$0.00</span></div>
-    <div class="full-amount-row" id="batchFullAmountRow">
-      <button type="button" class="full-amount-btn" onclick="useFullSelectedAmount()">✓ Full Selected Amount</button>
-    </div>
-    <div class="grid2">
-      <div class="field"><label>Payment Date</label><input type="date" id="batchDate"></div>
-      <div class="field" id="batchPaymentMethodArea"><label>Payment Method</label><select id="batchMethod" onchange="toggleBatchBankFields()"><option value="Cash">Cash</option><option value="Bank">Bank</option></select></div>
-      <div class="salesman-bank-note" id="batchBankOnlyNote">
-        Salesman batch requests are Bank only. Cash collections must be handed directly to the Accountant for clearing.
-      </div>
-    </div>
-    <div class="direct-request-note" id="batchDirectRequestNote">
-      <strong>Direct Batch Request</strong><br>
-      Send all selected Receivable invoices directly to Admin. No Payment Method, bank name, or Transaction ID is required from the salesman.
-    </div>
-    <div class="cashfields" id="batchCashReceiptFields">
-      <strong style="font-size:13px;color:#146c43">Physical Receivable Cash Received</strong>
-      <div class="cash-note">Enter the actual USD and KHR received for this batch. No exchange rate is required.</div>
-      <div class="grid2">
-        <div class="field" style="margin-bottom:0"><label>Amount in USD</label><input id="batchCashUSD" type="number" min="0" step="0.01" value="0"></div>
-        <div class="field" style="margin-bottom:0"><label>Amount in KHR</label><input id="batchCashKHR" type="number" min="0" step="100" value="0"></div>
-      </div>
-    </div>
-    <div class="bankfields" id="batchBankFields">
-      <div class="field"><label>Bank Name</label><input id="batchBank" placeholder="e.g. ABA, ACLEDA"></div>
-      <div class="field"><label>Transaction ID <span style="color:#c93c46">*</span></label><input id="batchTransactionId" autocomplete="off" placeholder="One unique Transaction ID for the whole batch"></div>
-      <div class="field"><label>Bank Reference / Note</label><input id="batchBankReference" placeholder="Optional"></div>
-    </div>
-    <div class="field"><label>Payment Note</label><textarea id="batchNote" rows="2" placeholder="Optional"></textarea></div>
-    <div class="field" id="batchAdminField"><label>Admin Code <span style="color:#c93c46">*</span></label><input id="batchAdminCode" type="password" autocomplete="off" placeholder="One Admin Code approves the whole batch"></div>
-    <div class="formerror" id="batchError"></div>
-    <button class="btn batch-btn" id="saveBatchBtn" style="width:100%;margin-top:5px" onclick="saveBatchPayment()">✓ Approve & Clear Selected Invoices</button>
-    <div class="secure-note">One payment, one Admin approval, and one Bank Transaction ID can clear all selected invoices. The server recalculates every outstanding balance before saving.</div>
-  </div>
-</div>
+    <div class="batch-list" id="reviewList"></div>
+    <div class="batch-total"><span>Requested Total</span><span id="reviewTotal">$0.00</span></div>
+    <div class="meta" id="reviewMeta"></div>
 
-<div class="overlay hidden" id="requestReviewOverlay">
-  <div class="modalbox">
-    <div class="modalhead"><div><h2>Review Payment Request</h2><p id="requestReviewInfo">Processing request</p></div><button class="close" onclick="closeRequestReview()">×</button></div>
-    <div class="batch-list" id="requestReviewList"></div>
-    <div class="batch-total"><span>Requested Total</span><span id="requestReviewTotal">$0.00</span></div>
-    <div id="requestReviewMeta" style="font-size:12px;line-height:1.7;color:#50647b;margin-bottom:12px"></div>
-    <div class="admin-decision" id="adminPaymentDecision">
-      <h4>Admin Payment Decision</h4>
-      <div class="field">
+    <div class="ar-decision" id="reviewPaymentDecision">
+      <div class="ar-decision-title">Admin Payment Decision</div>
+
+      <div class="field" style="margin-bottom:0">
         <label>Final Payment Method <span style="color:#c93c46">*</span></label>
-        <select id="reviewPaymentMethod" onchange="toggleReviewPaymentMethod()">
+        <select id="reviewPaymentMethod" onchange="togglePendingReceivableMethod()">
           <option value="">Select Payment Method</option>
           <option value="Cash">Cash</option>
           <option value="Bank">Bank</option>
         </select>
       </div>
-      <div class="bankfields" id="reviewBankFields">
-        <div class="field"><label>Bank Name <span style="color:#c93c46">*</span></label><input id="reviewBankName" placeholder="e.g. ABA, ACLEDA"></div>
-        <div class="field"><label>Transaction ID <span style="color:#c93c46">*</span></label><input id="reviewTransactionId" autocomplete="off" placeholder="Enter transaction ID from bank slip"></div>
-        <div class="field"><label>Bank Reference / Note</label><input id="reviewBankReference" placeholder="Optional"></div>
+
+      <div class="ar-method-box" id="reviewCashBox">
+        <div class="ar-decision-grid">
+          <div class="field" style="margin-bottom:0">
+            <label>Physical Cash USD</label>
+            <input id="reviewCashUSD" type="number" min="0" step="0.01" value="0">
+          </div>
+          <div class="field" style="margin-bottom:0">
+            <label>Physical Cash KHR</label>
+            <input id="reviewCashKHR" type="number" min="0" step="100" value="0">
+          </div>
+        </div>
+        <div class="ar-help">Enter the real cash received. No exchange rate is required here.</div>
+      </div>
+
+      <div class="ar-method-box" id="reviewBankBox">
+        <div class="ar-decision-grid">
+          <div class="field" style="margin-bottom:0">
+            <label>Bank Name <span style="color:#c93c46">*</span></label>
+            <input id="reviewBankName" placeholder="Example: ABA">
+          </div>
+          <div class="field" style="margin-bottom:0">
+            <label>Transaction ID <span style="color:#c93c46">*</span></label>
+            <input id="reviewTransactionId" autocomplete="off" placeholder="Enter from bank slip">
+          </div>
+        </div>
+        <div class="field" style="margin:10px 0 0">
+          <label>Bank Reference / Note</label>
+          <input id="reviewBankReference" placeholder="Optional">
+        </div>
+        <div class="ar-help">Admin verifies the bank slip with the salesman before clearing.</div>
       </div>
     </div>
-    <div class="cashfields" id="reviewCashReceiptFields">
-      <strong style="font-size:13px;color:#146c43">Physical Receivable Cash Received</strong>
-      <div class="cash-note">Before clearing this Cash request, enter the real USD/KHR received. No exchange rate is used by the system.</div>
-      <div class="grid2">
-        <div class="field" style="margin-bottom:0"><label>Amount in USD</label><input id="reviewCashUSD" type="number" min="0" step="0.01" value="0"></div>
-        <div class="field" style="margin-bottom:0"><label>Amount in KHR</label><input id="reviewCashKHR" type="number" min="0" step="100" value="0"></div>
-      </div>
+
+    <div class="field">
+      <label>Reject Reason <span style="font-weight:400;color:#7a8798">(optional)</span></label>
+      <textarea id="rejectReason" rows="2" placeholder="Example: Wrong amount, wrong transaction ID, customer has not paid yet"></textarea>
     </div>
-    <div class="field" style="margin-top:12px"><label>Reject Reason <span style="font-weight:400;color:#7a8798">(optional)</span></label><textarea id="rejectReason" rows="2" placeholder="Example: Wrong amount, wrong transaction ID, customer has not paid yet"></textarea></div>
-    <div class="formerror" id="requestReviewError"></div>
-    <div style="display:grid;grid-template-columns:1fr 1.4fr;gap:8px;margin-top:5px">
-      <button class="btn danger" id="rejectRequestBtn" onclick="rejectRequest()">✕ Reject Request</button>
-      <button class="btn batch-btn" id="clearRequestBtn" onclick="clearRequest()">✓ Clear Request & Save Payment</button>
+
+    <div class="formerror" id="reviewError"></div>
+
+    <div class="actions">
+      <button class="btn danger" id="rejectBtn" onclick="rejectRequest()">✕ Reject Request</button>
+      <button class="btn success" id="clearBtn" onclick="clearRequest()">✓ Clear Request & Save Payment</button>
     </div>
-    <div class="secure-note">Reject releases the invoice back to the salesman without changing its balance. Clear saves the real payment and reduces the receivable.</div>
+
+    <div class="secure-note">Clear saves the real Receivable payment and reduces the invoice outstanding balance. Reject changes no balance.</div>
   </div>
 </div>
 
-<div class="overlay hidden" id="summaryOverlay">
-  <div class="summary-modal">
-    <div class="summary-actions">
-      <button class="btn secondary" onclick="closeSummary()">✕ Close</button>
-      <button class="btn primary" onclick="printSummary()">🖨 Print A4</button>
-      <button class="btn summary-btn" id="savePdfBtn" onclick="saveSummaryPDF()">💾 Save PDF</button>
+
+
+
+
+
+
+
+<div class="overlay hidden" id="receivableDepositOverlay">
+  <div class="modalbox" style="width:min(540px,96vw)">
+    <div class="modalhead">
+      <div><h2>Deposit Receivable Cash</h2><p id="rdInfo"></p></div>
+      <button class="close" onclick="closeReceivableDeposit()">×</button>
     </div>
-    <div class="a4-sheet" id="summarySheet"></div>
+    <div class="field">
+      <label>Company Bank Account</label>
+      <input id="rdBank" placeholder="Example: ABA USD / ACLEDA KHR">
+    </div>
+    <div class="field">
+      <label>Deposit Reference <span style="font-weight:400;color:#7a8798">(optional)</span></label>
+      <input id="rdReference" placeholder="Bank slip / transaction reference">
+    </div>
+    <div class="field">
+      <label>Deposit Note <span style="font-weight:400;color:#7a8798">(optional)</span></label>
+      <textarea id="rdNote" rows="3" placeholder="Optional note"></textarea>
+    </div>
+    <div class="formerror" id="rdError"></div>
+    <button class="btn success" id="rdCompleteBtn" style="width:100%" onclick="completeReceivableDeposit()">✓ Complete Deposit</button>
   </div>
 </div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+
+
+<div class="overlay hidden" id="dailyCashRequestReviewOverlay">
+  <div class="dc-review-shell">
+    <div class="dc-review-head">
+      <div>
+        <h2>Pending Daily Cash Request Review</h2>
+        <p id="dcReviewInfo"></p>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="dc-review-status">◷ Pending for Approval</div>
+        <button class="close" onclick="closePendingDailyCashReview()">×</button>
+      </div>
+    </div>
+
+    <div class="dc-review-body">
+      <section class="dc-section">
+        <div class="dc-section-title">Request Summary</div>
+        <div class="dc-summary-grid">
+          <div class="dc-summary-card"><small>Original Invoice Total</small><strong id="dcOriginalTotal">$0.00</strong></div>
+          <div class="dc-summary-card"><small>Physical Cash USD</small><strong id="dcPhysicalUSD">$0.00</strong></div>
+          <div class="dc-summary-card"><small>Physical Cash KHR</small><strong id="dcPhysicalKHR">៛0</strong></div>
+          <div class="dc-summary-card"><small>Expected Close Value</small><strong id="dcExpectedValue">$0.00</strong></div>
+          <div class="dc-summary-card"><small>Closing Rate</small><strong id="dcClosingRate">0</strong></div>
+          <div class="dc-summary-card"><small>Actual Equivalent</small><strong id="dcActualEquivalent">$0.00</strong></div>
+          <div class="dc-summary-card good"><small>Close Difference</small><strong id="dcCloseDifference">$0.00</strong></div>
+        </div>
+      </section>
+
+      <div class="dc-review-grid">
+        <section class="dc-section">
+          <div class="dc-section-title">Cash Invoices <span id="dcInvoiceCountBadge"></span></div>
+          <div class="dc-review-table-wrap">
+            <table class="dc-review-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Invoice No</th>
+                  <th>Sale Date</th>
+                  <th>Customer</th>
+                  <th>Salesman</th>
+                  <th>Location</th>
+                  <th>Original Invoice Amount</th>
+                  <th>Invoice Rate</th>
+                  <th>Cash Amount</th>
+                  <th class="money">Expected USD</th>
+                </tr>
+              </thead>
+              <tbody id="dcReviewBody"></tbody>
+              <tfoot>
+                <tr>
+                  <td colspan="6">Total</td>
+                  <td id="dcTableOriginalTotal">—</td>
+                  <td></td>
+                  <td id="dcTableCashTotal">—</td>
+                  <td class="money" id="dcTableExpectedTotal">$0.00</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </section>
+
+        <aside class="dc-side">
+          <section class="dc-section">
+            <div class="dc-section-title">Group Information</div>
+            <div class="dc-info-list">
+              <div class="dc-info-row"><span>Request No</span><strong id="dcInfoRequest">-</strong></div>
+              <div class="dc-info-row"><span>Salesman</span><strong id="dcInfoSalesman">-</strong></div>
+              <div class="dc-info-row"><span>Sale Date</span><strong id="dcInfoSaleDate">-</strong></div>
+              <div class="dc-info-row"><span>Location</span><strong id="dcInfoLocation">-</strong></div>
+              <div class="dc-info-row"><span>Total Invoices</span><strong id="dcInfoInvoiceCount">0</strong></div>
+              <div class="dc-info-row"><span>Groups</span><strong id="dcInfoGroups">1</strong></div>
+              <div class="dc-info-row"><span>Requested At</span><strong id="dcInfoCreated">-</strong></div>
+            </div>
+          </section>
+
+          <section class="dc-section">
+            <div class="dc-section-title">Physical Cash Verification</div>
+            <div class="dc-info-list">
+              <div class="dc-info-row"><span>Expected Selected Invoice Value</span><strong id="dcVerifyExpected">$0.00</strong></div>
+              <div class="dc-info-row"><span>Actual Physical USD</span><strong id="dcVerifyUSD">$0.00</strong></div>
+              <div class="dc-info-row"><span>Actual Physical KHR</span><strong id="dcVerifyKHR">៛0</strong></div>
+              <div class="dc-info-row"><span>Actual Equivalent USD</span><strong id="dcVerifyEquivalent">$0.00</strong></div>
+              <div class="dc-info-row"><span>Result</span><strong><span class="dc-match" id="dcVerifyResult">✓ MATCH</span></strong></div>
+            </div>
+          </section>
+<section class="dc-section">
+            <div class="dc-section-title">Close Method & Result</div>
+            <div class="dc-info-list" id="dcBankReview"></div>
+          </section>
+        </aside>
+      </div>
+
+      <section class="dc-section">
+        <div class="dc-section-title">Admin Decision</div>
+        <div class="dc-decision">
+          <div id="dcReviewTotals" class="note" style="margin-bottom:10px"></div>
+          <div class="field">
+            <label>Reject Reason <span style="font-weight:400;color:#7a8798">(optional)</span></label>
+            <textarea id="dcRejectReason" rows="3" placeholder="Reason if the request is not correct"></textarea>
+          </div>
+          <div class="formerror" id="dcReviewError"></div>
+          <div class="dc-review-actions">
+            <button class="btn danger" id="dcRejectBtn" onclick="rejectPendingDailyCash()">✕ Reject</button>
+            <button class="btn success" id="dcAcceptBtn" onclick="acceptPendingDailyCash()">✓ Accept</button>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
+
+
+
+<div class="overlay hidden" id="vaultDepositOverlay">
+  <div class="modalbox" style="width:min(620px,96vw)">
+    <div class="modalhead">
+      <div>
+        <h2>Deposit Cash Vault</h2>
+        <p>Take real USD/KHR from Vault. KHR is converted using the deposit-day rate, then the final company-bank deposit is USD.</p>
+      </div>
+      <button class="close" onclick="closeVaultDeposit()">×</button>
+    </div>
+
+    <div class="cards" style="grid-template-columns:1fr 1fr">
+      <div class="card"><small>Available USD</small><strong id="vaultModalUSD">$0.00</strong></div>
+      <div class="card"><small>Available KHR</small><strong id="vaultModalKHR">៛0</strong></div>
+    </div>
+
+    <div class="field"><label>USD Taken From Vault</label><input id="vaultOutUSD" type="number" min="0" step="0.01" value="0" oninput="calcVaultDeposit()"></div>
+    <div class="field"><label>KHR Taken From Vault</label><input id="vaultOutKHR" type="number" min="0" step="100" value="0" oninput="calcVaultDeposit()"></div>
+    <div class="field"><label>Deposit Exchange Rate</label><input id="vaultDepositRate" type="number" min="0" step="1" placeholder="Example: 4050" oninput="calcVaultDeposit()"></div>
+    <div class="field"><label>Expected Bank USD</label><input id="vaultExpectedUSD" disabled></div>
+    <div class="field"><label>Actual Bank Deposit USD</label><input id="vaultBankUSD" type="number" min="0" step="0.01" oninput="calcVaultDeposit()"></div>
+    <div class="field"><label>Company Bank Account</label><input id="vaultBankAccount" placeholder="Example: ABA USD"></div>
+    <div class="field"><label>Bank Transaction ID</label><input id="vaultTransactionId" placeholder="Fresh unique Transaction ID"></div>
+    <div class="field"><label>Note</label><textarea id="vaultDepositNote" rows="2"></textarea></div>
+
+    <div class="formerror" id="vaultDepositError"></div>
+    <button class="btn success" id="vaultDepositBtn" style="width:100%;margin-top:12px" onclick="completeVaultDeposit()">Complete Vault Deposit</button>
+    <button class="btn secondary" style="width:100%;margin-top:8px" onclick="closeVaultDeposit()">Cancel</button>
+  </div>
+</div>
 
 <script>
 const SALES_API="https://script.google.com/macros/s/AKfycbyM5mUlz5SeMZ_oPJCo2FgLkPEcodAQ7wPl5wxAdrvfqLvsZLaHxiOtS02L1Q3ZRA3D/exec";
-const MASTER_API="https://script.google.com/macros/s/AKfycbzIjs-cNehMxWTZs3ZPAosseGUu1nqACTPo3S4-onLLEYnEgqP6AUK7p3jwb6MaFr7H0w/exec";
-// Resolve A/R mode from the permanent Dashboard shell first.
-// Because both pages are hosted under the same GitHub Pages origin, the iframe
-// can safely read the parent's ?module= value. The iframe's own view parameter
-// remains as a fallback when the A/R page is opened directly.
-function resolveARView(){
-  let parentModule='';
-  try {
-    if (window.parent && window.parent !== window) {
-      parentModule=(new URLSearchParams(window.parent.location.search).get('module')||'').toLowerCase();
-    }
-  } catch(e) {}
-  if(parentModule==='ar-your') return 'your';
-  if(parentModule==='ar-all') return 'all';
 
-  const own=new URLSearchParams(location.search);
-  const shellModule=(own.get('shellModule')||'').toLowerCase();
-  if(shellModule==='ar-your') return 'your';
-  if(shellModule==='ar-all') return 'all';
+const SESSION_KEY="bb_ar_admin_session";
+const DEVICE_KEY="bb_ar_admin_device";
+const CACHE_KEY="BB_ADMIN_WORK_PENDING_RECEIVABLE_CACHE_V1";
+const SYNC_MS=20000;
+const VAULT_CACHE_KEY="BB_ADMIN_VAULT_PENDING_CACHE_V7";
+const VAULT_REPORT_CACHE_KEY="BB_ADMIN_VAULT_REPORT_CACHE_V7";
+const VAULT_FAST_SYNC_MS=8000;
 
-  const raw=(own.get('view')||'all').toLowerCase();
-  return raw==='your'?'your':'all';
-}
-const VIEW=resolveARView();
-const SESSION_KEY=VIEW==='all'?'bb_ar_admin_session':'bb_ar_salesman_session';
-const DEVICE_KEY=VIEW==='all'?'bb_ar_admin_device':'bb_ar_salesman_device';
-const DEVICE_ROLE=VIEW==='all'?'admin':'salesman';
 const $=id=>document.getElementById(id);
-let sessionToken=sessionStorage.getItem(SESSION_KEY)||'';
-let deviceToken=localStorage.getItem(DEVICE_KEY)||'';
-let sessionProfile=null,rows=[],revision='',currentInvoice=null,syncTimer=null;
-const selectedInvoices=new Set();
-let visibleRows=[];
+const VIEW=(new URLSearchParams(location.search).get("view")||"pending-receivable").toLowerCase();
 
-function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
-function normSearch(v){return String(v??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').trim().toLowerCase()}
+let sessionToken=sessionStorage.getItem(SESSION_KEY)||"";
+let deviceToken=localStorage.getItem(DEVICE_KEY)||"";
+let rows=[];
+let groups=[];
+let revision="";
+let syncTimer=null;
+let syncBusy=false;
+let currentRequest=null;
+let pendingDailyCashRequests=[];
+let currentDailyCashCollectionRequest=null;
+let vaultBalance={usd:0,khr:0,dailyCashUSD:0,dailyCashKHR:0,receivableCashUSD:0,receivableCashKHR:0,entries:[]};
+let vaultPendingEntries=[];
+let vaultFastTimer=null;
+let receivablePendingDeposits=[];
+let receivableDepositHistory=[];
+let currentReceivableDeposit=null;
+
+function esc(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
 function num(v){const n=Number(v);return Number.isFinite(n)?n:0}
-function money(v,c='USD'){return (c==='KHR'?'៛':'$')+num(v).toLocaleString(undefined,{minimumFractionDigits:c==='KHR'?0:2,maximumFractionDigits:c==='KHR'?0:2})}
-function today(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
+function money(v,c="USD"){return (String(c).toUpperCase()==="KHR"?"៛":"$")+num(v).toLocaleString(undefined,{minimumFractionDigits:String(c).toUpperCase()==="KHR"?0:2,maximumFractionDigits:String(c).toUpperCase()==="KHR"?0:2})}
+function norm(v){return String(v??"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g," ").trim().toLowerCase()}
 
 async function apiPost(params){
-  const body=new URLSearchParams();Object.entries(params).forEach(([k,v])=>body.append(k,v==null?'':String(v)));
-  const res=await fetch(SALES_API,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},body,redirect:'follow'});
-  const text=await res.text();let data;try{data=JSON.parse(text)}catch(e){throw new Error('Server returned an unreadable response. Please check Sales Web App deployment.')}return data;
+  const body=new URLSearchParams();
+  Object.entries(params).forEach(([k,v])=>body.append(k,v==null?"":String(v)));
+  const res=await fetch(SALES_API,{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8"},body,redirect:"follow"});
+  const text=await res.text();
+  let data;
+  try{data=JSON.parse(text)}catch(_){throw new Error("Server returned an unreadable response.")}
+  if(data?.success===false)throw new Error(data.error||"Database error.");
+  return data;
 }
-function setLoginError(msg){$('loginError').textContent=msg||'';$('loginError').classList.toggle('show',!!msg)}
-function setPaymentError(msg){$('paymentError').textContent=msg||'';$('paymentError').classList.toggle('show',!!msg)}
-function setBatchError(msg){$('batchError').textContent=msg||'';$('batchError').classList.toggle('show',!!msg)}
+
+async function apiGet(params){
+  const res=await fetch(SALES_API+"?"+new URLSearchParams(params).toString(),{cache:"no-store"});
+  const data=await res.json();
+  if(data?.success===false)throw new Error(data.error||"Database error.");
+  return data;
+}
 
 function configureView(){
-  // Summary + batch payment are available in both Admin and Salesman receivable views.
-  $('summaryBtn').hidden=false;
-  $('batchBtn').hidden=false;
-  $('selectHead').hidden=false;
-  if(VIEW==='all'){
-    $('pageTitle').textContent='All Receivable';
-    $('pageSubtitle').textContent='Company-wide Credit invoices from all active Location Codes.';
-    $('viewBanner').textContent='All Receivable = Admin Access only. USD and KHR receivables are tracked separately. Select invoices for Summary or Batch Payment.';
-    $('loginTitle').textContent='🔐 Admin Access';
-    $('loginText').textContent='Enter an active Admin Code to review company-wide receivables.';
-    $('loginLabel').textContent='Admin Code';
-    $('accessCode').placeholder='Enter admin code';
-    $('loginNote').textContent='Your Admin Code is never stored. If Remember me is checked, only a revocable device token is saved on this device. If the secret code changes in Master Database, remembered access is automatically invalidated.';
-  }else{
-    $('pageTitle').textContent='Your Receivable';
-    $('pageSubtitle').textContent='Credit invoices from Location Codes assigned to your Salesman ID.';
-    $('viewBanner').textContent='Your Receivable = only Credit invoices from your assigned Location Codes. USD and KHR are tracked separately.';
-    $('loginTitle').textContent='🔐 Salesman Access';
-    $('loginText').textContent='Enter your Salesman Code. The server will load only Location Codes assigned to your Salesman ID.';
-    $('loginLabel').textContent='Salesman Code';
-    $('accessCode').placeholder='Enter salesman code';
-    $('loginNote').textContent='Your Salesman Code is never stored. If Remember me is checked, only a revocable device token is saved on this device. If the secret code changes in Master Database, remembered access is automatically invalidated.';
+  $("pendingReceivableView").style.display="none";
+  $("pendingDailyCashView").style.display="none";
+  $("pendingDepositView").style.display="none";
+  $("depositHistoryView").style.display="none";
+  $("placeholderView").style.display="none";
+
+  if(VIEW==="pending-receivable"){
+    $("pendingReceivableView").style.display="";
+    $("pageTitle").textContent="Pending Receivable Request";
+    $("pageSubtitle").textContent="Receivable payment requests sent by Salespersons for Admin review.";
+    return true;
   }
-  $('rememberDevice').checked=!!deviceToken;
+
+  if(VIEW==="pending-daily-cash"){
+    $("pendingDailyCashView").style.display="";
+    $("pageTitle").textContent="Pending Daily Cash Request";
+    $("pageSubtitle").textContent="Daily Cash Collection requests waiting for Admin review.";
+    return true;
+  }
+
+  if(VIEW==="pending-deposit"){
+    $("pendingDepositView").style.display="";
+    $("pageTitle").textContent="Pending Deposit";
+    $("pageSubtitle").textContent="Approved real cash waiting for company bank deposit. Includes Receivable and Daily Cash Collection.";
+    return true;
+  }
+
+  if(VIEW==="deposit-history"){
+    $("depositHistoryView").style.display="";
+    $("pageTitle").textContent="Deposit History";
+    $("pageSubtitle").textContent="Completed company bank deposits from Receivable and Daily Cash Collection.";
+    return true;
+  }
+
+  const names={"staff-request":"Staff Request","admin-request":"Admin Request"};
+  $("placeholderView").style.display="";
+  $("placeholderTitle").textContent=names[VIEW]||"Admin Work";
+  $("pageTitle").textContent=names[VIEW]||"Admin Work";
+  $("pageSubtitle").textContent="Administration Workspace";
+  return false;
+}
+
+function setLoginError(msg){
+  $("loginError").textContent=msg||"";
+  $("loginError").classList.toggle("show",!!msg);
+}
+
+function setReviewError(msg){
+  $("reviewError").textContent=msg||"";
+  $("reviewError").classList.toggle("show",!!msg);
+}
+
+function cacheIdentity(){
+  return deviceToken||"admin";
+}
+
+function cacheKey(){
+  let hash=0,s=cacheIdentity();
+  for(let i=0;i<s.length;i++){hash=((hash<<5)-hash)+s.charCodeAt(i);hash|=0}
+  return CACHE_KEY+"_"+Math.abs(hash);
+}
+
+function saveCache(){
+  try{
+    localStorage.setItem(cacheKey(),JSON.stringify({revision,rows,savedAt:Date.now()}));
+  }catch(_){}
+}
+
+function restoreCache(){
+  try{
+    const raw=localStorage.getItem(cacheKey());
+    if(!raw)return false;
+    const d=JSON.parse(raw);
+    if(!Array.isArray(d.rows))return false;
+    rows=d.rows;
+    revision=String(d.revision||"");
+    buildGroups();
+    $("syncStatus").textContent="Cached • checking for updates...";
+    return true;
+  }catch(_){return false}
+}
+
+function buildGroups(){
+  const map=new Map();
+
+  rows
+    .filter(r=>String(r.requestStatus||r.arStatus||"").toLowerCase()==="processing" && r.requestId)
+    .forEach(r=>{
+      const id=String(r.requestId);
+      if(!map.has(id)){
+        map.set(id,{
+          requestId:id,
+          customer:r.customer||"",
+          requestedBy:r.requestedBy||r.salesperson||"",
+          paymentMethod:r.requestPaymentMethod||"",
+          transactionId:r.requestTransactionId||"",
+          currency:String(r.currency||"USD").toUpperCase(),
+          total:0,
+          invoices:[],
+          locations:new Set()
+        });
+      }
+
+      const g=map.get(id);
+      g.total+=num(r.requestedAmount);
+      g.invoices.push({
+        invoiceNo:r.invoiceNo||"",
+        requestedAmount:num(r.requestedAmount),
+        currency:r.currency||g.currency,
+        locationName:r.locationName||r.locationCode||"",
+        locationCode:r.locationCode||""
+      });
+      if(r.locationName||r.locationCode)g.locations.add(r.locationName||r.locationCode);
+    });
+
+  groups=[...map.values()].map(g=>({
+    ...g,
+    locations:[...g.locations]
+  })).sort((a,b)=>b.requestId.localeCompare(a.requestId));
+
+  render();
+}
+
+function render(){
+  const search=norm($("searchBox")?.value);
+  const salesman=norm($("salesmanFilter")?.value);
+  const currency=$("currencyFilter")?.value||"";
+
+  const visible=groups.filter(g=>{
+    const text=norm([
+      g.requestId,
+      g.customer,
+      g.requestedBy,
+      ...g.invoices.map(x=>x.invoiceNo)
+    ].join(" "));
+    return (!search||text.includes(search)) &&
+           (!salesman||norm(g.requestedBy).includes(salesman)) &&
+           (!currency||g.currency===currency);
+  });
+
+  $("rowCount").textContent=`${visible.length} request${visible.length===1?"":"s"}`;
+
+  const totalUSD=visible.filter(g=>g.currency==="USD").reduce((s,g)=>s+g.total,0);
+  const totalKHR=visible.filter(g=>g.currency==="KHR").reduce((s,g)=>s+g.total,0);
+  const invCount=visible.reduce((s,g)=>s+g.invoices.length,0);
+
+  $("sumRequests").textContent=visible.length;
+  $("sumUSD").textContent=money(totalUSD,"USD");
+  $("sumKHR").textContent=money(totalKHR,"KHR");
+  $("sumInvoices").textContent=invCount;
+
+  if(!visible.length){
+    $("requestBody").innerHTML='<tr><td colspan="11" class="empty">No Pending Receivable Requests.</td></tr>';
+    return;
+  }
+
+  $("requestBody").innerHTML=visible.map(g=>{
+    const loc=g.locations.length===1?g.locations[0]:(g.locations.length>1?"Multiple Locations":"-");
+    return `<tr>
+      <td><strong>${esc(g.requestId)}</strong></td>
+      <td>${esc(g.customer)}</td>
+      <td>${esc(g.requestedBy||"-")}</td>
+      <td>${esc(loc)}</td>
+      <td class="center">${g.invoices.length}</td>
+      <td>${esc(g.paymentMethod||"-")}</td>
+      <td>${esc(g.transactionId||"-")}</td>
+      <td>${esc(g.currency)}</td>
+      <td class="money"><strong>${money(g.total,g.currency)}</strong></td>
+      <td><span class="status processing">Processing</span></td>
+      <td><button class="btn primary" onclick='openReview(${JSON.stringify(g.requestId)})'>Review Request</button></td>
+    </tr>`;
+  }).join("");
+}
+
+function clearFilters(){
+  $("searchBox").value="";
+  $("salesmanFilter").value="";
+  $("currencyFilter").value="";
+  render();
+}
+
+async function loadPending(force=false){
+  if(!sessionToken)throw new Error("Admin session required.");
+
+  const btn=$("refreshBtn");
+  if(force){btn.disabled=true;btn.textContent="Refreshing…"}
+  $("syncStatus").textContent=force?"Syncing…":"Loading…";
+
+  try{
+    const d=await apiPost({
+      action:"arList",
+      sessionToken,
+      view:"all"
+    });
+
+    rows=Array.isArray(d.receivables)?d.receivables:[];
+    revision=String(d.revision||revision||"");
+
+    if(d.access){
+      $("accessPill").textContent="🛡️ "+(d.access.adminName||"Admin");
+    }
+
+    buildGroups();
+    saveCache();
+    $("syncStatus").textContent="Up to date · smart sync 20s";
+    return d;
+
+  }finally{
+    if(force){btn.disabled=false;btn.textContent="↻ Refresh"}
+  }
+}
+
+async function fetchRevision(){
+  const d=await apiGet({action:"invoiceHistoryRevision",_ts:Date.now()});
+  return String(d.revision||"0");
+}
+
+async function smartSync(force=false){
+  if(!sessionToken||syncBusy)return;
+  if(document.hidden&&!force)return;
+  syncBusy=true;
+  try{
+    if(VIEW==="pending-receivable")await loadPending(false);
+    else if(VIEW==="pending-daily-cash")await loadPendingDailyCash(false);
+    else if(VIEW==="pending-deposit")await loadPendingDeposit(false);
+    else if(VIEW==="deposit-history")await loadDepositHistory(false);
+  }catch(e){
+    console.warn("Admin Work sync:",e);
+  }finally{
+    syncBusy=false;
+  }
+}
+function startSync(){
+  if(syncTimer)clearInterval(syncTimer);
+  if(vaultFastTimer)clearInterval(vaultFastTimer);
+  syncTimer=setInterval(()=>smartSync(false),SYNC_MS);
+  if(VIEW==="pending-deposit"){
+    vaultFastTimer=setInterval(()=>{if(!document.hidden&&sessionToken)loadPendingDeposit(false).catch(()=>{})},VAULT_FAST_SYNC_MS);
+  }
 }
 
 async function login(){
-  const code=$('accessCode').value.trim(),remember=$('rememberDevice').checked;
-  if(!code){setLoginError(VIEW==='all'?'Please enter Admin Code.':'Please enter Salesman Code.');return}
-  const btn=$('loginBtn');btn.disabled=true;btn.textContent='Checking…';setLoginError('');
+  const code=$("accessCode").value.trim();
+  const remember=$("rememberDevice").checked;
+
+  if(!code)return setLoginError("Please enter Admin Code.");
+
+  const btn=$("loginBtn");
+  btn.disabled=true;
+  btn.textContent="Checking…";
+  setLoginError("");
+
   try{
-    const data=VIEW==='all'?await apiPost({action:'arAdminLogin',adminCode:code,rememberDevice:remember}):await apiPost({action:'arLogin',salesmanCode:code,rememberDevice:remember});
-    if(!data||!data.success||!data.authorized)throw new Error(data?.error||'Access denied.');
-    if(remember && !data.deviceToken) throw new Error('Remember me was requested, but the server did not return a remembered-device token. Deploy Sales Database V10 and try again.');
-    sessionToken=data.sessionToken;sessionProfile=data;sessionStorage.setItem(SESSION_KEY,sessionToken);
-    if(remember){
-      deviceToken=data.deviceToken;
-      localStorage.setItem(DEVICE_KEY,deviceToken);
-      localStorage.setItem(DEVICE_KEY+'_saved_at',String(Date.now()));
-    }else{
-      deviceToken='';
-      localStorage.removeItem(DEVICE_KEY);
-      localStorage.removeItem(DEVICE_KEY+'_saved_at');
-    }
-    $('accessCode').value='';$('loginOverlay').classList.add('hidden');$('logoutBtn').hidden=false;
-    applyProfile(data);await loadAR(true);startSync();
-  }catch(e){
-    sessionToken='';sessionStorage.removeItem(SESSION_KEY);setLoginError(e.message||'Access denied.');
-  } finally{btn.disabled=false;btn.textContent='Sign In'}
-}
-function applyProfile(p){
-  sessionProfile=p;const locs=Array.isArray(p.locations)?p.locations:[];
-  if((p.role||'')==='admin'){
-    $('accessPill').textContent='🛡️ '+(p.adminName||'Admin');
-    $('locationPill').textContent=`📍 ${locs.length} active location${locs.length===1?'':'s'}`;
-    $('pageTitle').textContent='All Receivable';
-    $('pageSubtitle').textContent='Company-wide Credit invoices from all active Location Codes.';
-  }else{
-    const name=p.salesmanName||'Salesman';
-    $('accessPill').textContent='👤 '+name;
-    $('locationPill').textContent=`📍 ${locs.length} location${locs.length===1?'':'s'}`;
-    const names=locs.map(l=>l.locationName||l.locationCode).filter(Boolean);
-    $('pageTitle').textContent=locs.length===1?`${names[0]} Receivable`:`${name} Receivable`;
-    $('pageSubtitle').textContent=locs.length?`Assigned locations: ${locs.map(l=>`${l.locationName||l.locationCode} (${l.locationCode})`).join(' • ')}`:'No assigned locations.';
-    $('viewBanner').textContent=`${name}: tracking open Credit invoices by assigned Location Code${locs.length===1?'':'s'}.`;
-  }
-  const sel=$('locationFilter'),cur=sel.value;sel.innerHTML='<option value="">All permitted locations</option>';
-  locs.forEach(l=>{const o=document.createElement('option');o.value=l.locationCode;o.textContent=`${l.locationName||l.locationCode} (${l.locationCode})`;sel.appendChild(o)});if([...sel.options].some(o=>o.value===cur))sel.value=cur;
-}
-
-async function restoreSession(){
-  // FAST PATH: on a normal refresh, use the existing session first.
-  // Sales Database V10 re-validates the CURRENT Admin/Salesman credential
-  // signature inside arRequireSession_ on every loadAR request, so this is
-  // still secure if the secret code was changed in Master Database.
-  if(sessionToken){
-    $('loginOverlay').classList.add('hidden');
-    try{
-      await loadAR(true);
-      setLoginError('');
-      $('logoutBtn').hidden=false;
-      startSync();
-      return;
-    }catch(e){
-      sessionToken='';
-      sessionStorage.removeItem(SESSION_KEY);
-      // Do not discard a remembered-device token yet. It may create a fresh
-      // session after an Apps Script cache/session expiry.
-    }
-  }
-
-  // PERSISTENT FALLBACK: used after browser/tab restart or session expiry.
-  if(deviceToken){
-    $('rememberDevice').checked=true;
-    $('loginOverlay').classList.remove('hidden');
-    $('accessCode').disabled=true;
-    $('loginBtn').disabled=true;
-    $('loginBtn').textContent='Signing in…';
-    setLoginError('Remembered device found. Signing you in automatically…');
-    try{
-      const data=await apiPost({action:'arDeviceLogin',deviceToken,role:DEVICE_ROLE});
-      if(!data||!data.success||!data.authorized)throw new Error(data?.error||'Remembered access failed.');
-      sessionToken=data.sessionToken;
-      sessionProfile=data;
-      sessionStorage.setItem(SESSION_KEY,sessionToken);
-      applyProfile(data);
-      await loadAR(true);
-      setLoginError('');
-      $('loginOverlay').classList.add('hidden');
-      $('logoutBtn').hidden=false;
-      startSync();
-      return;
-    }catch(e){
-      deviceToken='';
-      localStorage.removeItem(DEVICE_KEY);
-      localStorage.removeItem(DEVICE_KEY+'_saved_at');
-      sessionToken='';
-      sessionStorage.removeItem(SESSION_KEY);
-      $('rememberDevice').checked=false;
-      configureView();
-      setLoginError('Your saved access is no longer valid. The secret code or access settings may have changed. Please enter the current code.');
-    }finally{
-      $('accessCode').disabled=false;
-      $('loginBtn').disabled=false;
-      $('loginBtn').textContent='Sign In';
-    }
-  }
-
-  // Only show the normal code-entry state when neither restore path worked.
-  $('loginOverlay').classList.remove('hidden');
-}
-async function logout(){
-  const token=sessionToken,remembered=deviceToken;sessionToken='';deviceToken='';sessionProfile=null;rows=[];revision='';sessionStorage.removeItem(SESSION_KEY);localStorage.removeItem(DEVICE_KEY);localStorage.removeItem(DEVICE_KEY+'_saved_at');clearInterval(syncTimer);syncTimer=null;
-  if(token||remembered){try{await apiPost({action:'arLogout',sessionToken:token,deviceToken:remembered})}catch(_){}}
-  selectedInvoices.clear();visibleRows=[];updateSummaryControls();$('accessPill').textContent='Not signed in';$('locationPill').textContent='0 locations';$('logoutBtn').hidden=true;$('arBody').innerHTML='<tr><td colspan="11" class="empty">Sign in to view receivables.</td></tr>';$('rememberDevice').checked=false;$('loginOverlay').classList.remove('hidden');configureView();
-}
-
-async function loadAR(force=false){
-  if(!sessionToken)throw new Error('No A/R session.');$('syncStatus').textContent=force?'Syncing…':'Loading…';
-  const data=await apiPost({action:'arList',sessionToken,view:VIEW});if(!data||!data.success)throw new Error(data?.error||'Could not load receivables.');
-  rows=Array.isArray(data.receivables)?data.receivables:[];revision=data.revision||revision;selectedInvoices.clear();if(data.access)applyProfile(data.access);renderRows();$('syncStatus').textContent='Up to date · secure sync 20s';return data;
-}
-
-function filterChanged(){selectedInvoices.clear();renderRows()}
-function renderRows(){
-  const q=normSearch($('searchBox').value),customerQ=normSearch($('customerFilter').value),loc=$('locationFilter').value.trim().toLowerCase(),ccy=$('currencyFilter').value.trim().toUpperCase(),stat=$('statusFilter').value;
-  visibleRows=rows.filter(r=>{const rowCcy=String(r.currency||'USD').toUpperCase();if(q&&!normSearch(r.invoiceNo).includes(q))return false;if(customerQ&&!normSearch(r.customer).includes(customerQ))return false;if(loc&&String(r.locationCode).toLowerCase()!==loc)return false;if(ccy&&rowCcy!==ccy)return false;if(stat&&r.arStatus!==stat)return false;return true});
-  const totals={USD:{out:0,over:0},KHR:{out:0,over:0}};const customers=new Set();
-  visibleRows.forEach(r=>{const c=String(r.currency||'USD').toUpperCase()==='KHR'?'KHR':'USD';totals[c].out+=num(r.outstanding);if(r.arStatus==='Overdue')totals[c].over+=num(r.outstanding);if(r.customer)customers.add(r.customer.toLowerCase())});
-  $('sumOutstandingUSD').textContent=money(totals.USD.out,'USD');$('sumOutstandingKHR').textContent=money(totals.KHR.out,'KHR');
-  $('sumOverdueUSD').textContent=money(totals.USD.over,'USD');$('sumOverdueKHR').textContent=money(totals.KHR.over,'KHR');
-  $('sumInvoices').textContent=visibleRows.length;$('sumCustomers').textContent=customers.size;$('rowCount').textContent=`${visibleRows.length} record${visibleRows.length===1?'':'s'}`;
-  if(!visibleRows.length){$('arBody').innerHTML='<tr><td colspan="11" class="empty">No open Credit invoices found for this view.</td></tr>';updateSummaryControls();return}
-  $('arBody').innerHTML=visibleRows.map(r=>`<tr><td class="checkcell"><input class="rowcheck" type="checkbox" ${selectedInvoices.has(String(r.invoiceNo))?'checked':''} onchange='toggleInvoice(${JSON.stringify(String(r.invoiceNo))},this.checked)' title="Select ${esc(r.invoiceNo)} for summary or batch payment"></td><td><strong>${esc(r.invoiceNo)}</strong></td><td>${esc(String(r.invoiceDate||'').slice(0,10))}</td><td>${esc(r.dueDate||'-')}</td><td>${esc(r.customer)}</td><td>${esc(r.locationName||r.locationCode)}<br><small>${esc(r.locationCode)}</small></td><td class="money">${money(r.grandTotal,r.currency)}</td><td class="money">${money(r.amountPaid,r.currency)}</td><td class="money"><strong>${money(r.outstanding,r.currency)}</strong></td><td><span class="status ${r.arStatus.toLowerCase()}">${esc(r.arStatus)}</span></td><td><button class="btn primary" onclick='openPayment(${JSON.stringify(r.invoiceNo)})'>Receive</button></td></tr>`).join('');
-  updateSummaryControls();
-}
-function toggleInvoice(invoiceNo,checked){if(checked)selectedInvoices.add(String(invoiceNo));else selectedInvoices.delete(String(invoiceNo));updateSummaryControls()}
-function toggleSelectAll(checked){visibleRows.forEach(r=>{const k=String(r.invoiceNo);if(checked)selectedInvoices.add(k);else selectedInvoices.delete(k)});renderRows()}
-function updateSummaryControls(){
-  const count=selectedInvoices.size,btn=$('summaryBtn'),batch=$('batchBtn'),all=$('selectAllBox');
-  const picked=selectedSummaryRows();const currencies=[...new Set(picked.map(r=>String(r.currency||'USD').toUpperCase()))];
-  btn.textContent=`🧾 Summary Invoice (${count})`;btn.disabled=count===0;
-  if(count>0&&currencies.length>1){batch.textContent=`💰 Mixed Currency (${count})`;batch.disabled=true;batch.title='USD and KHR must be received in separate batch payments.'}
-  else{batch.textContent=`💰 Receive Selected (${count})`;batch.disabled=count===0;batch.title=''}
-  const visibleKeys=visibleRows.map(r=>String(r.invoiceNo)),selectedVisible=visibleKeys.filter(k=>selectedInvoices.has(k)).length;
-  all.checked=visibleKeys.length>0&&selectedVisible===visibleKeys.length;all.indeterminate=selectedVisible>0&&selectedVisible<visibleKeys.length;
-}
-
-function selectedSummaryRows(){return rows.filter(r=>selectedInvoices.has(String(r.invoiceNo)))}
-async function getMasterCustomerContact_(row){
-  const fallback={phone:row?.customerPhone||'',address:row?.customerAddress||''};
-  try{
-    const qs=new URLSearchParams({
-      action:'invoiceCustomerData',
-      locationCode:String(row?.locationCode||''),
-      customer:String(row?.customer||'')
+    const d=await apiPost({
+      action:"arAdminLogin",
+      adminCode:code,
+      rememberDevice:remember
     });
-    const res=await fetch(`${MASTER_API}?${qs.toString()}`,{method:'GET',redirect:'follow',cache:'no-store'});
-    if(!res.ok)throw new Error('Master Database request failed.');
-    const data=await res.json();
-    const c=data&&data.customer?data.customer:null;
-    if(data&&data.success&&data.found&&c){
-      return {phone:String(c.phone||'').trim(),address:String(c.address||'').trim()};
+
+    if(!d||!d.authorized)throw new Error(d?.error||"Access denied.");
+
+    sessionToken=d.sessionToken;
+    sessionStorage.setItem(SESSION_KEY,sessionToken);
+
+    if(remember&&d.deviceToken){
+      deviceToken=d.deviceToken;
+      localStorage.setItem(DEVICE_KEY,deviceToken);
+      localStorage.setItem(DEVICE_KEY+"_saved_at",String(Date.now()));
+    }else if(!remember){
+      deviceToken="";
+      localStorage.removeItem(DEVICE_KEY);
+      localStorage.removeItem(DEVICE_KEY+"_saved_at");
     }
-  }catch(e){console.warn('Customer contact lookup failed:',e)}
-  return fallback;
-}
-async function openSummary(){
-  const picked=selectedSummaryRows();if(!picked.length)return alert('Please check at least one invoice first.');
-  const customerKeys=[...new Set(picked.map(r=>String(r.customer||'').trim().toLowerCase()))];
-  if(customerKeys.length!==1)return alert('Please select invoices for one customer only before creating the summary.');
-  const btn=$('summaryBtn'),oldText=btn.textContent;btn.disabled=true;btn.textContent='Loading Customer…';
-  try{
-    const contact=await getMasterCustomerContact_(picked[0]);
-    buildSummary(picked,contact);
-    $('summaryOverlay').classList.remove('hidden');
-  }finally{
-    btn.disabled=false;btn.textContent=oldText;updateSummaryControls();
-  }
-}
-function closeSummary(){$('summaryOverlay').classList.add('hidden')}
-function buildSummary(picked,contact){
-  const first=picked[0],customer=first.customer||'-',preparedBy=sessionProfile?.adminName||sessionProfile?.salesmanName||'Authorized User';
-  const phone=(contact&&contact.phone)||first.customerPhone||'-';
-  const address=(contact&&contact.address)||first.customerAddress||'-';
-  const currencies=[...new Set(picked.map(r=>String(r.currency||'USD').toUpperCase()))];
-  const totals={};
-  currencies.forEach(c=>totals[c]=0);
-  picked.forEach(r=>{const c=String(r.currency||'USD').toUpperCase();totals[c]=(totals[c]||0)+num(r.outstanding)});
 
-  let grandOutstanding='';
-  if(currencies.length===1){
-    const c=currencies[0];
-    grandOutstanding=`<div class="sum-grand"><span class="label">TOTAL OUTSTANDING</span><span class="value">${money(totals[c],c)}</span></div>`;
-  }else{
-    grandOutstanding=`<div class="sum-grand-multi">${currencies.map(c=>`<div class="row"><span>TOTAL OUTSTANDING (${esc(c)})</span><span>${money(totals[c],c)}</span></div>`).join('')}</div>`;
-  }
+    $("accessCode").value="";
+    $("accessPill").textContent="🛡️ "+(d.adminName||"Admin");
+    $("loginOverlay").classList.add("hidden");
+    $("logoutBtn").hidden=false;
 
-  $('summarySheet').innerHTML=`<div class="sum-top"><div class="sum-brand"><h1>BIG BROTHER</h1><p>Ready to be your partner</p><div class="sum-contact">Phnom Penh, Cambodia<br>010 650 327, 070 998 988<br>angsokkhey11@gmail.com</div></div><div class="sum-meta"><div><strong>Summary Date:</strong> ${esc(today())}</div><div><strong>Prepared By:</strong> ${esc(preparedBy)}</div><div><strong>Selected Invoices:</strong> ${picked.length}</div></div></div><div class="sum-divider"></div><div class="sum-title">CUSTOMER INVOICE SUMMARY</div><div class="sum-customer"><div class="sum-box"><strong>Customer</strong><div class="sum-customer-name">${esc(customer)}</div></div><div class="sum-box"><strong>Customer Contact</strong><div class="sum-contact-line"><span class="sum-contact-icon">☎</span><span>${esc(phone)}</span></div><div class="sum-contact-line"><span class="sum-contact-icon">●</span><span>${esc(address)}</span></div></div></div><table class="sum-table"><thead><tr><th style="width:5%">#</th><th style="width:19%">Invoice No</th><th style="width:16%">Date</th><th style="width:16%">Due Date</th><th style="width:16%;text-align:right">Grand Total</th><th style="width:13%;text-align:right">Paid</th><th style="width:15%;text-align:right">Outstanding</th></tr></thead><tbody>${picked.map((r,i)=>`<tr><td class="center">${i+1}</td><td><strong>${esc(r.invoiceNo)}</strong></td><td>${esc(String(r.invoiceDate||'').slice(0,10))}</td><td>${esc(r.dueDate||'-')}</td><td class="money">${money(r.grandTotal,r.currency)}</td><td class="money">${money(r.amountPaid,r.currency)}</td><td class="money"><strong>${money(r.outstanding,r.currency)}</strong></td></tr>`).join('')}</tbody></table>${grandOutstanding}<div class="sum-footer"><span>Customer Invoice Summary generated from selected open Credit receivables.</span><span>BIG BROTHER</span></div>`;
-}
-function printSummary(){window.print()}
-async function saveSummaryPDF(){
-  const picked=selectedSummaryRows();if(!picked.length)return;const customer=(picked[0].customer||'Customer').replace(/[^a-z0-9]+/gi,'_').replace(/^_|_$/g,'');const filename=`Customer_Invoice_Summary_${customer}_${today()}.pdf`;const btn=$('savePdfBtn');btn.disabled=true;const old=btn.textContent;btn.textContent='Saving PDF…';
-  try{if(typeof html2pdf!=='function')throw new Error('PDF library is not available.');await html2pdf().set({margin:0,filename,image:{type:'jpeg',quality:.98},html2canvas:{scale:2,useCORS:true},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},pagebreak:{mode:['avoid-all','css','legacy']}}).from($('summarySheet')).save()}catch(e){alert('Could not save PDF directly. Please use Print A4 and choose “Save as PDF” in your browser.')}finally{btn.disabled=false;btn.textContent=old}
-}
-
-
-function selectedPaymentRows(){return rows.filter(r=>selectedInvoices.has(String(r.invoiceNo)))}
-function openBatchPayment(){
-  const picked=selectedPaymentRows();if(!picked.length)return alert('Please check at least one invoice first.');
-  const customers=[...new Set(picked.map(r=>String(r.customer||'').trim().toLowerCase()))];if(customers.length!==1)return alert('Batch payment can only clear invoices for one customer at a time.');
-  const currencies=[...new Set(picked.map(r=>String(r.currency||'USD').toUpperCase()))];if(currencies.length!==1)return alert('Batch payment can only clear invoices with the same currency.');
-  const currency=currencies[0],total=picked.reduce((s,r)=>s+num(r.outstanding),0);
-  $('batchInfo').textContent=`${picked[0].customer} · ${picked.length} invoice${picked.length===1?'':'s'} · one payment`;
-  $('batchList').innerHTML=picked.map(r=>`<div class="batch-item"><span><strong>${esc(r.invoiceNo)}</strong></span><span>${money(r.outstanding,r.currency)}</span></div>`).join('');
-  $('batchTotal').textContent=money(total,currency);$('batchDate').value=today();configureBatchPaymentMethod();$('batchMethod').value=requesting?'Bank':'Cash';$('batchCashUSD').value='0';$('batchCashKHR').value='0';$('batchBank').value='';$('batchTransactionId').value='';$('batchBankReference').value='';$('batchNote').value='';$('batchAdminCode').value='';setBatchError('');toggleBatchBankFields();$('batchOverlay').classList.remove('hidden');
-}
-function closeBatchPayment(){$('batchOverlay').classList.add('hidden')}
-function configureBatchPaymentMethod(){
-  const sel=$('batchMethod');
-  if(VIEW==='your'){
-    sel.innerHTML='<option value="Bank">Bank</option>';
-    sel.value='Bank';
-    sel.disabled=true;
-    $('batchBankOnlyNote').classList.add('show');
-  }else{
-    sel.innerHTML='<option value="Cash">Cash</option><option value="Bank">Bank</option>';
-    sel.disabled=false;
-    $('batchBankOnlyNote').classList.remove('show');
-  }
-}
-function toggleBatchBankFields(){
-  const isBank=$('batchMethod').value==='Bank';
-  $('batchBankFields').classList.toggle('show',isBank);
-  $('batchCashReceiptFields').classList.toggle('show',!isBank&&VIEW==='all');
-}
-async function saveBatchPayment(){
-  const picked=selectedPaymentRows();if(!picked.length)return setBatchError('No invoices are selected.');
-  const method=$('batchMethod').value,tx=$('batchTransactionId').value.trim(),admin=$('batchAdminCode').value.trim();setBatchError('');
-  if(method==='Bank'&&!$('batchBank').value.trim())return setBatchError('Bank Name is required.');if(method==='Bank'&&!tx)return setBatchError('Transaction ID is required for Bank payment.');if(!admin)return setBatchError('Admin Code is required to approve the whole batch.');
-  const btn=$('saveBatchBtn');btn.disabled=true;btn.textContent='Saving Batch…';
-  try{
-    const paymentData={sessionToken,adminCode:admin,invoiceNos:picked.map(r=>r.invoiceNo),paymentDate:$('batchDate').value,paymentMethod:method,bankPayment:method==='Bank'?$('batchBank').value.trim():'',transactionId:method==='Bank'?tx:'',bankReference:method==='Bank'?$('batchBankReference').value.trim():'',note:$('batchNote').value.trim()};
-    const d=await apiPost({action:'arBatchPayment',paymentData:JSON.stringify(paymentData)});if(!d||!d.success)throw new Error(d?.error||'Batch payment failed.');
-    closeBatchPayment();selectedInvoices.clear();await loadAR(true);alert(`Batch payment saved successfully.\nInvoices cleared: ${d.invoiceCount||picked.length}\nTotal: ${money(d.totalAmount,d.currency)}\nApproved by: ${d.approvedBy||'Admin'}\nPayment ID: ${d.paymentId||''}`);
-  }catch(e){setBatchError(e.message||'Batch payment failed. Nothing was changed.')}finally{btn.disabled=false;btn.textContent='✓ Approve & Clear Selected Invoices';$('batchAdminCode').value=''}
-}
-
-async function openPayment(invoiceNo){
-  currentInvoice=rows.find(r=>r.invoiceNo===invoiceNo);if(!currentInvoice)return;
-  $('paymentInfo').textContent=`${currentInvoice.invoiceNo} · ${currentInvoice.customer} · ${currentInvoice.locationCode} · Outstanding ${money(currentInvoice.outstanding,currentInvoice.currency)}`;
-  $('payDate').value=today();$('payAmount').value='';$('payAmount').max=currentInvoice.outstanding;configureSinglePaymentMethod();$('payMethod').value=requesting?'Bank':'Cash';$('payCashUSD').value='0';$('payCashKHR').value='0';$('payBank').value='';$('transactionId').value='';$('bankReference').value='';$('payNote').value='';$('adminCode').value='';setPaymentError('');toggleBankFields();$('paymentOverlay').classList.remove('hidden');$('paymentHistory').textContent='Loading…';
-  try{const d=await apiPost({action:'arDetail',sessionToken,view:VIEW,invoiceNo});if(!d||!d.success)throw new Error(d?.error||'Could not load payment history.');const ps=Array.isArray(d.payments)?d.payments:[];$('paymentHistory').innerHTML=ps.length?ps.map(p=>`<div class="historyitem"><strong>${money(p.amount,p.currency)}</strong> · ${esc(p.paymentDate)} · ${esc(p.paymentMethod)}${p.transactionId?`<br>Transaction ID: ${esc(p.transactionId)}`:''}${p.approvedBy?`<br>Approved by: ${esc(p.approvedBy)}`:''}</div>`).join(''):'<div class="empty" style="padding:12px">No previous payments.</div>'}catch(e){$('paymentHistory').textContent=e.message}
-}
-function closePayment(){$('paymentOverlay').classList.add('hidden');currentInvoice=null}
-function configureSinglePaymentMethod(){
-  const sel=$('payMethod');
-  if(VIEW==='your'){
-    sel.innerHTML='<option value="Bank">Bank</option>';
-    sel.value='Bank';
-    sel.disabled=true;
-    $('singleBankOnlyNote').classList.add('show');
-  }else{
-    sel.innerHTML='<option value="Cash">Cash</option><option value="Bank">Bank</option>';
-    sel.disabled=false;
-    $('singleBankOnlyNote').classList.remove('show');
-  }
-}
-function toggleBankFields(){
-  const isBank=$('payMethod').value==='Bank';
-  $('bankFields').classList.toggle('show',isBank);
-  $('cashReceiptFields').classList.toggle('show',!isBank&&VIEW==='all');
-}
-
-async function savePayment(){
-  if(!currentInvoice)return;const amount=num($('payAmount').value),method=$('payMethod').value,tx=$('transactionId').value.trim(),admin=$('adminCode').value.trim();setPaymentError('');
-  if(requesting&&method!=='Bank')return setPaymentError('Salesman payment requests are Bank only. Cash must be cleared directly by Accountant.');
-  if(amount<=0)return setPaymentError('Payment amount must be greater than zero.');if(amount>num(currentInvoice.outstanding)+.000001)return setPaymentError('Payment cannot exceed outstanding balance.');if(method==='Bank'&&!$('payBank').value.trim())return setPaymentError('Bank Name is required.');if(method==='Bank'&&!tx)return setPaymentError('Transaction ID is required for Bank payment.');if(!admin)return setPaymentError('Admin Code is required to approve payment.');
-  const btn=$('savePayBtn');btn.disabled=true;btn.textContent='Saving…';
-  try{const paymentData={sessionToken,adminCode:admin,invoiceNo:currentInvoice.invoiceNo,paymentDate:$('payDate').value,amount,paymentMethod:method,bankPayment:method==='Bank'?$('payBank').value.trim():'',transactionId:method==='Bank'?tx:'',bankReference:method==='Bank'?$('bankReference').value.trim():'',note:$('payNote').value.trim()};const d=await apiPost({action:'arPayment',paymentData:JSON.stringify(paymentData)});if(!d||!d.success)throw new Error(d?.error||'Payment failed.');closePayment();await loadAR(true);alert(`Payment saved successfully.\nApproved by: ${d.approvedBy||'Admin'}\nPayment ID: ${d.paymentId||''}`)}catch(e){setPaymentError(e.message||'Payment failed. Nothing was changed.')}finally{btn.disabled=false;btn.textContent='✓ Approve & Save Payment';$('adminCode').value=''}
-}
-// V3.11 — Salesman Request -> Admin Clear workflow
-function renderRows(){
-  const q=normSearch($('searchBox').value),customerQ=normSearch($('customerFilter').value),loc=$('locationFilter').value.trim().toLowerCase(),ccy=$('currencyFilter').value.trim().toUpperCase(),stat=$('statusFilter').value;
-  visibleRows=rows.filter(r=>{const rowCcy=String(r.currency||'USD').toUpperCase();if(q&&!normSearch(r.invoiceNo).includes(q))return false;if(customerQ&&!normSearch(r.customer).includes(customerQ))return false;if(loc&&String(r.locationCode).toLowerCase()!==loc)return false;if(ccy&&rowCcy!==ccy)return false;if(stat&&r.arStatus!==stat)return false;return true});
-  const totals={USD:{out:0,over:0},KHR:{out:0,over:0}};const customers=new Set();
-  visibleRows.forEach(r=>{const c=String(r.currency||'USD').toUpperCase()==='KHR'?'KHR':'USD';totals[c].out+=num(r.outstanding);if(r.arStatus==='Overdue')totals[c].over+=num(r.outstanding);if(r.customer)customers.add(r.customer.toLowerCase())});
-  $('sumOutstandingUSD').textContent=money(totals.USD.out,'USD');$('sumOutstandingKHR').textContent=money(totals.KHR.out,'KHR');$('sumOverdueUSD').textContent=money(totals.USD.over,'USD');$('sumOverdueKHR').textContent=money(totals.KHR.over,'KHR');$('sumInvoices').textContent=visibleRows.length;$('sumCustomers').textContent=customers.size;$('rowCount').textContent=`${visibleRows.length} record${visibleRows.length===1?'':'s'}`;
-  if(!visibleRows.length){$('arBody').innerHTML='<tr><td colspan="11" class="empty">No open Credit invoices found for this view.</td></tr>';updateSummaryControls();return}
-  $('arBody').innerHTML=visibleRows.map(r=>{
-    const processing=r.arStatus==='Processing';
-    const check=`<td class="checkcell"><input class="rowcheck" type="checkbox" ${selectedInvoices.has(String(r.invoiceNo))?'checked':''} ${processing?'disabled':''} onchange='toggleInvoice(${JSON.stringify(String(r.invoiceNo))},this.checked)' title="${processing?'Processing request cannot be selected again':'Select invoice'}"></td>`;
-    let action='';
-    if(VIEW==='your') action=processing?`<button class="btn secondary" disabled>Processing</button>`:`<button class="btn primary" onclick='openPayment(${JSON.stringify(r.invoiceNo)})'>Direct Request</button>`;
-    else action=processing?`<button class="btn primary" onclick='openRequestReview(${JSON.stringify(r.requestId||'')})'>Review Request</button>`:`<button class="btn primary" onclick='openPayment(${JSON.stringify(r.invoiceNo)})'>Receive</button>`;
-    return `<tr>${check}<td><strong>${esc(r.invoiceNo)}</strong></td><td>${esc(String(r.invoiceDate||'').slice(0,10))}</td><td>${esc(r.dueDate||'-')}</td><td>${esc(r.customer)}</td><td>${esc(r.locationName||r.locationCode)}<br><small>${esc(r.locationCode)}</small></td><td class="money">${money(r.grandTotal,r.currency)}</td><td class="money">${money(r.amountPaid,r.currency)}</td><td class="money"><strong>${money(r.outstanding,r.currency)}</strong></td><td><span class="status ${String(r.arStatus||'outstanding').toLowerCase()}">${esc(r.arStatus)}</span>${processing&&r.requestedBy?`<br><small>${esc(r.requestedBy)}</small>`:''}</td><td>${action}</td></tr>`;
-  }).join('');updateSummaryControls();
-}
-
-function updateSummaryControls(){
-  const count=selectedInvoices.size,btn=$('summaryBtn'),batch=$('batchBtn'),all=$('selectAllBox');btn.textContent=`🧾 Summary Invoice (${count})`;btn.disabled=count===0;
-  const picked=selectedPaymentRows(),currencies=[...new Set(picked.map(r=>String(r.currency||'USD').toUpperCase()))];
-  const verb=VIEW==='your'?'Direct Request Selected':'Receive Selected';
-  if(count>0&&currencies.length>1){batch.textContent=`💰 Mixed Currency (${count})`;batch.disabled=true;batch.title='USD and KHR must be processed separately.'}else{batch.textContent=`💰 ${verb} (${count})`;batch.disabled=count===0;batch.title=''}
-  const selectable=visibleRows.filter(r=>r.arStatus!=='Processing').map(r=>String(r.invoiceNo)),selectedVisible=selectable.filter(k=>selectedInvoices.has(k)).length;all.checked=selectable.length>0&&selectedVisible===selectable.length;all.indeterminate=selectedVisible>0&&selectedVisible<selectable.length;
-}
-function toggleSelectAll(checked){visibleRows.filter(r=>r.arStatus!=='Processing').forEach(r=>{const k=String(r.invoiceNo);if(checked)selectedInvoices.add(k);else selectedInvoices.delete(k)});renderRows()}
-
-
-function configureDirectRequestUI(){
-  const requesting=VIEW==='your';
-
-  if($('singlePaymentMethodArea'))$('singlePaymentMethodArea').style.display=requesting?'none':'block';
-  if($('singleDirectRequestNote'))$('singleDirectRequestNote').classList.toggle('show',requesting);
-  if($('singleBankOnlyNote'))$('singleBankOnlyNote').style.display='none';
-
-  if($('batchPaymentMethodArea'))$('batchPaymentMethodArea').style.display=requesting?'none':'block';
-  if($('batchDirectRequestNote'))$('batchDirectRequestNote').classList.toggle('show',requesting);
-  if($('batchBankOnlyNote'))$('batchBankOnlyNote').style.display='none';
-
-  if(requesting){
-    $('bankFields').classList.remove('show');
-    $('cashReceiptFields').classList.remove('show');
-    $('batchBankFields').classList.remove('show');
-    $('batchCashReceiptFields').classList.remove('show');
-  }
-}
-
-function toggleReviewPaymentMethod(){
-  const method=$('reviewPaymentMethod').value;
-  $('reviewBankFields').classList.toggle('show',method==='Bank');
-  $('reviewCashReceiptFields').classList.toggle('show',method==='Cash');
-}
-
-function fillFullOutstanding(){
-  if(!currentInvoice)return;
-  $('payAmount').value=num(currentInvoice.outstanding);
-  $('payAmount').dispatchEvent(new Event('input',{bubbles:true}));
-}
-
-function useFullSelectedAmount(){
-  const picked=selectedPaymentRows();
-  if(!picked.length)return;
-  const currency=String(picked[0].currency||'USD').toUpperCase();
-  const total=picked.reduce((s,r)=>s+num(r.outstanding),0);
-  $('batchTotal').textContent=money(total,currency);
-  $('batchInfo').textContent=`${picked[0].customer} · ${picked.length} invoice${picked.length===1?'':'s'} · full outstanding selected`;
-}
-
-async function openPayment(invoiceNo){
-  currentInvoice=rows.find(r=>r.invoiceNo===invoiceNo);
-  if(!currentInvoice)return;
-  if(currentInvoice.arStatus==='Processing')return alert('This invoice already has a Processing request.');
-
-  const requesting=VIEW==='your';
-  document.querySelector('#paymentOverlay h2').textContent=requesting?'Direct Request':'Receive Payment';
-  $('paymentInfo').textContent=`${currentInvoice.invoiceNo} · ${currentInvoice.customer} · ${currentInvoice.locationCode} · Outstanding ${money(currentInvoice.outstanding,currentInvoice.currency)}`;
-
-  $('payDate').value=today();
-  $('payAmount').value='';
-  $('payAmount').max=currentInvoice.outstanding;
-
-  configureDirectRequestUI();
-  if(!requesting)$('payMethod').value='Cash';
-
-  $('payCashUSD').value='0';
-  $('payCashKHR').value='0';
-  $('payBank').value='';
-  $('transactionId').value='';
-  $('bankReference').value='';
-  $('payNote').value='';
-  $('adminCode').value='';
-  setPaymentError('');
-  toggleBankFields();
-
-  $('singleAdminField').style.display=requesting?'none':'block';
-  $('savePayBtn').textContent=requesting?'✓ Send Direct Request':'✓ Approve & Save Payment';
-
-  /* Full Outstanding helper is useful on both sides. */
-  $('singleFullAmountRow').style.display='flex';
-
-  $('paymentOverlay').classList.remove('hidden');
-  $('paymentHistory').textContent='Loading…';
-
-  try{
-    const d=await apiPost({action:'arDetail',sessionToken,view:VIEW,invoiceNo});
-    if(!d||!d.success)throw new Error(d?.error||'Could not load payment history.');
-    const ps=Array.isArray(d.payments)?d.payments:[];
-    $('paymentHistory').innerHTML=ps.length
-      ?ps.map(p=>`<div class="historyitem"><strong>${money(p.amount,p.currency)}</strong> · ${esc(p.paymentDate)} · ${esc(p.paymentMethod)}${p.transactionId?`<br>Transaction ID: ${esc(p.transactionId)}`:''}${p.approvedBy?`<br>Approved by: ${esc(p.approvedBy)}`:''}</div>`).join('')
-      :'<div class="empty" style="padding:12px">No previous payments.</div>';
-  }catch(e){
-    $('paymentHistory').textContent=e.message;
-  }
-}
-async function savePayment(){
-  if(!currentInvoice)return;
-
-  const requesting=VIEW==='your',
-        amount=num($('payAmount').value),
-        admin=$('adminCode').value.trim();
-
-  setPaymentError('');
-
-  if(amount<=0)return setPaymentError('Receivable amount must be greater than zero.');
-  if(amount>num(currentInvoice.outstanding)+.000001)return setPaymentError('Amount cannot exceed outstanding balance.');
-
-  if(!requesting){
-    const method=$('payMethod').value,
-          tx=$('transactionId').value.trim(),
-          physicalCashUSD=num($('payCashUSD').value),
-          physicalCashKHR=num($('payCashKHR').value);
-
-    if(method==='Bank'&&!$('payBank').value.trim())return setPaymentError('Bank Name is required.');
-    if(method==='Bank'&&!tx)return setPaymentError('Transaction ID is required for Bank payment.');
-    if(method==='Cash'&&physicalCashUSD<=0&&physicalCashKHR<=0)return setPaymentError('Enter the physical cash received in USD and/or KHR.');
-    if(!admin)return setPaymentError('Admin Code is required to approve payment.');
-  }
-
-  const btn=$('savePayBtn');
-  btn.disabled=true;
-  btn.textContent=requesting?'Sending Direct Request…':'Saving…';
-
-  try{
-    if(requesting){
-      const requestData={
-        sessionToken,
-        invoiceNo:currentInvoice.invoiceNo,
-        paymentDate:$('payDate').value,
-        amount,
-        note:$('payNote').value.trim(),
-        requestType:'Direct Request'
-      };
-
-      const d=await apiPost({action:'arPaymentRequest',requestData:JSON.stringify(requestData)});
-      if(!d||!d.success)throw new Error(d?.error||'Could not send Direct Request.');
-
-      closePayment();
-      await loadAR(true);
-      alert(`Direct Request sent to Admin.\nRequest ID: ${d.requestId||''}\nAmount: ${money(d.totalAmount||amount,d.currency||currentInvoice.currency)}\nAdmin will decide Cash or Bank before clearing.`);
-    }else{
-      const method=$('payMethod').value,
-            physicalCashUSD=num($('payCashUSD').value),
-            physicalCashKHR=num($('payCashKHR').value);
-
-      const paymentData={
-        sessionToken,
-        adminCode:admin,
-        invoiceNo:currentInvoice.invoiceNo,
-        paymentDate:$('payDate').value,
-        amount,
-        paymentMethod:method,
-        bankPayment:method==='Bank'?$('payBank').value.trim():'',
-        transactionId:method==='Bank'?$('transactionId').value.trim():'',
-        bankReference:method==='Bank'?$('bankReference').value.trim():'',
-        physicalCashUSD:method==='Cash'?physicalCashUSD:0,
-        physicalCashKHR:method==='Cash'?physicalCashKHR:0,
-        note:$('payNote').value.trim()
-      };
-
-      const d=await apiPost({action:'arPayment',paymentData:JSON.stringify(paymentData)});
-      if(!d||!d.success)throw new Error(d?.error||'Payment failed.');
-
-      closePayment();
-      await loadAR(true);
-      alert(`Payment saved successfully.\nApproved by: ${d.approvedBy||'Admin'}\nPayment ID: ${d.paymentId||''}`);
+    if(VIEW==="pending-receivable"){
+      const cached=restoreCache();
+      if(cached)await smartSync(true);
+      else await loadPending(true);
+    }else if(VIEW==="pending-daily-cash"){
+      await loadPendingDailyCash(true);
     }
+
+    startSync();
+
   }catch(e){
-    setPaymentError(e.message||'Action failed. Nothing was changed.');
+    setLoginError(e.message||"Access denied.");
   }finally{
     btn.disabled=false;
-    btn.textContent=requesting?'✓ Send Direct Request':'✓ Approve & Save Payment';
-    $('adminCode').value='';
+    btn.textContent="Sign In";
   }
 }
 
-function openBatchPayment(){
-  const picked=selectedPaymentRows();
-  if(!picked.length)return alert('Please check at least one invoice first.');
-  if(picked.some(r=>r.arStatus==='Processing'))return alert('Processing invoices cannot be selected again.');
 
-  const customers=[...new Set(picked.map(r=>String(r.customer||'').trim().toLowerCase()))];
-  if(customers.length!==1)return alert('Selected invoices must belong to one customer.');
 
-  const currencies=[...new Set(picked.map(r=>String(r.currency||'USD').toUpperCase()))];
-  if(currencies.length!==1)return alert('Selected invoices must use the same currency.');
 
-  const requesting=VIEW==='your';
-  const currency=currencies[0];
-  const total=picked.reduce((s,r)=>s+num(r.outstanding),0);
 
-  document.querySelector('#batchOverlay h2').textContent=requesting?'Direct Batch Request':'Batch Payment';
-  $('batchInfo').textContent=`${picked[0].customer} · ${picked.length} invoice${picked.length===1?'':'s'} · ${requesting?'request to Admin':'one payment'}`;
-  $('batchList').innerHTML=picked.map(r=>`<div class="batch-item"><span><strong>${esc(r.invoiceNo)}</strong></span><span>${money(r.outstanding,r.currency)}</span></div>`).join('');
-  $('batchTotal').textContent=money(total,currency);
-  $('batchDate').value=today();
 
-  configureDirectRequestUI();
-  if(!requesting)$('batchMethod').value='Cash';
 
-  $('batchCashUSD').value='0';
-  $('batchCashKHR').value='0';
-  $('batchBank').value='';
-  $('batchTransactionId').value='';
-  $('batchBankReference').value='';
-  $('batchNote').value='';
-  $('batchAdminCode').value='';
-  setBatchError('');
-  toggleBatchBankFields();
 
-  $('batchAdminField').style.display=requesting?'none':'block';
-  $('saveBatchBtn').textContent=requesting?'✓ Send Direct Batch Request':'✓ Approve & Clear Selected Invoices';
-  $('batchFullAmountRow').style.display='flex';
 
-  $('batchOverlay').classList.remove('hidden');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function vaultCacheSave(){
+  try{localStorage.setItem(VAULT_CACHE_KEY,JSON.stringify({balance:vaultBalance,entries:vaultPendingEntries,savedAt:Date.now()}))}catch(_){}
 }
-async function saveBatchPayment(){
-  const picked=selectedPaymentRows();
-  if(!picked.length)return setBatchError('No invoices are selected.');
+function vaultCacheRestore(){
+  try{
+    const raw=localStorage.getItem(VAULT_CACHE_KEY);if(!raw)return false;
+    const d=JSON.parse(raw);if(!d||!d.balance)return false;
+    vaultBalance={usd:num(d.balance.usd),khr:num(d.balance.khr),dailyCashUSD:num(d.balance.dailyCashUSD),dailyCashKHR:num(d.balance.dailyCashKHR),receivableCashUSD:num(d.balance.receivableCashUSD),receivableCashKHR:num(d.balance.receivableCashKHR),entries:Array.isArray(d.balance.entries)?d.balance.entries:[]};
+    vaultPendingEntries=Array.isArray(d.entries)?d.entries:[];
+    renderVaultCards();renderPendingDeposit();
+    const age=Math.max(0,Math.round((Date.now()-num(d.savedAt))/1000));
+    if($("pdSyncStatus"))$("pdSyncStatus").textContent=`Cached ${age}s ago · checking live data…`;
+    if($("vaultFreshState"))$("vaultFreshState").textContent="● Cached Vault";
+    return true;
+  }catch(_){return false}
+}
+function currentVaultPendingEntries(entries){
+  const list=Array.isArray(entries)?entries:[],out=[];
+  for(const x of list){
+    if(String(x.type||"").toUpperCase()==="OUT")break;
+    if(String(x.type||"").toUpperCase()!=="IN")continue;
+    const source=String(x.source||"").trim();
+    if(source!=="Daily Cash"&&source!=="Receivable Cash")continue;
+    out.push(x);
+  }
+  return out;
+}
+function renderVaultCards(){
+  const isEmpty=Math.abs(num(vaultBalance.usd))<0.000001 && Math.abs(num(vaultBalance.khr))<0.5;
 
-  const requesting=VIEW==='your',
-        admin=$('batchAdminCode').value.trim();
-
-  setBatchError('');
-
-  if(!requesting){
-    const method=$('batchMethod').value,
-          tx=$('batchTransactionId').value.trim(),
-          physicalCashUSD=num($('batchCashUSD').value),
-          physicalCashKHR=num($('batchCashKHR').value);
-
-    if(method==='Bank'&&!$('batchBank').value.trim())return setBatchError('Bank Name is required.');
-    if(method==='Bank'&&!tx)return setBatchError('Transaction ID is required for Bank payment.');
-    if(method==='Cash'&&physicalCashUSD<=0&&physicalCashKHR<=0)return setBatchError('Enter the physical cash received in USD and/or KHR.');
-    if(!admin)return setBatchError('Admin Code is required to approve the whole batch.');
+  /* If the full Vault has been deposited, never show stale source
+     contribution cards from the previous deposit cycle. */
+  if(isEmpty){
+    vaultBalance.usd=0;
+    vaultBalance.khr=0;
+    vaultBalance.dailyCashUSD=0;
+    vaultBalance.dailyCashKHR=0;
+    vaultBalance.receivableCashUSD=0;
+    vaultBalance.receivableCashKHR=0;
+    vaultPendingEntries=[];
   }
 
-  const btn=$('saveBatchBtn');
+  if($("vaultUSD"))$("vaultUSD").textContent=money(vaultBalance.usd,"USD");
+  if($("vaultKHR"))$("vaultKHR").textContent=money(vaultBalance.khr,"KHR");
+  if($("vaultDailyUSD"))$("vaultDailyUSD").textContent=money(vaultBalance.dailyCashUSD,"USD");
+  if($("vaultDailyKHR"))$("vaultDailyKHR").textContent=money(vaultBalance.dailyCashKHR,"KHR");
+  if($("vaultReceivableUSD"))$("vaultReceivableUSD").textContent=money(vaultBalance.receivableCashUSD,"USD");
+  if($("vaultReceivableKHR"))$("vaultReceivableKHR").textContent=money(vaultBalance.receivableCashKHR,"KHR");
+  if($("vaultStatus"))$("vaultStatus").textContent=isEmpty?"Empty":"Cash On Hold";
+}
+function depositSearchText(r){
+  return norm([r.date,r.source,r.referenceId,r.closeId,r.depositId,r.customer,r.customerName,r.salesperson,r.locationCode,r.entryId,r.invoiceDate].join(" "));
+}
+function renderPendingDeposit(){
+  if(VIEW!=="pending-deposit")return;
+  const q=norm($("pdSearch")?.value),salesman=norm($("pdSalesman")?.value),source=$("pdSource")?.value||"";
+  const visible=vaultPendingEntries.filter(r=>(!q||depositSearchText(r).includes(q))&&(!salesman||norm(r.salesperson).includes(salesman))&&(!source||String(r.source)===source));
+  $("pdCount").textContent=visible.length;
+  $("pdUSD").textContent=money(visible.reduce((s,r)=>s+num(r.usd),0),"USD");
+  $("pdKHR").textContent=money(visible.reduce((s,r)=>s+num(r.khr),0),"KHR");
+  $("pdRowCount").textContent=`${visible.length} vault entr${visible.length===1?"y":"ies"}`;
+  $("pendingDepositBody").innerHTML=visible.length?visible.map((r,i)=>{
+    const sourceClass=String(r.source)==="Receivable Cash"?"receivable":"daily";
+    const ref=r.referenceId||r.closeId||r.entryId||"-";
+    const customer=r.customerName||r.customer||"-";
+    return `<tr>
+      <td>${i+1}</td><td>${esc(r.date||"-")}</td>
+      <td><span class="vault-source ${sourceClass}">${esc(r.source||"-")}</span></td>
+      <td><strong>${esc(ref)}</strong></td><td>${esc(customer)}</td><td>${esc(r.salesperson||"-")}</td>
+      <td>${esc(r.locationCode||"-")}</td><td class="center">${num(r.invoiceCount).toLocaleString()}</td>
+      <td class="money vault-money-usd">${money(r.usd,"USD")}</td><td class="money vault-money-khr">${money(r.khr,"KHR")}</td>
+      <td><span class="status processing">In Vault</span></td>
+    </tr>`;
+  }).join(""):'<tr><td colspan="11" class="empty">No cash is currently waiting inside Vault.</td></tr>';
+}
+async function loadPendingDeposit(force=false){
+  if(!sessionToken)throw new Error("Admin session required.");
+  const btn=$("pdRefreshBtn");
+  if(force&&btn){btn.disabled=true;btn.textContent="Refreshing…"}
+  if($("pdSyncStatus"))$("pdSyncStatus").textContent=force?"Refreshing Vault…":"Checking Vault…";
+  try{
+    await loadVaultBalance();
+    if($("pdSyncStatus"))$("pdSyncStatus").textContent="Up to date · fast smart sync";
+    if($("vaultFreshState"))$("vaultFreshState").textContent="● Live Vault";
+  }finally{
+    if(force&&btn){btn.disabled=false;btn.textContent="↻ Refresh"}
+  }
+}
+function clearPendingDepositFilters(){
+  $("pdSearch").value="";$("pdSalesman").value="";if($("pdSource"))$("pdSource").value="";renderPendingDeposit();
+}
+
+
+function openReceivableDeposit(depositId){
+  currentReceivableDeposit=receivablePendingDeposits.find(r=>r.depositId===depositId)||null;
+  if(!currentReceivableDeposit)return;
+
+  $("rdInfo").textContent=
+    `${currentReceivableDeposit.depositId} · ${currentReceivableDeposit.customer} · ${money(currentReceivableDeposit.amount,currentReceivableDeposit.currency)}`;
+
+  $("rdBank").value="";
+  $("rdReference").value="";
+  $("rdNote").value="";
+  $("rdError").textContent="";
+  $("rdError").classList.remove("show");
+  $("receivableDepositOverlay").classList.remove("hidden");
+}
+
+function closeReceivableDeposit(){
+  $("receivableDepositOverlay").classList.add("hidden");
+  currentReceivableDeposit=null;
+}
+
+async function completeReceivableDeposit(){
+  if(!currentReceivableDeposit)return;
+
+  const bank=$("rdBank").value.trim();
+  if(!bank){
+    $("rdError").textContent="Company Bank Account is required.";
+    $("rdError").classList.add("show");
+    return;
+  }
+
+  const btn=$("rdCompleteBtn");
   btn.disabled=true;
-  btn.textContent=requesting?'Sending Direct Batch Request…':'Saving Batch…';
+  btn.textContent="Depositing…";
+  $("rdError").textContent="";
+  $("rdError").classList.remove("show");
 
   try{
-    if(requesting){
-      const requestData={
+    await apiPost({
+      action:"completeReceivableCashDeposit",
+      requestData:JSON.stringify({
         sessionToken,
-        invoiceNos:picked.map(r=>r.invoiceNo),
-        paymentDate:$('batchDate').value,
-        note:$('batchNote').value.trim(),
-        requestType:'Direct Request'
-      };
+        depositId:currentReceivableDeposit.depositId,
+        companyBankAccount:bank,
+        depositReference:$("rdReference").value.trim(),
+        note:$("rdNote").value.trim()
+      })
+    });
 
-      const d=await apiPost({action:'arBatchRequest',requestData:JSON.stringify(requestData)});
-      if(!d||!d.success)throw new Error(d?.error||'Could not send Direct Batch Request.');
+    closeReceivableDeposit();
+    await loadPendingDeposit(true);
+    alert("Receivable Cash deposited successfully and moved to Deposit History.");
 
-      closeBatchPayment();
-      selectedInvoices.clear();
-      await loadAR(true);
-
-      alert(`Direct Batch Request sent to Admin.\nInvoices: ${d.invoiceCount||picked.length}\nTotal: ${money(d.totalAmount,d.currency)}\nRequest ID: ${d.requestId||''}\nAdmin will decide Cash or Bank before clearing.`);
-    }else{
-      const method=$('batchMethod').value,
-            physicalCashUSD=num($('batchCashUSD').value),
-            physicalCashKHR=num($('batchCashKHR').value);
-
-      const paymentData={
-        sessionToken,
-        adminCode:admin,
-        invoiceNos:picked.map(r=>r.invoiceNo),
-        paymentDate:$('batchDate').value,
-        paymentMethod:method,
-        bankPayment:method==='Bank'?$('batchBank').value.trim():'',
-        transactionId:method==='Bank'?$('batchTransactionId').value.trim():'',
-        bankReference:method==='Bank'?$('batchBankReference').value.trim():'',
-        physicalCashUSD:method==='Cash'?physicalCashUSD:0,
-        physicalCashKHR:method==='Cash'?physicalCashKHR:0,
-        note:$('batchNote').value.trim()
-      };
-
-      const d=await apiPost({action:'arBatchPayment',paymentData:JSON.stringify(paymentData)});
-      if(!d||!d.success)throw new Error(d?.error||'Action failed.');
-
-      closeBatchPayment();
-      selectedInvoices.clear();
-      await loadAR(true);
-
-      alert(`Batch payment saved successfully.\nInvoices cleared: ${d.invoiceCount||picked.length}\nTotal: ${money(d.totalAmount,d.currency)}\nApproved by: ${d.approvedBy||'Admin'}\nPayment ID: ${d.paymentId||''}`);
-    }
   }catch(e){
-    setBatchError(e.message||'Action failed. Nothing was changed.');
+    $("rdError").textContent=e.message||"Could not complete deposit.";
+    $("rdError").classList.add("show");
   }finally{
     btn.disabled=false;
-    btn.textContent=requesting?'✓ Send Direct Batch Request':'✓ Approve & Clear Selected Invoices';
-    $('batchAdminCode').value='';
+    btn.textContent="✓ Complete Deposit";
   }
 }
 
-async function openRequestReview(requestId){
-  if(VIEW!=='all'||!requestId)return;
+function renderDepositHistory(){
+  if(VIEW!=="deposit-history")return;
+  const q=norm($("dhSearch")?.value);
+  const salesman=norm($("dhSalesman")?.value);
+  const visible=receivableDepositHistory.filter(r=>
+    (!q||depositSearchText(r).includes(q)) &&
+    (!salesman||norm(r.salesman).includes(salesman))
+  );
+
+  $("dhCount").textContent=visible.length;
+  $("dhUSD").textContent=money(visible.filter(r=>String(r.currency).toUpperCase()==="USD").reduce((s,r)=>s+num(r.amount),0),"USD");
+  $("dhKHR").textContent=money(visible.filter(r=>String(r.currency).toUpperCase()==="KHR").reduce((s,r)=>s+num(r.amount),0),"KHR");
+  $("dhRowCount").textContent=`${visible.length} deposit${visible.length===1?"":"s"}`;
+
+  $("depositHistoryBody").innerHTML=visible.length?visible.map(r=>`
+    <tr>
+      <td><strong>${esc(r.depositId)}</strong></td>
+      <td>${esc(r.source||"-")}</td>
+      <td>${esc(r.depositedAt||"-")}</td>
+      <td>${esc(r.paymentId||"-")}</td>
+      <td>${esc(r.customer||"-")}</td>
+      <td>${esc(r.paymentMethod||"-")}</td>
+      <td>${esc(r.companyBankAccount||r.collectionBank||"-")}</td>
+      <td>${esc(r.depositReference||r.collectionTransactionId||"-")}</td>
+      <td class="money"><strong>${money(r.amount,r.currency)}</strong></td>
+      <td>${esc(r.depositedBy||r.approvedBy||"-")}</td>
+    </tr>`).join("")
+  :'<tr><td colspan="10" class="empty">No Deposit History.</td></tr>';
+}
+
+async function loadDepositHistory(force=false){
+  if(!sessionToken)throw new Error("Admin session required.");
+  const btn=$("dhRefreshBtn");
+  if(force&&btn){btn.disabled=true;btn.textContent="Refreshing…"}
+  $("dhSyncStatus").textContent=force?"Syncing…":"Loading…";
+  try{
+    const d=await apiGet({
+      action:"adminCompanyDepositHistory",
+      sessionToken,
+      _ts:Date.now()
+    });
+    receivableDepositHistory=Array.isArray(d.deposits)?d.deposits:[];
+    renderDepositHistory();
+    $("dhSyncStatus").textContent="Up to date · smart sync";
+  }finally{
+    if(force&&btn){btn.disabled=false;btn.textContent="↻ Refresh"}
+  }
+}
+
+function clearDepositHistoryFilters(){
+  $("dhSearch").value="";
+  $("dhSalesman").value="";
+  renderDepositHistory();
+}
+
+
+function pendingDailyCashSearchText(r){
+  return norm([
+    r.requestId,r.salesman,r.note,
+    ...(Array.isArray(r.invoices)?r.invoices.flatMap(x=>[x.invoiceNo,x.customer,x.locationCode]):[])
+  ].join(" "));
+}
+
+function renderPendingDailyCash(){
+  if(VIEW!=="pending-daily-cash")return;
+  const q=norm($("dcSearch")?.value);
+  const salesman=norm($("dcSalesman")?.value);
+
+  const visible=pendingDailyCashRequests.filter(r=>
+    (!q||pendingDailyCashSearchText(r).includes(q)) &&
+    (!salesman||norm(r.salesman).includes(salesman))
+  );
+
+  $("dcCount").textContent=visible.length;
+  $("dcUSD").textContent=money(visible.reduce((s,r)=>s+num(r.cashUSD),0),"USD");
+  $("dcKHR").textContent=money(visible.reduce((s,r)=>s+num(r.cashKHR),0),"KHR");
+  $("dcInvoices").textContent=visible.reduce((s,r)=>s+num(r.invoiceCount),0);
+  $("dcRowCount").textContent=`${visible.length} request${visible.length===1?"":"s"}`;
+
+  $("pendingDailyCashBody").innerHTML=visible.length?visible.map(r=>`
+    <tr>
+      <td><strong>${esc(r.requestId)}</strong></td>
+      <td>${esc(r.requestDate||"-")}</td>
+      <td>${esc(r.salesman||"-")}</td>
+      <td class="center">${num(r.groupCount)}</td>
+      <td class="center">${num(r.invoiceCount)}</td>
+      <td class="money">${money(r.cashUSD,"USD")}</td>
+      <td class="money">${money(r.cashKHR,"KHR")}</td>
+      <td><span class="status processing">Processing</span></td>
+      <td><button class="btn primary" onclick='openPendingDailyCashReview(${JSON.stringify(r.requestId)})'>Review</button></td>
+    </tr>`).join("")
+  :'<tr><td colspan="9" class="empty">No Pending Daily Cash Requests.</td></tr>';
+}
+
+async function loadPendingDailyCash(force=false){
+  if(!sessionToken)throw new Error("Admin session required.");
+  const btn=$("dcRefreshBtn");
+  if(force&&btn){btn.disabled=true;btn.textContent="Refreshing…"}
+  $("dcSyncStatus").textContent=force?"Syncing…":"Loading…";
+
+  try{
+    const d=await apiGet({
+      action:"adminPendingDailyCashCollectionRequests",
+      sessionToken,
+      _ts:Date.now()
+    });
+
+    pendingDailyCashRequests=Array.isArray(d.requests)?d.requests:[];
+    renderPendingDailyCash();
+    $("dcSyncStatus").textContent="Up to date · smart sync";
+  }finally{
+    if(force&&btn){btn.disabled=false;btn.textContent="↻ Refresh"}
+  }
+}
+
+function clearPendingDailyCashFilters(){
+  $("dcSearch").value="";
+  $("dcSalesman").value="";
+  renderPendingDailyCash();
+}
+
+function nativeAmount(v,c){
+  return money(v,String(c||"USD").toUpperCase());
+}
+
+function openPendingDailyCashReview(requestId){
+  currentDailyCashCollectionRequest=pendingDailyCashRequests.find(r=>r.requestId===requestId)||null;
+  if(!currentDailyCashCollectionRequest)return;
+
+  const r=currentDailyCashCollectionRequest;
+  const invoices=Array.isArray(r.invoices)?r.invoices:[];
+  const first=invoices[0]||{};
+
+  $("dcReviewInfo").textContent=
+    `${r.requestId} · ${r.salesman||"-"} · ${r.invoiceCount} Cash invoices`;
+
+  let originalUsdTotal=0;
+  let expectedTotal=0;
+  let cashUsdTotal=0;
+  let cashKhrTotal=0;
+
+  $("dcReviewBody").innerHTML=invoices.map((x,i)=>{
+    const originalCurrency=x.originalInvoiceCurrency||x.currency||"USD";
+    const originalAmount=num(x.originalInvoiceAmount);
+    const originalUsd=num(x.originalInvoiceUSD);
+    const expected=num(x.expectedUSD);
+    const cashCurrency=x.currency||"USD";
+    const cashAmount=num(x.amount);
+
+    originalUsdTotal+=originalUsd;
+    expectedTotal+=expected;
+    if(String(cashCurrency).toUpperCase()==="KHR")cashKhrTotal+=cashAmount;
+    else cashUsdTotal+=cashAmount;
+
+    return `<tr>
+      <td>${i+1}</td>
+      <td><strong>${esc(x.invoiceNo||x.invoiceId||"-")}</strong></td>
+      <td>${esc(x.invoiceDate||"-")}</td>
+      <td>${esc(x.customer||"-")}</td>
+      <td>${esc(x.salesperson||r.salesman||"-")}</td>
+      <td>${esc(x.locationCode||"-")}</td>
+      <td><strong>${nativeAmount(originalAmount,originalCurrency)}</strong></td>
+      <td>${num(x.originalInvoiceExchangeRate||x.exchangeRate)>0?num(x.originalInvoiceExchangeRate||x.exchangeRate).toLocaleString():"-"}</td>
+      <td>${nativeAmount(cashAmount,cashCurrency)}</td>
+      <td class="money">${money(expected,"USD")}</td>
+    </tr>`;
+  }).join("");
+
+  $("dcInvoiceCountBadge").textContent=`(${invoices.length})`;
+  $("dcTableOriginalTotal").textContent=money(originalUsdTotal||num(r.expectedUSD),"USD")+" equiv.";
+  $("dcTableCashTotal").textContent=
+    `${money(cashUsdTotal,"USD")} + ${money(cashKhrTotal,"KHR")}`;
+  $("dcTableExpectedTotal").textContent=money(expectedTotal,"USD");
+
+  $("dcOriginalTotal").textContent=money(originalUsdTotal||num(r.expectedUSD),"USD");
+  $("dcPhysicalUSD").textContent=money(r.actualCashUSD,"USD");
+  $("dcPhysicalKHR").textContent=money(r.actualCashKHR,"KHR");
+  $("dcExpectedValue").textContent=money(r.expectedUSD,"USD");
+  $("dcClosingRate").textContent=num(r.closingRate).toLocaleString();
+  $("dcActualEquivalent").textContent=money(r.actualEquivalentUSD,"USD");
+  $("dcCloseDifference").textContent=money(r.differenceUSD,"USD");
+
+  $("dcInfoRequest").textContent=r.requestId||"-";
+  $("dcInfoSalesman").textContent=r.salesman||"-";
+  $("dcInfoSaleDate").textContent=first.invoiceDate||r.requestDate||"-";
+  $("dcInfoLocation").textContent=first.locationCode||"-";
+  $("dcInfoInvoiceCount").textContent=num(r.invoiceCount);
+  $("dcInfoGroups").textContent=num(r.groupCount)||1;
+  $("dcInfoCreated").textContent=r.createdAt||r.requestDate||"-";
+
+  $("dcVerifyExpected").textContent=money(r.expectedUSD,"USD");
+  $("dcVerifyUSD").textContent=money(r.actualCashUSD,"USD");
+  $("dcVerifyKHR").textContent=money(r.actualCashKHR,"KHR");
+  $("dcVerifyEquivalent").textContent=money(r.actualEquivalentUSD,"USD");
+
+  const matched=Math.abs(num(r.differenceUSD))<=0.05;
+  $("dcVerifyResult").textContent=matched?"✓ MATCH":"✕ NOT MATCHED";
+  $("dcVerifyResult").style.background=matched?"#eaf8ef":"#fff0f0";
+  $("dcVerifyResult").style.color=matched?"#198754":"#c93c46";
+
+  $("dcReviewTotals").innerHTML=
+    `<strong>Request Note:</strong> ${r.note?esc(r.note):"No note"}<br>`+
+    `<strong>Admin action:</strong> ${
+      r.closeMethod==="Deposit to Company Bank"
+        ? "Accept will record the direct company-bank deposit in Deposit History."
+        : "Accept will add the physical USD/KHR to Cash Vault."
+    }`;
+
+  $("dcBankReview").innerHTML=`
+    <div class="dc-info-row"><span>Close Method</span><strong>${esc(r.closeMethod||"-")}</strong></div>
+    <div class="dc-info-row"><span>Closing Exchange Rate</span><strong>${num(r.closingRate).toLocaleString()}</strong></div>
+    <div class="dc-info-row"><span>Close Difference</span><strong>${money(r.differenceUSD,"USD")}</strong></div>
+    ${r.closeMethod==="Deposit to Company Bank"
+      ? `<div class="dc-info-row"><span>Company Bank</span><strong>${esc(r.bankAccount||"-")}</strong></div>
+         <div class="dc-info-row"><span>Bank Transaction ID</span><strong>${esc(r.transactionId||"-")}</strong></div>
+         <div class="dc-info-row"><span>Deposit Exchange Rate</span><strong>${num(r.depositRate).toLocaleString()}</strong></div>
+         <div class="dc-info-row"><span>Final Bank Deposit USD</span><strong>${money(r.bankDepositUSD,"USD")}</strong></div>
+         <div class="dc-info-row"><span>Bank Difference</span><strong>${money(r.bankDifferenceUSD,"USD")}</strong></div>`
+      : `<div class="dc-info-row"><span>Destination</span><strong>Cash Vault</strong></div>`}
+  `;
+
+  $("dcRejectReason").value="";
+  $("dcReviewError").textContent="";
+  $("dcReviewError").classList.remove("show");
+  $("dailyCashRequestReviewOverlay").classList.remove("hidden");
+}
+
+async function acceptPendingDailyCash(){
+  if(!currentDailyCashCollectionRequest)return;
+  const r=currentDailyCashCollectionRequest;
+
+  const message=r.closeMethod==="Deposit to Company Bank"
+    ? `Accept ${r.requestId} and record the direct company-bank deposit?`
+    : `Accept ${r.requestId} and add the physical USD/KHR to Cash Vault?`;
+
+  if(!confirm(message))return;
+
+  const btn=$("dcAcceptBtn");
+  btn.disabled=true;btn.textContent="Accepting…";
+  $("dcReviewError").textContent="";
+  $("dcReviewError").classList.remove("show");
+
+  try{
+    const d=await apiPost({
+      action:"dccApproveRequest",
+      requestData:JSON.stringify({
+        sessionToken,
+        requestId:r.requestId
+      })
+    });
+
+    closePendingDailyCashReview();
+    await loadPendingDailyCash(true);
+
+    alert(
+      d.nextStage==="Deposit History"
+        ? "Daily Cash accepted and recorded in Deposit History."
+        : "Daily Cash accepted. Physical USD/KHR has been added to Cash Vault."
+    );
+  }catch(e){
+    $("dcReviewError").textContent=e.message||"Could not accept Daily Cash Request.";
+    $("dcReviewError").classList.add("show");
+  }finally{
+    btn.disabled=false;btn.textContent="✓ Accept";
+  }
+}
+
+async function rejectPendingDailyCash(){
+  if(!currentDailyCashCollectionRequest)return;
+  const r=currentDailyCashCollectionRequest;
+  if(!confirm(`Reject ${r.requestId}?`))return;
+
+  const btn=$("dcRejectBtn");
+  btn.disabled=true;btn.textContent="Rejecting…";
+  $("dcReviewError").textContent="";
+  $("dcReviewError").classList.remove("show");
+
+  try{
+    await apiPost({
+      action:"dccRejectRequest",
+      requestData:JSON.stringify({
+        sessionToken,
+        requestId:r.requestId,
+        reason:$("dcRejectReason").value.trim()
+      })
+    });
+
+    closePendingDailyCashReview();
+    await loadPendingDailyCash(true);
+    alert("Daily Cash Request rejected. Its invoices are available to request again.");
+  }catch(e){
+    $("dcReviewError").textContent=e.message||"Could not reject Daily Cash Request.";
+    $("dcReviewError").classList.add("show");
+  }finally{
+    btn.disabled=false;btn.textContent="✕ Reject";
+  }
+}
+
+function closePendingDailyCashReview(){
+  $("dailyCashRequestReviewOverlay").classList.add("hidden");
+  currentDailyCashCollectionRequest=null;
+}
+
+
+async function loadVaultBalance(){
+  if(!sessionToken)return;
+  try{
+    const d=await apiGet({action:"vaultBalance",sessionToken,_ts:Date.now()});
+    vaultBalance={usd:num(d.usd),khr:num(d.khr),dailyCashUSD:num(d.dailyCashUSD),dailyCashKHR:num(d.dailyCashKHR),receivableCashUSD:num(d.receivableCashUSD),receivableCashKHR:num(d.receivableCashKHR),entries:Array.isArray(d.entries)?d.entries:[]};
+    vaultPendingEntries=currentVaultPendingEntries(vaultBalance.entries);
+    renderVaultCards();
+    if(VIEW==="pending-deposit")renderPendingDeposit();
+    vaultCacheSave();
+  }catch(e){
+    console.warn("Cash Vault:",e);
+    if(!vaultPendingEntries.length)vaultCacheRestore();
+  }
+}
+
+function openVaultDeposit(){
+  if(vaultBalance.usd<=0&&vaultBalance.khr<=0){
+    alert("Cash Vault is empty.");
+    return;
+  }
+
+  $("vaultModalUSD").textContent=money(vaultBalance.usd,"USD");
+  $("vaultModalKHR").textContent=money(vaultBalance.khr,"KHR");
+
+  $("vaultOutUSD").value=vaultBalance.usd.toFixed(2);
+  $("vaultOutKHR").value=Math.round(vaultBalance.khr);
+  $("vaultDepositRate").value="";
+  $("vaultExpectedUSD").value="";
+  $("vaultBankUSD").value="";
+  $("vaultBankAccount").value="";
+  $("vaultTransactionId").value="";
+  $("vaultDepositNote").value="";
+  $("vaultDepositError").textContent="";
+  $("vaultDepositError").classList.remove("show");
+
+  $("vaultDepositOverlay").classList.remove("hidden");
+}
+
+function closeVaultDeposit(){
+  $("vaultDepositOverlay").classList.add("hidden");
+}
+
+function calcVaultDeposit(){
+  const usdOut=num($("vaultOutUSD").value);
+  const khrOut=num($("vaultOutKHR").value);
+  const rate=num($("vaultDepositRate").value);
+
+  const expected=usdOut+(khrOut>0&&rate>0?khrOut/rate:0);
+  $("vaultExpectedUSD").value=expected>0?expected.toFixed(2):"";
+
+  return expected;
+}
+
+async function completeVaultDeposit(){
+  const usdOut=num($("vaultOutUSD").value);
+  const khrOut=num($("vaultOutKHR").value);
+  const rate=num($("vaultDepositRate").value);
+  const expected=calcVaultDeposit();
+  const bankUsd=num($("vaultBankUSD").value);
+  const bank=$("vaultBankAccount").value.trim();
+  const tx=$("vaultTransactionId").value.trim();
+
+  const showVaultError=msg=>{
+    $("vaultDepositError").textContent=msg;
+    $("vaultDepositError").classList.add("show");
+  };
+
+  if(usdOut<0||khrOut<0)return showVaultError("Deposit amount cannot be negative.");
+  if(usdOut>vaultBalance.usd+0.001)return showVaultError("USD is greater than Cash Vault balance.");
+  if(khrOut>vaultBalance.khr+1)return showVaultError("KHR is greater than Cash Vault balance.");
+  if(khrOut>0&&rate<=0)return showVaultError("Deposit Exchange Rate is required.");
+  if(!bank||!tx)return showVaultError("Company Bank Account and Transaction ID are required.");
+
+  if(bankUsd<=0||Math.abs(bankUsd-expected)>0.05){
+    return showVaultError("Actual Bank Deposit USD does not match the selected Vault cash.");
+  }
+
+  const btn=$("vaultDepositBtn");
+  btn.disabled=true;
+  btn.textContent="Depositing…";
+
+  try{
+    const d=await apiPost({
+      action:"vaultDeposit",
+      requestData:JSON.stringify({
+        sessionToken,
+        usdAmount:usdOut,
+        khrAmount:khrOut,
+        exchangeRate:rate,
+        bankDepositUSD:bankUsd,
+        bankAccount:bank,
+        transactionId:tx,
+        note:$("vaultDepositNote").value.trim()
+      })
+    });
+
+    closeVaultDeposit();
+    await loadVaultBalance();
+    await loadDepositHistory(true);
+
+    alert(`Cash Vault deposit completed.\nDeposit ID: ${d.depositId}`);
+  }catch(e){
+    showVaultError(e.message||"Could not complete Cash Vault deposit.");
+  }finally{
+    btn.disabled=false;
+    btn.textContent="Complete Vault Deposit";
+  }
+}
+
+async function restoreAccess(){
+  const needsSecureLoad=configureView();
+  if(!needsSecureLoad)return;
+
+  deviceToken=localStorage.getItem(DEVICE_KEY)||"";
+  sessionToken=sessionStorage.getItem(SESSION_KEY)||"";
+  $("rememberDevice").checked=!!deviceToken;
+
+  if(sessionToken||deviceToken)$("loginOverlay").classList.add("hidden");
+
+  if(sessionToken){
+    try{
+      $("logoutBtn").hidden=false;
+      if(VIEW==="pending-receivable")await loadPending(true);
+      else if(VIEW==="pending-daily-cash")await loadPendingDailyCash(true);
+      else if(VIEW==="pending-deposit")await loadPendingDeposit(true);
+      else if(VIEW==="deposit-history")await loadDepositHistory(true);
+      startSync();
+      return;
+    }catch(_){
+      sessionStorage.removeItem(SESSION_KEY);
+      sessionToken="";
+    }
+  }
+
+  if(deviceToken){
+    try{
+      const data=await apiPost({action:"arDeviceLogin",deviceToken,role:"admin"});
+      if(!data||!data.authorized)throw new Error(data?.error||"Remembered access failed.");
+      sessionToken=data.sessionToken;
+      sessionStorage.setItem(SESSION_KEY,sessionToken);
+      $("accessPill").textContent="🛡️ "+(data.adminName||"Admin");
+      $("logoutBtn").hidden=false;
+      if(VIEW==="pending-receivable")await loadPending(true);
+      else if(VIEW==="pending-daily-cash")await loadPendingDailyCash(true);
+      else if(VIEW==="pending-deposit")await loadPendingDeposit(true);
+      else if(VIEW==="deposit-history")await loadDepositHistory(true);
+      startSync();
+      return;
+    }catch(_){
+      deviceToken="";
+      localStorage.removeItem(DEVICE_KEY);
+      localStorage.removeItem(DEVICE_KEY+"_saved_at");
+      sessionToken="";
+      sessionStorage.removeItem(SESSION_KEY);
+    }
+  }
+
+  $("loginOverlay").classList.remove("hidden");
+}
+
+async function logout(){
+  const s=sessionToken,d=deviceToken;
+
+  sessionToken="";
+  deviceToken="";
+  sessionStorage.removeItem(SESSION_KEY);
+  localStorage.removeItem(DEVICE_KEY);
+  localStorage.removeItem(DEVICE_KEY+"_saved_at");
+
+  if(syncTimer){clearInterval(syncTimer);syncTimer=null}
+
+  try{
+    if(s||d)await apiPost({action:"arLogout",sessionToken:s,deviceToken:d});
+  }catch(_){}
+
+  rows=[];
+  groups=[];
+  revision="";
+  $("accessPill").textContent="Admin Work";
+  $("logoutBtn").hidden=true;
+  $("loginOverlay").classList.remove("hidden");
+  $("requestBody").innerHTML='<tr><td colspan="11" class="empty">Sign in to view Pending Receivable Requests.</td></tr>';
+  $("sumRequests").textContent="0";
+  $("sumUSD").textContent="$0.00";
+  $("sumKHR").textContent="៛0";
+  $("sumInvoices").textContent="0";
+}
+
+
+function togglePendingReceivableMethod(){
+  const method=$("reviewPaymentMethod")?.value||"";
+  $("reviewCashBox")?.classList.toggle("show",method==="Cash");
+  $("reviewBankBox")?.classList.toggle("show",method==="Bank");
+}
+
+async function openReview(requestId){
+  if(!sessionToken||!requestId)return;
 
   currentRequest=null;
-  $('requestReviewError').classList.remove('show');
-  $('rejectReason').value='';
-  $('requestReviewOverlay').classList.remove('hidden');
-  $('requestReviewInfo').textContent='Loading request…';
-  $('requestReviewList').innerHTML='';
-  $('requestReviewMeta').innerHTML='';
+  setReviewError("");
+  $("rejectReason").value="";
+  $("reviewInfo").textContent="Loading request…";
+  $("reviewList").innerHTML="";
+  $("reviewMeta").innerHTML="";
 
-  $('reviewPaymentMethod').value='';
-  $('reviewBankName').value='';
-  $('reviewTransactionId').value='';
-  $('reviewBankReference').value='';
-  $('reviewCashUSD').value='0';
-  $('reviewCashKHR').value='0';
-  toggleReviewPaymentMethod();
+  $("reviewPaymentMethod").value="";
+  $("reviewCashUSD").value="0";
+  $("reviewCashKHR").value="0";
+  $("reviewBankName").value="";
+  $("reviewTransactionId").value="";
+  $("reviewBankReference").value="";
+  togglePendingReceivableMethod();
+
+  $("reviewOverlay").classList.remove("hidden");
 
   try{
-    const d=await apiPost({action:'arRequestDetail',sessionToken,requestId});
-    if(!d||!d.success)throw new Error(d?.error||'Could not load request.');
+    const d=await apiPost({
+      action:"arRequestDetail",
+      sessionToken,
+      requestId
+    });
+
+    if(!d||!d.success)throw new Error(d?.error||"Could not load request.");
 
     currentRequest=d.request;
-    const r=currentRequest,
-          total=(r.allocations||[]).reduce((s,a)=>s+num(a.requestedAmount),0);
+    const r=currentRequest;
+    const allocations=Array.isArray(r.allocations)?r.allocations:[];
+    const total=allocations.reduce((s,a)=>s+num(a.requestedAmount),0);
 
-    /* Old requests remain compatible. New Direct Request has no method yet. */
-    if(r.paymentMethod==='Bank'||r.paymentMethod==='Cash'){
-      $('reviewPaymentMethod').value=r.paymentMethod;
-      $('reviewBankName').value=r.bankPayment||'';
-      $('reviewTransactionId').value=r.transactionId||'';
-      $('reviewBankReference').value=r.bankReference||'';
-    }else{
-      $('reviewPaymentMethod').value='';
+    $("reviewInfo").textContent=
+      `${r.requestId} · ${r.customer} · requested by ${r.salesmanName||"Salesman"}`;
+
+    $("reviewList").innerHTML=allocations.length
+      ? allocations.map(a=>`<div class="batch-item"><span><strong>${esc(a.invoiceNo)}</strong></span><span>${money(a.requestedAmount,a.currency||r.currency)}</span></div>`).join("")
+      : '<div class="empty" style="padding:12px">No allocation rows found.</div>';
+
+    $("reviewTotal").textContent=money(total,r.currency);
+
+    const isDirect=(r.requestType==="Direct Request"||r.paymentMethod==="Direct Request"||!r.paymentMethod);
+
+    $("reviewMeta").innerHTML=
+      `<strong>Request Date:</strong> ${esc(r.requestDate||"-")}<br>`+
+      `<strong>Request Type:</strong> ${esc(isDirect?"Direct Request":(r.requestType||r.paymentMethod||"-"))}`+
+      `${r.note?`<br><strong>Salesman Note:</strong> ${esc(r.note)}`:""}`+
+      `<br><strong>Admin Action:</strong> Choose the final Payment Method below before clearing.`;
+
+    /* Backward compatibility for older Bank/Cash requests. */
+    if(r.paymentMethod==="Bank"||r.paymentMethod==="Cash"){
+      $("reviewPaymentMethod").value=r.paymentMethod;
+
+      if(r.paymentMethod==="Bank"){
+        $("reviewBankName").value=r.bankPayment||"";
+        $("reviewTransactionId").value=r.transactionId||"";
+        $("reviewBankReference").value=r.bankReference||"";
+      }
     }
-    toggleReviewPaymentMethod();
 
-    $('requestReviewInfo').textContent=`${r.requestId} · ${r.customer} · requested by ${r.salesmanName||'Salesman'}`;
-    $('requestReviewList').innerHTML=(r.allocations||[]).map(a=>`<div class="batch-item"><span><strong>${esc(a.invoiceNo)}</strong></span><span>${money(a.requestedAmount,a.currency||r.currency)}</span></div>`).join('');
-    $('requestReviewTotal').textContent=money(total,r.currency);
-
-    $('requestReviewMeta').innerHTML=
-      `<strong>Request Type:</strong> ${esc(r.paymentMethod==='Direct Request'?'Direct Request':(r.paymentMethod||'Direct Request'))}`+
-      `${r.note?`<br><strong>Salesman Note:</strong> ${esc(r.note)}`:''}`+
-      `<br><strong>Request Date:</strong> ${esc(r.requestDate||'-')}`+
-      `<br><strong>Admin Action:</strong> Choose Cash or Bank below before clearing.`;
+    togglePendingReceivableMethod();
 
   }catch(e){
-    $('requestReviewInfo').textContent='Could not load request';
-    $('requestReviewError').textContent=e.message;
-    $('requestReviewError').classList.add('show');
+    setReviewError(e.message||"Could not load request.");
   }
 }
-function closeRequestReview(){$('requestReviewOverlay').classList.add('hidden');currentRequest=null}
+
+function closeReview(){
+  $("reviewOverlay").classList.add("hidden");
+  currentRequest=null;
+}
+
 async function clearRequest(){
   if(!currentRequest)return;
 
-  const btn=$('clearRequestBtn'),
-        method=$('reviewPaymentMethod').value,
-        physicalCashUSD=num($('reviewCashUSD').value),
-        physicalCashKHR=num($('reviewCashKHR').value),
-        bankName=$('reviewBankName').value.trim(),
-        transactionId=$('reviewTransactionId').value.trim(),
-        bankReference=$('reviewBankReference').value.trim();
+  const method=$("reviewPaymentMethod").value;
+  const physicalCashUSD=num($("reviewCashUSD").value);
+  const physicalCashKHR=num($("reviewCashKHR").value);
+  const bankName=$("reviewBankName").value.trim();
+  const transactionId=$("reviewTransactionId").value.trim();
+  const bankReference=$("reviewBankReference").value.trim();
 
-  $('requestReviewError').classList.remove('show');
+  setReviewError("");
 
   if(!method){
-    $('requestReviewError').textContent='Please choose the final Payment Method: Cash or Bank.';
-    $('requestReviewError').classList.add('show');
+    setReviewError("Please choose the final Payment Method: Cash or Bank.");
     return;
   }
 
-  if(method==='Cash'&&physicalCashUSD<=0&&physicalCashKHR<=0){
-    $('requestReviewError').textContent='Enter the physical cash received in USD and/or KHR.';
-    $('requestReviewError').classList.add('show');
+  if(method==="Cash"&&physicalCashUSD<=0&&physicalCashKHR<=0){
+    setReviewError("Enter the physical cash received in USD and/or KHR.");
     return;
   }
 
-  if(method==='Bank'&&!bankName){
-    $('requestReviewError').textContent='Bank Name is required.';
-    $('requestReviewError').classList.add('show');
+  if(method==="Bank"&&!bankName){
+    setReviewError("Bank Name is required.");
     return;
   }
 
-  if(method==='Bank'&&!transactionId){
-    $('requestReviewError').textContent='Transaction ID is required before clearing a Bank request.';
-    $('requestReviewError').classList.add('show');
+  if(method==="Bank"&&!transactionId){
+    setReviewError("Transaction ID is required before clearing a Bank payment.");
     return;
   }
 
+  if(!confirm(`Clear ${currentRequest.requestId} as ${method} and save the Receivable payment?`))return;
+
+  const btn=$("clearBtn");
   btn.disabled=true;
-  btn.textContent='Clearing Request…';
+  btn.textContent="Clearing…";
 
   try{
-    const payload={
-      sessionToken,
-      requestId:currentRequest.requestId,
-      paymentMethod:method,
-      bankPayment:method==='Bank'?bankName:'',
-      transactionId:method==='Bank'?transactionId:'',
-      bankReference:method==='Bank'?bankReference:'',
-      physicalCashUSD:method==='Cash'?physicalCashUSD:0,
-      physicalCashKHR:method==='Cash'?physicalCashKHR:0
-    };
+    const d=await apiPost({
+      action:"arClearRequest",
+      requestData:JSON.stringify({
+        sessionToken,
+        requestId:currentRequest.requestId,
+        paymentMethod:method,
+        bankPayment:method==="Bank"?bankName:"",
+        transactionId:method==="Bank"?transactionId:"",
+        bankReference:method==="Bank"?bankReference:"",
+        physicalCashUSD:method==="Cash"?physicalCashUSD:0,
+        physicalCashKHR:method==="Cash"?physicalCashKHR:0
+      })
+    });
 
-    const d=await apiPost({action:'arClearRequest',requestData:JSON.stringify(payload)});
-    if(!d||!d.success)throw new Error(d?.error||'Could not clear request.');
+    if(!d||!d.success)throw new Error(d?.error||"Could not clear request.");
 
-    closeRequestReview();
-    selectedInvoices.clear();
-    await loadAR(true);
+    closeReview();
+    await loadPending(true);
 
-    alert(`Request cleared successfully.\nPayment Method: ${d.paymentMethod||method}\nPayment ID: ${d.paymentId||''}\nInvoices: ${d.invoiceCount||0}\nTotal: ${money(d.totalAmount,d.currency)}${method==='Cash'?`\nReceivable Cash added to Vault.`:''}`);
+    /* Refresh Vault immediately if Admin later opens Pending Deposit. */
+    try{await loadVaultBalance()}catch(_){}
+
+    alert(
+      `Receivable request cleared successfully.\n`+
+      `Payment Method: ${d.paymentMethod||method}\n`+
+      `Payment ID: ${d.paymentId||""}\n`+
+      `Approved by: ${d.approvedBy||"Admin"}`+
+      (method==="Cash"?"\nReceivable Cash added to Vault.":"")
+    );
+
   }catch(e){
-    $('requestReviewError').textContent=e.message||'Could not clear request.';
-    $('requestReviewError').classList.add('show');
+    setReviewError(e.message||"Could not clear request.");
   }finally{
     btn.disabled=false;
-    btn.textContent='✓ Clear Request & Save Payment';
+    btn.textContent="✓ Clear Request & Save Payment";
   }
 }
-
 
 async function rejectRequest(){
   if(!currentRequest)return;
-  const btn=$('rejectRequestBtn'),clearBtn=$('clearRequestBtn'),reason=$('rejectReason').value.trim();
-  if(!confirm(`Reject request ${currentRequest.requestId}?\n\nThe invoice balance will NOT change and the salesman can request it again.`))return;
-  btn.disabled=true;clearBtn.disabled=true;btn.textContent='Rejecting…';$('requestReviewError').classList.remove('show');
+
+  if(!confirm(`Reject ${currentRequest.requestId}?`))return;
+
+  const btn=$("rejectBtn");
+  btn.disabled=true;
+  btn.textContent="Rejecting…";
+  setReviewError("");
+
   try{
-    const d=await apiPost({action:'arRejectRequest',requestData:JSON.stringify({sessionToken,requestId:currentRequest.requestId,reason})});
-    if(!d||!d.success)throw new Error(d?.error||'Could not reject request.');
-    closeRequestReview();selectedInvoices.clear();await loadAR(true);
-    alert(`Request rejected.\nRequest ID: ${d.requestId||''}\nThe invoice is available to the salesman again.`);
-  }catch(e){$('requestReviewError').textContent=e.message||'Could not reject request.';$('requestReviewError').classList.add('show')}
-  finally{btn.disabled=false;clearBtn.disabled=false;btn.textContent='✕ Reject Request';}
+    await apiPost({
+      action:"arRejectRequest",
+      requestData:JSON.stringify({
+        sessionToken,
+        requestId:currentRequest.requestId,
+        reason:$("rejectReason").value.trim()
+      })
+    });
+
+    closeReview();
+    await loadPending(true);
+    alert("Receivable request rejected.");
+
+  }catch(e){
+    setReviewError(e.message||"Could not reject request.");
+  }finally{
+    btn.disabled=false;
+    btn.textContent="✕ Reject Request";
+  }
 }
 
-function startSync(){clearInterval(syncTimer);syncTimer=setInterval(async()=>{if(document.hidden||!sessionToken)return;try{const d=await apiPost({action:'arRevision',sessionToken});if(d&&d.success&&d.revision!==revision)await loadAR(false)}catch(e){if(String(e.message).toLowerCase().includes('session')||String(e.message).toLowerCase().includes('inactive')){await logout();setLoginError('Access session expired or was disabled. Please sign in again.')}}},20000)}
-document.addEventListener('visibilitychange',()=>{if(!document.hidden&&sessionToken)loadAR(false).catch(()=>{})});
-configureView();
-// V3.10: fast refresh restore -> remembered-device fallback -> manual login.
-restoreSession();
+document.addEventListener("visibilitychange",()=>{
+  if(!document.hidden&&sessionToken){
+    if(VIEW==="pending-deposit")loadPendingDeposit(false).catch(()=>{});
+    else if(VIEW==="pending-receivable"||VIEW==="pending-daily-cash")smartSync(true);
+  }
+});
+
+if(VIEW==="pending-deposit")vaultCacheRestore();
+restoreAccess();
+
+let vaultReportData=null;
+
+function vrUsd(v){return "$"+Number(v||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});}
+function vrKhr(v){return "៛"+Math.round(Number(v||0)).toLocaleString();}
+function vrEsc(v){return String(v==null?"":v).replace(/[&<>"']/g,function(m){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m];});}
+
+function vaultReportCacheSave(){
+  try{localStorage.setItem(VAULT_REPORT_CACHE_KEY,JSON.stringify({data:vaultReportData,savedAt:Date.now()}))}catch(_){}
+}
+function vaultReportCacheRestore(){
+  try{
+    const raw=localStorage.getItem(VAULT_REPORT_CACHE_KEY);if(!raw)return false;
+    const d=JSON.parse(raw);if(!d||!d.data)return false;
+    vaultReportData=d.data;renderVaultReport();return true;
+  }catch(_){return false}
+}
+
+function closeVaultReport(){$("vaultReportOverlay").classList.add("hidden");}
+
+function openVaultReport(){
+  $("vaultReportOverlay").classList.remove("hidden");
+  if(!$("vaultReportDate").value)$("vaultReportDate").value=new Date().toISOString().slice(0,10);
+  vaultReportCacheRestore();
+  loadVaultReport(false);
+}
+
+async function loadVaultReport(force=true){
+  try{
+    const rate=Number($("vaultReportRate").value||0);
+    const qs=new URLSearchParams({
+      action:"vaultReport",
+      currentRate:String(rate),
+      sessionToken:sessionToken||sessionStorage.getItem(SESSION_KEY)||""
+    });
+    const r=await fetch(SALES_API+"?"+qs.toString(),{cache:"no-store"});
+    const d=await r.json();
+    if(!d.ok)throw new Error(d.error||"Could not load Vault Report");
+    vaultReportData=d;
+    renderVaultReport();
+    vaultReportCacheSave();
+  }catch(e){
+    if(force||!vaultReportData)alert("Vault Report: "+e.message);
+  }
+}
+
+function recalcVaultReportValue(){
+  if(!vaultReportData)return;
+  const rate=Number($("vaultReportRate").value||0);
+  vaultReportData.currentRate=rate;
+  vaultReportData.totalVaultUSD=rate>0?Number(vaultReportData.vaultUSD||0)+(Number(vaultReportData.vaultKHR||0)/rate):null;
+  renderVaultReport();
+}
+
+function renderVaultReport(){
+  const d=vaultReportData||{};
+  const reportDate=$("vaultReportDate").value||d.reportDate||"";
+  $("vrDailyDate").textContent="Report Date: "+reportDate;
+  $("vrReceivableDate").textContent="Report Date: "+reportDate;
+
+  const daily=Array.isArray(d.dailyRows)?d.dailyRows:[];
+  const recv=Array.isArray(d.receivableRows)?d.receivableRows:[];
+
+  $("vrDailyInvoiceCount").textContent=Number(d.totalClosedInvoices||0).toLocaleString();
+  $("vrDailyUSD").textContent=vrUsd(d.dailyUSD);
+  $("vrDailyKHR").textContent=vrKhr(d.dailyKHR);
+  $("vrDailyBatchCount").textContent=daily.length.toLocaleString();
+  $("vrDailyFootInvoices").textContent=Number(d.totalClosedInvoices||0).toLocaleString();
+  $("vrDailyFootUSD").textContent=vrUsd(d.dailyUSD);
+  $("vrDailyFootKHR").textContent=vrKhr(d.dailyKHR);
+
+  $("vrDailyBody").innerHTML=daily.length?daily.map((x,i)=>`<tr>
+    <td>${i+1}</td><td>${vrEsc(x.saleDate||x.date||"-")}</td><td title="${vrEsc(x.locationCode||"")}">${vrEsc(x.locationName||x.locationCode||"-")}</td>
+    <td>${vrEsc(x.salesperson||"-")}</td><td>${Number(x.invoiceCount||0).toLocaleString()}</td>
+    <td>${vrUsd(x.usd)}</td><td>${vrKhr(x.khr)}</td>
+  </tr>`).join(""):'<tr><td colspan="7" style="text-align:center;padding:20px;color:#7a8798">No Daily Cash currently in Vault.</td></tr>';
+  $("vrDailyPageInfo").innerHTML=`<span>${daily.length} batch(es)</span><span>Showing up to 20 rows.</span>`;
+
+  $("vrReceivableUSD").textContent=vrUsd(d.receivableUSD);
+  $("vrReceivableKHR").textContent=vrKhr(d.receivableKHR);
+  $("vrReceivableCount").textContent=recv.length.toLocaleString();
+  $("vrReceivableBody").innerHTML=recv.length?recv.map((x,i)=>`
+    <tr>
+      <td>${i+1}</td>
+      <td>${vrEsc(x.date||"-")}</td>
+      <td>${vrEsc(x.salesperson||"-")}</td>
+      <td>${vrUsd(x.usd)}</td>
+      <td>${vrKhr(x.khr)}</td>
+      <td title="${vrEsc((x.paymentId||"")+(x.invoiceNos&&x.invoiceNos.length?" · "+x.invoiceNos.join(", "):""))}">${vrEsc(x.invoiceDate||"-")}</td>
+      <td>${vrEsc(x.customerName||"-")}</td>
+    </tr>
+  `).join(""):'<tr><td colspan="7" style="text-align:center;padding:20px;color:#7a8798">No Receivable Cash currently in Vault.</td></tr>';
+  $("vrReceivableFootUSD").textContent=vrUsd(d.receivableUSD);
+  $("vrReceivableFootKHR").textContent=vrKhr(d.receivableKHR);
+  $("vrReceivablePageInfo").innerHTML=`<span>${recv.length} receipt(s)</span><span>Showing up to 20 rows.</span>`;
+
+  $("vrVaultUSD").textContent=vrUsd(d.vaultUSD);
+  $("vrVaultKHR").textContent=vrKhr(d.vaultKHR);
+  $("vrCurrentRate").textContent=Number(d.currentRate||0).toLocaleString();
+  $("vrTotalVaultUSD").textContent=d.totalVaultUSD==null?"Enter Rate":vrUsd(d.totalVaultUSD);
+}
+
+async function saveVaultReportPicture(){
+  try{
+    if(typeof html2canvas==="undefined")return alert("Picture export library is not loaded.");
+    const canvas=await html2canvas($("vaultReportCapture"),{scale:2,backgroundColor:"#fff",useCORS:true,logging:false});
+    const a=document.createElement("a");
+    a.download=`BIG_BROTHER_VAULT_REPORT_${$("vaultReportDate").value||"report"}.png`;
+    a.href=canvas.toDataURL("image/png");
+    a.click();
+  }catch(e){alert("Could not save picture: "+e.message);}
+}
+
+async function shareVaultReportTelegram(){
+  try{
+    if(typeof html2canvas==="undefined")return alert("Picture export library is not loaded.");
+    const canvas=await html2canvas($("vaultReportCapture"),{scale:2,backgroundColor:"#fff",useCORS:true,logging:false});
+    const blob=await new Promise(resolve=>canvas.toBlob(resolve,"image/png"));
+    const file=new File([blob],`BIG_BROTHER_VAULT_REPORT_${$("vaultReportDate").value||"report"}.png`,{type:"image/png"});
+
+    if(navigator.canShare&&navigator.canShare({files:[file]})){
+      await navigator.share({title:"BIG BROTHER Vault Cash Detail Report",text:"Vault Cash Detail Report",files:[file]});
+      return;
+    }
+
+    window.open("https://t.me/share/url?url=&text="+encodeURIComponent("BIG BROTHER Vault Cash Detail Report"),"_blank");
+    alert("Telegram opened. This browser cannot attach the PNG automatically, so use Save as Picture and attach it.");
+  }catch(e){
+    if(e&&e.name==="AbortError")return;
+    alert("Could not share report: "+e.message);
+  }
+}
+
 </script>
+
+
+<div class="overlay hidden" id="vaultReportOverlay">
+  <div class="vault-report-shell">
+    <div class="vr-head">
+      <div>
+        <h2>Vault Cash Detail Report</h2>
+        <p>Daily Cash Sale + Receivable Cash currently held before full bank deposit.</p>
+      </div>
+      <div class="vr-actions">
+        <button class="btn secondary" onclick="saveVaultReportPicture()">Save as Picture</button>
+        <button class="btn secondary" onclick="shareVaultReportTelegram()">Share to Telegram</button>
+        <button class="btn secondary" onclick="window.print()">Print / Save PDF</button>
+        <button class="close" onclick="closeVaultReport()">×</button>
+      </div>
+    </div>
+
+    <div class="vr-toolbar">
+      <div class="field">
+        <label>Current Day Exchange Rate (KHR per USD)</label>
+        <input id="vaultReportRate" type="number" min="0" step="1" placeholder="Example: 4060" oninput="recalcVaultReportValue()">
+      </div>
+      <div class="field">
+        <label>Report Date</label>
+        <input id="vaultReportDate" type="date">
+      </div>
+      <button class="btn primary" onclick="loadVaultReport()">Refresh</button>
+      <button class="btn secondary" onclick="closeVaultReport()">Close</button>
+    </div>
+
+    <div class="vr-body" id="vaultReportCapture">
+      <div class="vr-sheets">
+        <section class="vr-page">
+          <div class="vr-banner">
+            <span>DAILY CASH COLLECTION — VAULT CASH DETAIL REPORT</span>
+            <span id="vrDailyDate"></span>
+          </div>
+
+          <div class="vr-summary">
+            <div class="vr-card"><small>Total Closed Invoices</small><strong id="vrDailyInvoiceCount">0</strong></div>
+            <div class="vr-card"><small>Total Daily Cash USD</small><strong id="vrDailyUSD">$0.00</strong></div>
+            <div class="vr-card"><small>Total Daily Cash KHR</small><strong id="vrDailyKHR">៛0</strong></div>
+            <div class="vr-card"><small>Daily Cash Batches</small><strong id="vrDailyBatchCount">0</strong></div>
+          </div>
+
+          <div class="vr-table-wrap">
+            <table class="vr-table">
+              <colgroup>
+                <col style="width:6%">
+                <col style="width:14%">
+                <col style="width:19%">
+                <col style="width:19%">
+                <col style="width:15%">
+                <col style="width:13.5%">
+                <col style="width:13.5%">
+              </colgroup>
+              <thead>
+                <tr>
+                  <th>No.</th>
+                  <th>Date</th>
+                  <th>Location</th>
+                  <th>Salesman</th>
+                  <th>Invoices</th>
+                  <th>Cash USD</th>
+                  <th>Cash KHR</th>
+                </tr>
+              </thead>
+              <tbody id="vrDailyBody"></tbody>
+              <tfoot>
+                <tr>
+                  <td colspan="4">Total</td>
+                  <td id="vrDailyFootInvoices">0</td>
+                  <td id="vrDailyFootUSD">$0.00</td>
+                  <td id="vrDailyFootKHR">៛0</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+          <div class="vr-page-count" id="vrDailyPageInfo"></div>
+        </section>
+
+        <section class="vr-page">
+          <div class="vr-banner receivable">
+            <span>RECEIVABLE CASH RECEIPT — VAULT CASH DETAIL REPORT</span>
+            <span id="vrReceivableDate"></span>
+          </div>
+
+          <div class="vr-summary">
+            <div class="vr-card"><small>Total Receivable Cash USD</small><strong id="vrReceivableUSD">$0.00</strong></div>
+            <div class="vr-card"><small>Total Receivable Cash KHR</small><strong id="vrReceivableKHR">៛0</strong></div>
+            <div class="vr-card"><small>Total Receipts</small><strong id="vrReceivableCount">0</strong></div>
+            <div class="vr-card"><small>Report Type</small><strong>Cash Received</strong></div>
+          </div>
+
+          <div class="vr-table-wrap">
+            <table class="vr-table receivable">
+              <colgroup>
+                <col style="width:6%">
+                <col style="width:14%">
+                <col style="width:22%">
+                <col style="width:13%">
+                <col style="width:14%">
+                <col style="width:14%">
+                <col style="width:17%">
+              </colgroup>
+              <thead>
+                <tr>
+                  <th>No.</th>
+                  <th>Receive Date</th>
+                  <th>Salesman Name</th>
+                  <th>Cash Received USD</th>
+                  <th>Cash Received KHR</th>
+                  <th>Invoice Date</th>
+                  <th>Customer Name</th>
+                </tr>
+              </thead>
+              <tbody id="vrReceivableBody"></tbody>
+              <tfoot>
+                <tr>
+                  <td colspan="3">Total</td>
+                  <td id="vrReceivableFootUSD">$0.00</td>
+                  <td id="vrReceivableFootKHR">៛0</td>
+                  <td colspan="2"></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+          <div class="vr-page-count" id="vrReceivablePageInfo"></div>
+        </section>
+      </div>
+
+      <div class="vr-final">
+        <div class="vr-card"><small>Vault Cash Total</small><strong>Daily Cash + Receivable</strong></div>
+        <div class="vr-card"><small>Total Vault USD</small><strong id="vrVaultUSD">$0.00</strong></div>
+        <div class="vr-card"><small>Total Vault KHR</small><strong id="vrVaultKHR">៛0</strong></div>
+        <div class="vr-card"><small>Current Day Exchange Rate</small><strong id="vrCurrentRate">0</strong></div>
+        <div class="vr-card total-value"><small>Total Vault Value in USD</small><strong id="vrTotalVaultUSD">$0.00</strong></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
 </body>
 </html>
