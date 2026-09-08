@@ -239,6 +239,63 @@ function num(v){const n=Number(v);return Number.isFinite(n)?n:0}
 function money(v,c='USD'){return (c==='KHR'?'៛':'$')+num(v).toLocaleString(undefined,{minimumFractionDigits:c==='KHR'?0:2,maximumFractionDigits:c==='KHR'?0:2})}
 function today(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
 
+function receivableDateParts(value){
+  const raw=String(value??'').trim();
+  if(!raw)return null;
+
+  // Preserve the calendar date from Sheets/Apps Script without timezone shifting.
+  let m=raw.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if(m){
+    return {year:Number(m[1]),month:Number(m[2]),day:Number(m[3])};
+  }
+
+  // Already formatted DD/MM/YYYY.
+  m=raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if(m){
+    return {year:Number(m[3]),month:Number(m[2]),day:Number(m[1])};
+  }
+
+  const parsed=new Date(raw);
+  if(Number.isNaN(parsed.getTime()))return null;
+
+  return {
+    year:parsed.getFullYear(),
+    month:parsed.getMonth()+1,
+    day:parsed.getDate()
+  };
+}
+
+function formatReceivableInvoiceDate(value){
+  const p=receivableDateParts(value);
+  if(!p)return String(value??'').trim()||'-';
+
+  return `${String(p.day).padStart(2,'0')}/${String(p.month).padStart(2,'0')}/${String(p.year).padStart(4,'0')}`;
+}
+
+function receivableInvoiceDateSortValue(value){
+  const p=receivableDateParts(value);
+  if(!p)return Number.MAX_SAFE_INTEGER;
+
+  return (p.year*10000)+(p.month*100)+p.day;
+}
+
+function sortReceivablesOldestFirst(list){
+  return list.slice().sort((a,b)=>{
+    const dateDiff=
+      receivableInvoiceDateSortValue(a?.invoiceDate)-
+      receivableInvoiceDateSortValue(b?.invoiceDate);
+
+    if(dateDiff!==0)return dateDiff;
+
+    return String(a?.invoiceNo??'').localeCompare(
+      String(b?.invoiceNo??''),
+      undefined,
+      {numeric:true,sensitivity:'base'}
+    );
+  });
+}
+
+
 async function apiPost(params){
   const body=new URLSearchParams();Object.entries(params).forEach(([k,v])=>body.append(k,v==null?'':String(v)));
   const res=await fetch(SALES_API,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},body,redirect:'follow'});
@@ -395,14 +452,14 @@ async function loadAR(force=false){
 function filterChanged(){selectedInvoices.clear();renderRows()}
 function renderRows(){
   const q=normSearch($('searchBox').value),customerQ=normSearch($('customerFilter').value),loc=$('locationFilter').value.trim().toLowerCase(),ccy=$('currencyFilter').value.trim().toUpperCase(),stat=$('statusFilter').value;
-  visibleRows=rows.filter(r=>{const rowCcy=String(r.currency||'USD').toUpperCase();if(q&&!normSearch(r.invoiceNo).includes(q))return false;if(customerQ&&!normSearch(r.customer).includes(customerQ))return false;if(loc&&String(r.locationCode).toLowerCase()!==loc)return false;if(ccy&&rowCcy!==ccy)return false;if(stat&&r.arStatus!==stat)return false;return true});
+  visibleRows=sortReceivablesOldestFirst(rows.filter(r=>{const rowCcy=String(r.currency||'USD').toUpperCase();if(q&&!normSearch(r.invoiceNo).includes(q))return false;if(customerQ&&!normSearch(r.customer).includes(customerQ))return false;if(loc&&String(r.locationCode).toLowerCase()!==loc)return false;if(ccy&&rowCcy!==ccy)return false;if(stat&&r.arStatus!==stat)return false;return true}));
   const totals={USD:{out:0,over:0},KHR:{out:0,over:0}};const customers=new Set();
   visibleRows.forEach(r=>{const c=String(r.currency||'USD').toUpperCase()==='KHR'?'KHR':'USD';totals[c].out+=num(r.outstanding);if(r.arStatus==='Overdue')totals[c].over+=num(r.outstanding);if(r.customer)customers.add(r.customer.toLowerCase())});
   $('sumOutstandingUSD').textContent=money(totals.USD.out,'USD');$('sumOutstandingKHR').textContent=money(totals.KHR.out,'KHR');
   $('sumOverdueUSD').textContent=money(totals.USD.over,'USD');$('sumOverdueKHR').textContent=money(totals.KHR.over,'KHR');
   $('sumInvoices').textContent=visibleRows.length;$('sumCustomers').textContent=customers.size;$('rowCount').textContent=`${visibleRows.length} record${visibleRows.length===1?'':'s'}`;
   if(!visibleRows.length){$('arBody').innerHTML='<tr><td colspan="11" class="empty">No open Credit invoices found for this view.</td></tr>';updateSummaryControls();return}
-  $('arBody').innerHTML=visibleRows.map(r=>`<tr><td class="checkcell"><input class="rowcheck" type="checkbox" ${selectedInvoices.has(String(r.invoiceNo))?'checked':''} onchange='toggleInvoice(${JSON.stringify(String(r.invoiceNo))},this.checked)' title="Select ${esc(r.invoiceNo)} for summary or batch payment"></td><td><strong>${esc(r.invoiceNo)}</strong></td><td>${esc(String(r.invoiceDate||'').slice(0,10))}</td><td>${esc(r.dueDate||'-')}</td><td>${esc(r.customer)}</td><td>${esc(r.locationName||r.locationCode)}<br><small>${esc(r.locationCode)}</small></td><td class="money">${money(r.grandTotal,r.currency)}</td><td class="money">${money(r.amountPaid,r.currency)}</td><td class="money"><strong>${money(r.outstanding,r.currency)}</strong></td><td><span class="status ${r.arStatus.toLowerCase()}">${esc(r.arStatus)}</span></td><td><button class="btn primary" onclick='openPayment(${JSON.stringify(r.invoiceNo)})'>Receive</button></td></tr>`).join('');
+  $('arBody').innerHTML=visibleRows.map(r=>`<tr><td class="checkcell"><input class="rowcheck" type="checkbox" ${selectedInvoices.has(String(r.invoiceNo))?'checked':''} onchange='toggleInvoice(${JSON.stringify(String(r.invoiceNo))},this.checked)' title="Select ${esc(r.invoiceNo)} for summary or batch payment"></td><td><strong>${esc(r.invoiceNo)}</strong></td><td>${esc(formatReceivableInvoiceDate(r.invoiceDate))}</td><td>${esc(r.dueDate||'-')}</td><td>${esc(r.customer)}</td><td>${esc(r.locationName||r.locationCode)}<br><small>${esc(r.locationCode)}</small></td><td class="money">${money(r.grandTotal,r.currency)}</td><td class="money">${money(r.amountPaid,r.currency)}</td><td class="money"><strong>${money(r.outstanding,r.currency)}</strong></td><td><span class="status ${r.arStatus.toLowerCase()}">${esc(r.arStatus)}</span></td><td><button class="btn primary" onclick='openPayment(${JSON.stringify(r.invoiceNo)})'>Receive</button></td></tr>`).join('');
   updateSummaryControls();
 }
 function toggleInvoice(invoiceNo,checked){if(checked)selectedInvoices.add(String(invoiceNo));else selectedInvoices.delete(String(invoiceNo));updateSummaryControls()}
@@ -417,7 +474,7 @@ function updateSummaryControls(){
   all.checked=visibleKeys.length>0&&selectedVisible===visibleKeys.length;all.indeterminate=selectedVisible>0&&selectedVisible<visibleKeys.length;
 }
 
-function selectedSummaryRows(){return rows.filter(r=>selectedInvoices.has(String(r.invoiceNo)))}
+function selectedSummaryRows(){return sortReceivablesOldestFirst(rows.filter(r=>selectedInvoices.has(String(r.invoiceNo))))}
 async function getMasterCustomerContact_(row){
   const fallback={phone:row?.customerPhone||'',address:row?.customerAddress||''};
   try{
@@ -467,7 +524,7 @@ function buildSummary(picked,contact){
     grandOutstanding=`<div class="sum-grand-multi">${currencies.map(c=>`<div class="row"><span>TOTAL OUTSTANDING (${esc(c)})</span><span>${money(totals[c],c)}</span></div>`).join('')}</div>`;
   }
 
-  $('summarySheet').innerHTML=`<div class="sum-top"><div class="sum-brand"><h1>BIG BROTHER</h1><p>Ready to be your partner</p><div class="sum-contact">Phnom Penh, Cambodia<br>010 650 327, 070 998 988<br>angsokkhey11@gmail.com</div></div><div class="sum-meta"><div><strong>Summary Date:</strong> ${esc(today())}</div><div><strong>Prepared By:</strong> ${esc(preparedBy)}</div><div><strong>Selected Invoices:</strong> ${picked.length}</div></div></div><div class="sum-divider"></div><div class="sum-title">CUSTOMER INVOICE SUMMARY</div><div class="sum-customer"><div class="sum-box"><strong>Customer</strong><div class="sum-customer-name">${esc(customer)}</div></div><div class="sum-box"><strong>Customer Contact</strong><div class="sum-contact-line"><span class="sum-contact-icon">☎</span><span>${esc(phone)}</span></div><div class="sum-contact-line"><span class="sum-contact-icon">●</span><span>${esc(address)}</span></div></div></div><table class="sum-table"><thead><tr><th style="width:5%">#</th><th style="width:19%">Invoice No</th><th style="width:16%">Date</th><th style="width:16%">Due Date</th><th style="width:16%;text-align:right">Grand Total</th><th style="width:13%;text-align:right">Paid</th><th style="width:15%;text-align:right">Outstanding</th></tr></thead><tbody>${picked.map((r,i)=>`<tr><td class="center">${i+1}</td><td><strong>${esc(r.invoiceNo)}</strong></td><td>${esc(String(r.invoiceDate||'').slice(0,10))}</td><td>${esc(r.dueDate||'-')}</td><td class="money">${money(r.grandTotal,r.currency)}</td><td class="money">${money(r.amountPaid,r.currency)}</td><td class="money"><strong>${money(r.outstanding,r.currency)}</strong></td></tr>`).join('')}</tbody></table>${grandOutstanding}<div class="sum-footer"><span>Customer Invoice Summary generated from selected open Credit receivables.</span><span>BIG BROTHER</span></div>`;
+  $('summarySheet').innerHTML=`<div class="sum-top"><div class="sum-brand"><h1>BIG BROTHER</h1><p>Ready to be your partner</p><div class="sum-contact">Phnom Penh, Cambodia<br>010 650 327, 070 998 988<br>angsokkhey11@gmail.com</div></div><div class="sum-meta"><div><strong>Summary Date:</strong> ${esc(today())}</div><div><strong>Prepared By:</strong> ${esc(preparedBy)}</div><div><strong>Selected Invoices:</strong> ${picked.length}</div></div></div><div class="sum-divider"></div><div class="sum-title">CUSTOMER INVOICE SUMMARY</div><div class="sum-customer"><div class="sum-box"><strong>Customer</strong><div class="sum-customer-name">${esc(customer)}</div></div><div class="sum-box"><strong>Customer Contact</strong><div class="sum-contact-line"><span class="sum-contact-icon">☎</span><span>${esc(phone)}</span></div><div class="sum-contact-line"><span class="sum-contact-icon">●</span><span>${esc(address)}</span></div></div></div><table class="sum-table"><thead><tr><th style="width:5%">#</th><th style="width:19%">Invoice No</th><th style="width:16%">Date</th><th style="width:16%">Due Date</th><th style="width:16%;text-align:right">Grand Total</th><th style="width:13%;text-align:right">Paid</th><th style="width:15%;text-align:right">Outstanding</th></tr></thead><tbody>${picked.map((r,i)=>`<tr><td class="center">${i+1}</td><td><strong>${esc(r.invoiceNo)}</strong></td><td>${esc(formatReceivableInvoiceDate(r.invoiceDate))}</td><td>${esc(r.dueDate||'-')}</td><td class="money">${money(r.grandTotal,r.currency)}</td><td class="money">${money(r.amountPaid,r.currency)}</td><td class="money"><strong>${money(r.outstanding,r.currency)}</strong></td></tr>`).join('')}</tbody></table>${grandOutstanding}<div class="sum-footer"><span>Customer Invoice Summary generated from selected open Credit receivables.</span><span>BIG BROTHER</span></div>`;
 }
 function printSummary(){window.print()}
 async function saveSummaryPDF(){
@@ -476,7 +533,7 @@ async function saveSummaryPDF(){
 }
 
 
-function selectedPaymentRows(){return rows.filter(r=>selectedInvoices.has(String(r.invoiceNo)))}
+function selectedPaymentRows(){return sortReceivablesOldestFirst(rows.filter(r=>selectedInvoices.has(String(r.invoiceNo))))}
 function openBatchPayment(){
   const picked=selectedPaymentRows();if(!picked.length)return alert('Please check at least one invoice first.');
   const customers=[...new Set(picked.map(r=>String(r.customer||'').trim().toLowerCase()))];if(customers.length!==1)return alert('Batch payment can only clear invoices for one customer at a time.');
@@ -550,10 +607,11 @@ async function savePayment(){
   const btn=$('savePayBtn');btn.disabled=true;btn.textContent='Saving…';
   try{const paymentData={sessionToken,adminCode:admin,invoiceNo:currentInvoice.invoiceNo,paymentDate:$('payDate').value,amount,paymentMethod:method,bankPayment:method==='Bank'?$('payBank').value.trim():'',transactionId:method==='Bank'?tx:'',bankReference:method==='Bank'?$('bankReference').value.trim():'',note:$('payNote').value.trim()};const d=await apiPost({action:'arPayment',paymentData:JSON.stringify(paymentData)});if(!d||!d.success)throw new Error(d?.error||'Payment failed.');closePayment();await loadAR(true);alert(`Payment saved successfully.\nApproved by: ${d.approvedBy||'Admin'}\nPayment ID: ${d.paymentId||''}`)}catch(e){setPaymentError(e.message||'Payment failed. Nothing was changed.')}finally{btn.disabled=false;btn.textContent='✓ Approve & Save Payment';$('adminCode').value=''}
 }
+// V3.12 — DD/MM/YYYY invoice date + oldest-to-newest receivable order
 // V3.11 — Salesman Request -> Admin Clear workflow
 function renderRows(){
   const q=normSearch($('searchBox').value),customerQ=normSearch($('customerFilter').value),loc=$('locationFilter').value.trim().toLowerCase(),ccy=$('currencyFilter').value.trim().toUpperCase(),stat=$('statusFilter').value;
-  visibleRows=rows.filter(r=>{const rowCcy=String(r.currency||'USD').toUpperCase();if(q&&!normSearch(r.invoiceNo).includes(q))return false;if(customerQ&&!normSearch(r.customer).includes(customerQ))return false;if(loc&&String(r.locationCode).toLowerCase()!==loc)return false;if(ccy&&rowCcy!==ccy)return false;if(stat&&r.arStatus!==stat)return false;return true});
+  visibleRows=sortReceivablesOldestFirst(rows.filter(r=>{const rowCcy=String(r.currency||'USD').toUpperCase();if(q&&!normSearch(r.invoiceNo).includes(q))return false;if(customerQ&&!normSearch(r.customer).includes(customerQ))return false;if(loc&&String(r.locationCode).toLowerCase()!==loc)return false;if(ccy&&rowCcy!==ccy)return false;if(stat&&r.arStatus!==stat)return false;return true}));
   const totals={USD:{out:0,over:0},KHR:{out:0,over:0}};const customers=new Set();
   visibleRows.forEach(r=>{const c=String(r.currency||'USD').toUpperCase()==='KHR'?'KHR':'USD';totals[c].out+=num(r.outstanding);if(r.arStatus==='Overdue')totals[c].over+=num(r.outstanding);if(r.customer)customers.add(r.customer.toLowerCase())});
   $('sumOutstandingUSD').textContent=money(totals.USD.out,'USD');$('sumOutstandingKHR').textContent=money(totals.KHR.out,'KHR');$('sumOverdueUSD').textContent=money(totals.USD.over,'USD');$('sumOverdueKHR').textContent=money(totals.KHR.over,'KHR');$('sumInvoices').textContent=visibleRows.length;$('sumCustomers').textContent=customers.size;$('rowCount').textContent=`${visibleRows.length} record${visibleRows.length===1?'':'s'}`;
@@ -564,7 +622,7 @@ function renderRows(){
     let action='';
     if(VIEW==='your') action=processing?`<button class="btn secondary" disabled>Processing</button>`:`<button class="btn primary" onclick='openPayment(${JSON.stringify(r.invoiceNo)})'>Direct Request</button>`;
     else action=processing?`<button class="btn primary" onclick='openRequestReview(${JSON.stringify(r.requestId||'')})'>Review Request</button>`:`<button class="btn primary" onclick='openPayment(${JSON.stringify(r.invoiceNo)})'>Receive</button>`;
-    return `<tr>${check}<td><strong>${esc(r.invoiceNo)}</strong></td><td>${esc(String(r.invoiceDate||'').slice(0,10))}</td><td>${esc(r.dueDate||'-')}</td><td>${esc(r.customer)}</td><td>${esc(r.locationName||r.locationCode)}<br><small>${esc(r.locationCode)}</small></td><td class="money">${money(r.grandTotal,r.currency)}</td><td class="money">${money(r.amountPaid,r.currency)}</td><td class="money"><strong>${money(r.outstanding,r.currency)}</strong></td><td><span class="status ${String(r.arStatus||'outstanding').toLowerCase()}">${esc(r.arStatus)}</span>${processing&&r.requestedBy?`<br><small>${esc(r.requestedBy)}</small>`:''}</td><td>${action}</td></tr>`;
+    return `<tr>${check}<td><strong>${esc(r.invoiceNo)}</strong></td><td>${esc(formatReceivableInvoiceDate(r.invoiceDate))}</td><td>${esc(r.dueDate||'-')}</td><td>${esc(r.customer)}</td><td>${esc(r.locationName||r.locationCode)}<br><small>${esc(r.locationCode)}</small></td><td class="money">${money(r.grandTotal,r.currency)}</td><td class="money">${money(r.amountPaid,r.currency)}</td><td class="money"><strong>${money(r.outstanding,r.currency)}</strong></td><td><span class="status ${String(r.arStatus||'outstanding').toLowerCase()}">${esc(r.arStatus)}</span>${processing&&r.requestedBy?`<br><small>${esc(r.requestedBy)}</small>`:''}</td><td>${action}</td></tr>`;
   }).join('');updateSummaryControls();
 }
 
