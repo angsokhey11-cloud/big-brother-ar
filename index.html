@@ -10,14 +10,21 @@
 <script>
 (async function(){
   try{
-    const response=await fetch('legacy-google-v3.html?v=20260910-1',{cache:'no-store'});
+    const response=await fetch('legacy-google-v3.html?v=20260910-2',{cache:'no-store'});
     if(!response.ok)throw new Error('Could not load Accounts Receivable source.');
     let html=await response.text();
 
-    const adapter='<scr'+'ipt src="supabase-ar-adapter.js?v=20260910-1"></scr'+'ipt>';
+    const adapter='<scr'+'ipt src="supabase-ar-adapter.js?v=20260910-2"></scr'+'ipt>';
+    const authCutover='<style id="bb-ar-auth-cutover">#loginOverlay{display:none!important}#singleAdminField,#batchAdminField{display:none!important}</style>';
     const headClose=html.toLowerCase().indexOf('</head>');
     if(headClose<0)throw new Error('Accounts Receivable source is missing </head>.');
-    html=html.slice(0,headClose)+adapter+'\n'+html.slice(headClose);
+    html=html.slice(0,headClose)+adapter+'\n'+authCutover+'\n'+html.slice(headClose);
+
+    /* Legacy secret-code UI is never rendered in the Supabase version. */
+    html=html.replace('<div class="overlay" id="loginOverlay">','<div class="overlay hidden" id="loginOverlay" style="display:none!important" aria-hidden="true">');
+    html=html.replaceAll('Your secret code is checked on the server and is not stored in this HTML.','Supabase Auth controls access to this page.');
+    html=html.replaceAll('For Bank payment, duplicate Transaction ID will be rejected by the server. The Admin Code is verified server-side and is never saved into Payments.','For Bank payment, duplicate Transaction ID will be rejected by the server. Authorization is verified through your Supabase user permissions.');
+    html=html.replaceAll('One payment, one Admin approval, and one Bank Transaction ID can clear all selected invoices. The server recalculates every outstanding balance before saving.','One payment and one Bank Transaction ID can clear all selected invoices. Supabase permissions and current outstanding balances are verified before saving.');
 
     html=html.replaceAll("if(!admin)return setPaymentError('Admin Code is required to approve payment.');",'');
     html=html.replaceAll("if(!admin)return setBatchError('Admin Code is required to approve the whole batch.');",'');
@@ -27,7 +34,7 @@
     html=html.replaceAll('✓ Approve & Clear Selected Invoices','✓ Clear Selected Invoices');
 
     const marker=`configureView();\n// V3.10: fast refresh restore -> remembered-device fallback -> manual login.\nrestoreSession();`;
-    const replacement=`configureView();\n// SUPABASE AUTH CUTOVER\napiPost=window.BBARAdapter.apiPost;\ngetMasterCustomerContact_=async function(row){\n  return {phone:String(row?.customerPhone||''),address:String(row?.customerAddress||'')};\n};\nlogout=async function(){\n  await window.BBARAdapter.signOut();\n  location.reload();\n};\n(async function(){\n  try{\n    await window.BBARAdapter.ensureSession();\n    const access=await window.BBARAdapter.accessProfile();\n    sessionToken='SUPABASE_AUTH';\n    deviceToken='';\n    sessionProfile=access;\n    try{sessionStorage.removeItem(SESSION_KEY);}catch(_){}\n    try{localStorage.removeItem(DEVICE_KEY);localStorage.removeItem(DEVICE_KEY+'_saved_at');}catch(_){}\n    $('loginOverlay').classList.add('hidden');\n    $('logoutBtn').hidden=false;\n    applyProfile(access);\n    await loadAR(true);\n    startSync();\n  }catch(error){\n    sessionToken='';\n    sessionProfile=null;\n    $('logoutBtn').hidden=true;\n    $('loginOverlay').classList.remove('hidden');\n    $('loginTitle').textContent='🔐 Supabase Sign In Required';\n    $('loginText').textContent='Sign in to BIG BROTHER with an account that has Accounts Receivable access.';\n    const codeField=$('accessCode')?.closest('.field');if(codeField)codeField.style.display='none';\n    const rememberRow=$('rememberDevice')?.closest('.remember-row');if(rememberRow)rememberRow.style.display='none';\n    $('loginBtn').style.display='none';\n    setLoginError(error?.message||'Accounts Receivable access denied.');\n  }\n})();`;
+    const replacement=`// SUPABASE AUTH CUTOVER — no Admin/Salesman code screen.\n$('summaryBtn').hidden=false;\n$('batchBtn').hidden=false;\n$('selectHead').hidden=false;\nif(VIEW==='all'){\n  $('pageTitle').textContent='All Receivable';\n  $('pageSubtitle').textContent='Company-wide Credit invoices from all active Location Codes.';\n  $('viewBanner').textContent='All Receivable = permission-controlled company receivables. USD and KHR are tracked separately.';\n}else{\n  $('pageTitle').textContent='Your Receivable';\n  $('pageSubtitle').textContent='Credit invoices from your assigned Location Codes.';\n  $('viewBanner').textContent='Your Receivable = only Credit invoices from your assigned Location Codes. USD and KHR are tracked separately.';\n}\napiPost=window.BBARAdapter.apiPost;\ngetMasterCustomerContact_=async function(row){\n  return {phone:String(row?.customerPhone||''),address:String(row?.customerAddress||'')};\n};\nlogout=async function(){\n  await window.BBARAdapter.signOut();\n  const target='https://angsokhey11-cloud.github.io/big-brother-dashboard/';\n  try{if(window.top&&window.top!==window)window.top.location.replace(target);else window.location.replace(target);}catch(_){window.location.href=target;}\n};\n(async function(){\n  try{\n    await window.BBARAdapter.ensureSession();\n    const access=await window.BBARAdapter.accessProfile();\n    sessionToken='SUPABASE_AUTH';\n    deviceToken='';\n    sessionProfile=access;\n    try{sessionStorage.removeItem(SESSION_KEY);}catch(_){}\n    try{localStorage.removeItem(DEVICE_KEY);localStorage.removeItem(DEVICE_KEY+'_saved_at');}catch(_){}\n    $('loginOverlay').classList.add('hidden');\n    $('logoutBtn').hidden=false;\n    applyProfile(access);\n    await loadAR(true);\n    startSync();\n  }catch(error){\n    sessionToken='';\n    sessionProfile=null;\n    $('logoutBtn').hidden=true;\n    const target='https://angsokhey11-cloud.github.io/big-brother-dashboard/';\n    try{if(window.top&&window.top!==window)window.top.location.replace(target);else window.location.replace(target);}catch(_){window.location.href=target;}\n  }\n})();`;
     if(!html.includes(marker))throw new Error('Accounts Receivable initialization marker was not found.');
     html=html.replace(marker,replacement);
 
