@@ -2,199 +2,1521 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta
+  name="viewport"
+  content="width=device-width,initial-scale=1,viewport-fit=cover"
+>
 <title>BIG BROTHER — Your Receivable Mobile</title>
+
 <style>
-html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#f4f7fb;font-family:Arial,sans-serif}
-#arMobileFrame{display:block;width:100%;height:100%;border:0;background:#f4f7fb}
-#boot{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#f4f7fb;color:#17457a;font-weight:800;z-index:2}
-#boot.hide{display:none}
+html,
+body{
+  margin:0;
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  background:#f4f7fb;
+  font-family:Arial,sans-serif;
+}
+
+#arMobileFrame{
+  display:block;
+  width:100%;
+  height:100%;
+  border:0;
+  background:#f4f7fb;
+}
+
+#boot{
+  position:fixed;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#f4f7fb;
+  color:#17457a;
+  font-weight:800;
+  z-index:2;
+}
+
+#boot.hide{
+  display:none;
+}
 </style>
 </head>
+
 <body>
-<div id="boot">Loading Your Receivable…</div>
-<iframe id="arMobileFrame" src="your-receivable.html?embed=1&view=your&mobileSkin=1&v=20260914-5" title="Your Receivable"></iframe>
+
+<div id="boot">
+  Loading Your Receivable…
+</div>
+
+<iframe
+  id="arMobileFrame"
+  src="your-receivable.html?embed=1&view=your&mobileSkin=1&v=20260914-6"
+  title="Your Receivable">
+</iframe>
+
 <script>
 (function(){
-  const frame=document.getElementById('arMobileFrame');
-  const boot=document.getElementById('boot');
-  const MOBILE_CSS=`
+
+  const frame = document.getElementById('arMobileFrame');
+  const boot  = document.getElementById('boot');
+
+  const MOBILE_CSS = `
+
+  /*
+  ============================================================
+  BIG BROTHER — YOUR RECEIVABLE MOBILE
+  MOBILE ONLY
+  ============================================================
+  */
+
+
+  /*
+  ============================================================
+  SUMMARY INVOICE
+  REMOVE DUE DATE FOR MOBILE WORKSPACE
+  ============================================================
+  */
+
+  #summaryOverlay .sum-table{
+    width:100% !important;
+    min-width:0 !important;
+    table-layout:fixed !important;
+    border-collapse:collapse !important;
+  }
+
+  #summaryOverlay .sum-table th:nth-child(4),
+  #summaryOverlay .sum-table td:nth-child(4){
+    display:none !important;
+  }
+
+  /* # */
+  #summaryOverlay .sum-table th:nth-child(1),
+  #summaryOverlay .sum-table td:nth-child(1){
+    width:6% !important;
+  }
+
+  /* Invoice No */
+  #summaryOverlay .sum-table th:nth-child(2),
+  #summaryOverlay .sum-table td:nth-child(2){
+    width:22% !important;
+  }
+
+  /* Date */
+  #summaryOverlay .sum-table th:nth-child(3),
+  #summaryOverlay .sum-table td:nth-child(3){
+    width:18% !important;
+  }
+
+  /* Grand Total */
+  #summaryOverlay .sum-table th:nth-child(5),
+  #summaryOverlay .sum-table td:nth-child(5){
+    width:18% !important;
+  }
+
+  /* Paid */
+  #summaryOverlay .sum-table th:nth-child(6),
+  #summaryOverlay .sum-table td:nth-child(6){
+    width:17% !important;
+  }
+
+  /* Outstanding */
+  #summaryOverlay .sum-table th:nth-child(7),
+  #summaryOverlay .sum-table td:nth-child(7){
+    width:19% !important;
+  }
+
+
+  /*
+  ============================================================
+  MOBILE SCREEN
+  ============================================================
+  */
+
   @media screen {
-    :root{--bbm-blue:#1768d5;--bbm-navy:#123f78;--bbm-bg:#f4f7fb;--bbm-line:#dfe7f0;--bbm-text:#18324e;--bbm-muted:#6d7e92;--bbm-red:#d73545;--bbm-green:#198754;--bbm-amber:#b57500}
-    html,body{background:var(--bbm-bg)!important;overflow-x:hidden!important}
-    body{padding:0!important;font-family:Arial,Helvetica,sans-serif!important}
-    .wrap{max-width:none!important;margin:0!important;padding:9px 10px 24px!important}
-    .topbar{margin:0 0 8px!important;align-items:center!important}
-    .topbar>div:first-child h1{font-size:21px!important;margin:0 0 2px!important;color:var(--bbm-navy)!important}
-    .subtitle{font-size:11px!important;line-height:1.35!important}
-    .userbox{gap:6px!important;justify-content:flex-end!important}
-    #accessPill,#logoutBtn{display:none!important}
-    #locationPill{font-size:10px!important;padding:7px 9px!important;background:#eaf3ff!important;border-color:#c6daf7!important;color:#175db6!important}
-    .view-banner{margin:0 0 9px!important;border:1px solid #cfe2ff!important;border-radius:12px!important;background:#eaf4ff!important;color:#1a5bb0!important;font-size:11px!important;line-height:1.4!important;padding:9px 11px!important}
 
-    .cards{grid-template-columns:1fr 1fr!important;gap:7px!important;margin:0 0 9px!important}
-    .card{padding:10px!important;border-radius:12px!important;box-shadow:none!important;min-height:82px!important}
-    .card small{font-size:9.5px!important;margin-bottom:4px!important}
-    .currency-line{display:block!important}
-    .currency-line .ccy{font-size:8.5px!important;display:inline-block!important;margin-right:4px!important}
-    .currency-line .amt{font-size:16px!important;white-space:normal!important}
-    .card>strong{font-size:22px!important;color:var(--bbm-navy)!important}
-
-    .panel{border:0!important;box-shadow:none!important;background:transparent!important;overflow:visible!important}
-    .filters{display:grid!important;grid-template-columns:1fr 1fr!important;gap:7px!important;padding:0 0 9px!important;border:0!important}
-    .filters input,.filters select,.filters button{min-width:0!important;width:100%!important;min-height:42px!important;border-radius:11px!important}
-    .filters input{padding:8px 9px!important;font-size:11px!important}
-    .filters input::placeholder{font-size:11px!important;color:#75869a!important}
-    .filters select{padding:8px 9px!important;font-size:11.5px!important}
-    .filters .btn{padding:8px 8px!important;font-size:10.5px!important;line-height:1.2!important}
-    #searchBox,#customerFilter,#locationFilter,#currencyFilter,#statusFilter,#summaryBtn,#batchBtn{grid-column:span 1!important}
-
-    .tablewrap{overflow:visible!important}
-    table{display:block!important;width:100%!important;min-width:0!important;border-collapse:separate!important}
-    thead{display:none!important}
-    tbody{display:grid!important;gap:8px!important}
-    tbody tr{
-      position:relative!important;
-      display:grid!important;
-      grid-template-columns:25px minmax(0,1fr) minmax(0,1fr) auto!important;
-      grid-template-areas:
-        'check inv inv status'
-        'check customer customer action'
-        'check invdate invdate action'
-        'check duedate duedate action'
-        'check location location action'
-        'check total paid outstanding'!important;
-      column-gap:6px!important;
-      row-gap:2px!important;
-      background:#fff!important;
-      border:1px solid var(--bbm-line)!important;
-      border-radius:13px!important;
-      padding:8px 8px!important;
-      box-shadow:0 2px 8px rgba(23,63,119,.045)!important;
-      min-height:0!important;
-      overflow:hidden!important;
+    :root{
+      --bbm-blue:#1768d5;
+      --bbm-navy:#123f78;
+      --bbm-bg:#f4f7fb;
+      --bbm-line:#dfe7f0;
+      --bbm-text:#18324e;
+      --bbm-muted:#6d7e92;
+      --bbm-red:#d73545;
+      --bbm-green:#198754;
+      --bbm-amber:#b57500;
     }
-    tbody td{display:block!important;border:0!important;padding:0!important;white-space:normal!important;font-size:10px!important;min-width:0!important;background:transparent!important;line-height:1.2!important;overflow-wrap:anywhere!important}
-    tbody td:nth-child(1){grid-area:check!important;display:flex!important;align-items:flex-start!important;justify-content:center!important;padding-top:2px!important}
-    tbody td:nth-child(2){grid-area:inv!important;font-size:15px!important;font-weight:900!important;color:var(--bbm-navy)!important;line-height:1.1!important;align-self:center!important}
-    tbody td:nth-child(5){grid-area:customer!important;font-size:12px!important;font-weight:800!important;color:var(--bbm-text)!important;line-height:1.15!important;align-self:center!important}
-    tbody td:nth-child(10){grid-area:status!important;text-align:right!important;align-self:start!important;justify-self:end!important}
-    tbody td:nth-child(11){grid-area:action!important;display:flex!important;align-items:center!important;justify-content:flex-end!important;align-self:stretch!important;padding-left:2px!important}
 
-    tbody td:nth-child(3){grid-area:invdate!important}
-    tbody td:nth-child(4){grid-area:duedate!important;color:#c94750!important}
-    tbody td:nth-child(3),tbody td:nth-child(4){display:flex!important;align-items:baseline!important;gap:5px!important;width:100%!important;font-size:9.5px!important;line-height:1.25!important;white-space:normal!important;overflow:visible!important;text-overflow:clip!important;color:var(--bbm-muted)!important}
-    tbody td:nth-child(4){color:#c94750!important}
-    tbody td:nth-child(3)::before{content:'Invoice:';flex:0 0 auto;font-weight:900;color:#50677f!important}
-    tbody td:nth-child(4)::before{content:'Due:';flex:0 0 auto;font-weight:900;color:#50677f!important}
 
-    tbody td:nth-child(6){grid-area:location!important;color:#526b84!important;font-size:9.5px!important;line-height:1.2!important;padding-top:1px!important}
-    tbody td:nth-child(6)::before{content:'📍 ';font-size:9px}
-    tbody td:nth-child(6) small{font-size:8.5px!important;color:#78899b!important}
+    html,
+    body{
+      background:var(--bbm-bg) !important;
+      overflow-x:hidden !important;
+    }
 
-    tbody td:nth-child(7){grid-area:total!important}
-    tbody td:nth-child(8){grid-area:paid!important}
-    tbody td:nth-child(9){grid-area:outstanding!important}
-    tbody td:nth-child(7),tbody td:nth-child(8),tbody td:nth-child(9){width:auto!important;min-width:0!important;padding:5px 6px!important;border-radius:8px!important;background:#f7f9fc!important;text-align:left!important;font-size:10.5px!important;font-weight:900!important;line-height:1.1!important;align-self:end!important;overflow:hidden!important}
-    tbody td:nth-child(7)::before{content:'Total';display:block;font-size:7.5px;color:var(--bbm-muted);font-weight:700;margin-bottom:2px}
-    tbody td:nth-child(8)::before{content:'Paid';display:block;font-size:7.5px;color:var(--bbm-muted);font-weight:700;margin-bottom:2px}
-    tbody td:nth-child(9){background:#fff2f3!important;color:var(--bbm-red)!important}
-    tbody td:nth-child(9)::before{content:'Outstanding';display:block;font-size:7.5px;color:#7c6370;font-weight:700;margin-bottom:2px}
+    body{
+      padding:0 !important;
+      font-family:Arial,Helvetica,sans-serif !important;
+    }
 
-    .rowcheck,.selectall{width:18px!important;height:18px!important;margin:0!important}
-    .status{padding:4px 7px!important;font-size:8.5px!important;border-radius:999px!important;white-space:nowrap!important;line-height:1.1!important}
-    td:nth-child(11) .btn{min-height:36px!important;padding:6px 9px!important;font-size:9px!important;line-height:1.12!important;border-radius:9px!important;background:var(--bbm-blue)!important;color:#fff!important;white-space:nowrap!important;max-width:100px!important}
-    td:nth-child(11) .btn.secondary{background:#e9f1fb!important;color:#1b5aa8!important}
-    .foot{padding:9px 2px 4px!important;font-size:9.5px!important}
+    .wrap{
+      max-width:none !important;
+      margin:0 !important;
+      padding:9px 10px 24px !important;
+    }
 
-    .overlay{align-items:flex-end!important;padding:0!important;background:rgba(10,27,48,.52)!important}
-    .modalbox,.loginbox{width:100%!important;max-width:none!important;max-height:92vh!important;overflow:auto!important;border-radius:22px 22px 0 0!important;padding:17px 15px calc(18px + env(safe-area-inset-bottom))!important;box-shadow:0 -14px 40px rgba(0,0,0,.18)!important}
-    .modalhead{position:sticky!important;top:-17px!important;background:#fff!important;z-index:4!important;padding:12px 0 9px!important}
-    .modalbox h2{font-size:19px!important;color:var(--bbm-navy)!important}
-    .modalbox p{font-size:11px!important;margin-bottom:12px!important}
-    .grid2{grid-template-columns:1fr 1fr!important;gap:8px!important}
-    .field label{font-size:10px!important}
-    input,select,textarea{font-size:13px!important;min-height:42px!important}
-    #singleDirectRequestNote,.direct-request-note{font-size:10px!important;line-height:1.4!important}
-    #savePayBtn,#saveBatchBtn{width:100%!important;min-height:48px!important;font-size:14px!important;border-radius:12px!important;background:var(--bbm-blue)!important;color:#fff!important}
-    .history{margin-top:12px!important}.historyitem{font-size:10px!important}
 
-    #summaryOverlay{align-items:stretch!important;justify-content:stretch!important;padding:0!important;background:#eef2f7!important}
-    #summaryOverlay .summary-modal{width:100%!important;height:100%!important;max-width:none!important;max-height:100%!important;margin:0!important;padding:8px 8px calc(12px + env(safe-area-inset-bottom))!important;border-radius:0!important;overflow:auto!important;background:#eef2f7!important;box-shadow:none!important}
-    #summaryOverlay .summary-actions{display:grid!important;grid-template-columns:1fr 1fr!important;gap:6px!important;position:sticky!important;top:0!important;z-index:10!important;margin:0 0 8px!important;padding:6px 0 8px!important;background:#eef2f7!important}
-    #summaryOverlay .summary-actions .btn{width:100%!important;min-height:40px!important;padding:7px 6px!important;font-size:9.5px!important;line-height:1.15!important;border-radius:10px!important;white-space:normal!important}
-    #summaryOverlay .a4-sheet{width:100%!important;min-height:0!important;margin:0!important;padding:12px 10px 16px!important;box-shadow:none!important;border-radius:12px!important;overflow:hidden!important}
-    #summaryOverlay .sum-top{display:block!important}
-    #summaryOverlay .sum-brand h1{font-size:20px!important;letter-spacing:.2px!important}
-    #summaryOverlay .sum-brand p{font-size:10px!important}
-    #summaryOverlay .sum-contact{font-size:9.5px!important;line-height:1.4!important;margin-top:6px!important}
-    #summaryOverlay .sum-meta{min-width:0!important;text-align:left!important;font-size:9.5px!important;line-height:1.4!important;margin-top:9px!important;padding:8px 9px!important;background:#f6f9fd!important;border-radius:9px!important}
-    #summaryOverlay .sum-divider{margin:9px 0 11px!important}
-    #summaryOverlay .sum-title{font-size:14px!important;margin:2px 0 10px!important}
-    #summaryOverlay .sum-customer{grid-template-columns:1fr!important;gap:7px!important;margin-bottom:10px!important;font-size:10px!important}
-    #summaryOverlay .sum-box{padding:9px 10px!important;min-height:0!important;border-radius:9px!important}
-    #summaryOverlay .sum-box strong{font-size:9px!important;margin-bottom:5px!important}
-    #summaryOverlay .sum-customer-name{font-size:13px!important}
-    #summaryOverlay .sum-contact-line{font-size:9.5px!important;margin:3px 0!important;line-height:1.35!important}
-    #summaryOverlay .sum-contact-icon{width:15px!important;flex-basis:15px!important}
-    #summaryOverlay .sum-table{width:100%!important;min-width:0!important;table-layout:fixed!important;border-collapse:collapse!important}
-    #summaryOverlay .sum-table th,#summaryOverlay .sum-table td{font-size:7.5px!important;line-height:1.15!important;padding:5px 2px!important;white-space:normal!important;overflow-wrap:anywhere!important;word-break:break-word!important}
-    #summaryOverlay .sum-table th{font-size:7px!important;letter-spacing:0!important}
-    #summaryOverlay .sum-grand,#summaryOverlay .sum-grand-multi{width:100%!important;margin:11px 0 0!important;padding-top:7px!important}
-    #summaryOverlay .sum-grand{gap:10px!important}
-    #summaryOverlay .sum-grand .label{font-size:12px!important}
-    #summaryOverlay .sum-grand .value{font-size:16px!important;white-space:normal!important;text-align:right!important}
-    #summaryOverlay .sum-grand-multi .row{font-size:11px!important;padding:4px 2px!important}
-    #summaryOverlay .sum-footer{display:block!important;margin-top:14px!important;padding-top:7px!important;font-size:8px!important;line-height:1.35!important}
-    #summaryOverlay .sum-footer>*+*{margin-top:4px!important}
-    #summaryOverlay .sum-small{font-size:8px!important}
+    /*
+    ============================================================
+    PAGE HEADER
+    ============================================================
+    */
+
+    .topbar{
+      margin:0 0 8px !important;
+      align-items:center !important;
+    }
+
+    .topbar > div:first-child h1{
+      font-size:21px !important;
+      margin:0 0 2px !important;
+      color:var(--bbm-navy) !important;
+    }
+
+    .subtitle{
+      font-size:11px !important;
+      line-height:1.35 !important;
+    }
+
+    .userbox{
+      gap:6px !important;
+      justify-content:flex-end !important;
+    }
+
+    #accessPill,
+    #logoutBtn{
+      display:none !important;
+    }
+
+    #locationPill{
+      font-size:10px !important;
+      padding:7px 9px !important;
+      background:#eaf3ff !important;
+      border-color:#c6daf7 !important;
+      color:#175db6 !important;
+    }
+
+
+    /*
+    ============================================================
+    INFO BANNER
+    ============================================================
+    */
+
+    .view-banner{
+      margin:0 0 9px !important;
+      border:1px solid #cfe2ff !important;
+      border-radius:12px !important;
+      background:#eaf4ff !important;
+      color:#1a5bb0 !important;
+      font-size:11px !important;
+      line-height:1.4 !important;
+      padding:9px 11px !important;
+    }
+
+
+    /*
+    ============================================================
+    SUMMARY CARDS
+    ============================================================
+    */
+
+    .cards{
+      grid-template-columns:1fr 1fr !important;
+      gap:7px !important;
+      margin:0 0 9px !important;
+    }
+
+    .card{
+      padding:10px !important;
+      border-radius:12px !important;
+      box-shadow:none !important;
+      min-height:82px !important;
+    }
+
+    .card small{
+      font-size:9.5px !important;
+      margin-bottom:4px !important;
+    }
+
+    .currency-line{
+      display:block !important;
+    }
+
+    .currency-line .ccy{
+      font-size:8.5px !important;
+      display:inline-block !important;
+      margin-right:4px !important;
+    }
+
+    .currency-line .amt{
+      font-size:16px !important;
+      white-space:normal !important;
+    }
+
+    .card > strong{
+      font-size:22px !important;
+      color:var(--bbm-navy) !important;
+    }
+
+
+    /*
+    ============================================================
+    FILTERS
+    ============================================================
+    */
+
+    .panel{
+      border:0 !important;
+      box-shadow:none !important;
+      background:transparent !important;
+      overflow:visible !important;
+    }
+
+    .filters{
+      display:grid !important;
+      grid-template-columns:1fr 1fr !important;
+      gap:7px !important;
+      padding:0 0 9px !important;
+      border:0 !important;
+    }
+
+    .filters input,
+    .filters select,
+    .filters button{
+      min-width:0 !important;
+      width:100% !important;
+      min-height:42px !important;
+      border-radius:11px !important;
+    }
+
+    .filters input{
+      padding:8px 9px !important;
+      font-size:11px !important;
+    }
+
+    .filters input::placeholder{
+      font-size:11px !important;
+      color:#75869a !important;
+    }
+
+    .filters select{
+      padding:8px 9px !important;
+      font-size:11.5px !important;
+    }
+
+    .filters .btn{
+      padding:8px !important;
+      font-size:10.5px !important;
+      line-height:1.2 !important;
+    }
+
+    #searchBox,
+    #customerFilter,
+    #locationFilter,
+    #currencyFilter,
+    #statusFilter,
+    #summaryBtn,
+    #batchBtn{
+      grid-column:span 1 !important;
+    }
+
+
+    /*
+    ============================================================
+    RECEIVABLE LIST
+    ============================================================
+    */
+
+    .tablewrap{
+      overflow:visible !important;
+    }
+
+    table{
+      display:block !important;
+      width:100% !important;
+      min-width:0 !important;
+      border-collapse:separate !important;
+    }
+
+    thead{
+      display:none !important;
+    }
+
+    tbody{
+      display:grid !important;
+      gap:8px !important;
+    }
+
+
+    /*
+    ============================================================
+    INVOICE CARD
+    ============================================================
+
+    ROW 1:
+    CHECKBOX -> INVOICE NUMBER -> CUSTOMER NAME -> STATUS
+
+    ============================================================
+    */
+
+    tbody tr{
+      position:relative !important;
+
+      display:grid !important;
+
+      grid-template-columns:
+        24px
+        minmax(82px,96px)
+        minmax(0,1fr)
+        auto !important;
+
+      grid-template-areas:
+        "check inv customer status"
+        ". invdate invdate action"
+        ". duedate duedate action"
+        ". location location action"
+        ". total paid outstanding" !important;
+
+      column-gap:7px !important;
+      row-gap:3px !important;
+
+      align-items:start !important;
+
+      background:#fff !important;
+      border:1px solid var(--bbm-line) !important;
+      border-radius:13px !important;
+
+      padding:9px !important;
+
+      box-shadow:
+        0 2px 8px rgba(23,63,119,.045) !important;
+
+      min-height:0 !important;
+      overflow:hidden !important;
+    }
+
+
+    tbody td{
+      display:block !important;
+
+      border:0 !important;
+      padding:0 !important;
+
+      min-width:0 !important;
+
+      background:transparent !important;
+
+      font-size:10px !important;
+      line-height:1.2 !important;
+
+      white-space:normal !important;
+      overflow-wrap:anywhere !important;
+    }
+
+
+    /*
+    ============================================================
+    CHECKBOX
+    ============================================================
+    */
+
+    tbody td:nth-child(1){
+      grid-area:check !important;
+
+      display:flex !important;
+
+      align-items:center !important;
+      justify-content:center !important;
+
+      align-self:center !important;
+
+      padding:0 !important;
+    }
+
+    .rowcheck,
+    .selectall{
+      width:18px !important;
+      height:18px !important;
+      margin:0 !important;
+      flex:0 0 auto !important;
+    }
+
+
+    /*
+    ============================================================
+    INVOICE NUMBER
+    ============================================================
+    */
+
+    tbody td:nth-child(2){
+      grid-area:inv !important;
+
+      font-size:14px !important;
+      font-weight:900 !important;
+
+      color:var(--bbm-navy) !important;
+
+      line-height:1.1 !important;
+
+      align-self:center !important;
+
+      white-space:nowrap !important;
+      overflow:hidden !important;
+      text-overflow:ellipsis !important;
+    }
+
+
+    /*
+    ============================================================
+    CUSTOMER NAME
+    ============================================================
+    */
+
+    tbody td:nth-child(5){
+      grid-area:customer !important;
+
+      font-size:11.5px !important;
+      font-weight:800 !important;
+
+      color:var(--bbm-text) !important;
+
+      line-height:1.15 !important;
+
+      align-self:center !important;
+
+      padding-left:1px !important;
+
+      white-space:nowrap !important;
+      overflow:hidden !important;
+      text-overflow:ellipsis !important;
+    }
+
+
+    /*
+    ============================================================
+    STATUS
+    ============================================================
+    */
+
+    tbody td:nth-child(10){
+      grid-area:status !important;
+
+      text-align:right !important;
+
+      align-self:center !important;
+      justify-self:end !important;
+    }
+
+    .status{
+      display:inline-flex !important;
+
+      align-items:center !important;
+      justify-content:center !important;
+
+      padding:4px 7px !important;
+
+      font-size:8.5px !important;
+      line-height:1.1 !important;
+
+      border-radius:999px !important;
+
+      white-space:nowrap !important;
+    }
+
+
+    /*
+    ============================================================
+    DIRECT REQUEST BUTTON
+    ============================================================
+    */
+
+    tbody td:nth-child(11){
+      grid-area:action !important;
+
+      display:flex !important;
+
+      align-items:flex-start !important;
+      justify-content:flex-end !important;
+
+      align-self:start !important;
+
+      padding-left:3px !important;
+      padding-top:2px !important;
+    }
+
+    tbody td:nth-child(11) .btn{
+      min-height:36px !important;
+
+      padding:6px 9px !important;
+
+      font-size:9px !important;
+      font-weight:800 !important;
+
+      line-height:1.12 !important;
+
+      border-radius:9px !important;
+
+      background:var(--bbm-blue) !important;
+      color:#fff !important;
+
+      white-space:nowrap !important;
+
+      max-width:100px !important;
+    }
+
+    tbody td:nth-child(11) .btn.secondary{
+      background:#e9f1fb !important;
+      color:#1b5aa8 !important;
+    }
+
+
+    /*
+    ============================================================
+    INVOICE DATE
+    ============================================================
+    */
+
+    tbody td:nth-child(3){
+      grid-area:invdate !important;
+
+      display:flex !important;
+      align-items:baseline !important;
+
+      gap:5px !important;
+
+      width:100% !important;
+
+      font-size:9.5px !important;
+      line-height:1.25 !important;
+
+      color:var(--bbm-muted) !important;
+
+      white-space:normal !important;
+
+      overflow:visible !important;
+      text-overflow:clip !important;
+    }
+
+    tbody td:nth-child(3)::before{
+      content:"Invoice:";
+
+      flex:0 0 auto;
+
+      font-weight:900;
+
+      color:#50677f !important;
+    }
+
+
+    /*
+    ============================================================
+    DUE DATE
+    ============================================================
+    */
+
+    tbody td:nth-child(4){
+      grid-area:duedate !important;
+
+      display:flex !important;
+      align-items:baseline !important;
+
+      gap:5px !important;
+
+      width:100% !important;
+
+      font-size:9.5px !important;
+      line-height:1.25 !important;
+
+      color:#c94750 !important;
+
+      white-space:normal !important;
+
+      overflow:visible !important;
+      text-overflow:clip !important;
+    }
+
+    tbody td:nth-child(4)::before{
+      content:"Due:";
+
+      flex:0 0 auto;
+
+      font-weight:900;
+
+      color:#50677f !important;
+    }
+
+
+    /*
+    ============================================================
+    LOCATION
+    ============================================================
+    */
+
+    tbody td:nth-child(6){
+      grid-area:location !important;
+
+      color:#526b84 !important;
+
+      font-size:9.5px !important;
+      line-height:1.2 !important;
+
+      padding-top:1px !important;
+    }
+
+    tbody td:nth-child(6)::before{
+      content:"📍 ";
+
+      font-size:9px;
+    }
+
+    tbody td:nth-child(6) small{
+      font-size:8.5px !important;
+
+      color:#78899b !important;
+    }
+
+
+    /*
+    ============================================================
+    AMOUNT BOXES
+    ============================================================
+    */
+
+    tbody td:nth-child(7){
+      grid-area:total !important;
+    }
+
+    tbody td:nth-child(8){
+      grid-area:paid !important;
+    }
+
+    tbody td:nth-child(9){
+      grid-area:outstanding !important;
+    }
+
+    tbody td:nth-child(7),
+    tbody td:nth-child(8),
+    tbody td:nth-child(9){
+      width:auto !important;
+      min-width:0 !important;
+
+      padding:6px 7px !important;
+
+      border-radius:8px !important;
+
+      background:#f7f9fc !important;
+
+      text-align:left !important;
+
+      font-size:10.5px !important;
+      font-weight:900 !important;
+
+      line-height:1.1 !important;
+
+      align-self:end !important;
+
+      overflow:hidden !important;
+    }
+
+
+    tbody td:nth-child(7)::before{
+      content:"Total";
+
+      display:block;
+
+      font-size:7.5px;
+
+      color:var(--bbm-muted);
+
+      font-weight:700;
+
+      margin-bottom:2px;
+    }
+
+
+    tbody td:nth-child(8)::before{
+      content:"Paid";
+
+      display:block;
+
+      font-size:7.5px;
+
+      color:var(--bbm-muted);
+
+      font-weight:700;
+
+      margin-bottom:2px;
+    }
+
+
+    tbody td:nth-child(9){
+      background:#fff2f3 !important;
+
+      color:var(--bbm-red) !important;
+    }
+
+    tbody td:nth-child(9)::before{
+      content:"Outstanding";
+
+      display:block;
+
+      font-size:7.5px;
+
+      color:#7c6370;
+
+      font-weight:700;
+
+      margin-bottom:2px;
+    }
+
+
+    /*
+    ============================================================
+    FOOT
+    ============================================================
+    */
+
+    .foot{
+      padding:9px 2px 4px !important;
+
+      font-size:9.5px !important;
+    }
+
+
+    /*
+    ============================================================
+    DIRECT REQUEST / PAYMENT MODALS
+    ============================================================
+    */
+
+    .overlay{
+      align-items:flex-end !important;
+
+      padding:0 !important;
+
+      background:rgba(10,27,48,.52) !important;
+    }
+
+    .modalbox,
+    .loginbox{
+      width:100% !important;
+
+      max-width:none !important;
+
+      max-height:92vh !important;
+
+      overflow:auto !important;
+
+      border-radius:22px 22px 0 0 !important;
+
+      padding:
+        17px
+        15px
+        calc(18px + env(safe-area-inset-bottom))
+        !important;
+
+      box-shadow:
+        0 -14px 40px rgba(0,0,0,.18)
+        !important;
+    }
+
+    .modalhead{
+      position:sticky !important;
+
+      top:-17px !important;
+
+      background:#fff !important;
+
+      z-index:4 !important;
+
+      padding:12px 0 9px !important;
+    }
+
+    .modalbox h2{
+      font-size:19px !important;
+
+      color:var(--bbm-navy) !important;
+    }
+
+    .modalbox p{
+      font-size:11px !important;
+
+      margin-bottom:12px !important;
+    }
+
+    .grid2{
+      grid-template-columns:1fr 1fr !important;
+
+      gap:8px !important;
+    }
+
+    .field label{
+      font-size:10px !important;
+    }
+
+    input,
+    select,
+    textarea{
+      font-size:13px !important;
+
+      min-height:42px !important;
+    }
+
+    #singleDirectRequestNote,
+    .direct-request-note{
+      font-size:10px !important;
+
+      line-height:1.4 !important;
+    }
+
+    #savePayBtn,
+    #saveBatchBtn{
+      width:100% !important;
+
+      min-height:48px !important;
+
+      font-size:14px !important;
+
+      border-radius:12px !important;
+
+      background:var(--bbm-blue) !important;
+
+      color:#fff !important;
+    }
+
+    .history{
+      margin-top:12px !important;
+    }
+
+    .historyitem{
+      font-size:10px !important;
+    }
+
+
+    /*
+    ============================================================
+    SUMMARY INVOICE — MOBILE FULL SCREEN
+    ============================================================
+    */
+
+    #summaryOverlay{
+      align-items:stretch !important;
+      justify-content:stretch !important;
+
+      padding:0 !important;
+
+      background:#eef2f7 !important;
+    }
+
+    #summaryOverlay .summary-modal{
+      width:100% !important;
+      height:100% !important;
+
+      max-width:none !important;
+      max-height:100% !important;
+
+      margin:0 !important;
+
+      padding:
+        8px
+        8px
+        calc(12px + env(safe-area-inset-bottom))
+        !important;
+
+      border-radius:0 !important;
+
+      overflow:auto !important;
+
+      background:#eef2f7 !important;
+
+      box-shadow:none !important;
+    }
+
+
+    /*
+    Summary buttons
+    */
+
+    #summaryOverlay .summary-actions{
+      display:grid !important;
+
+      grid-template-columns:
+        1fr
+        1fr
+        !important;
+
+      gap:6px !important;
+
+      position:sticky !important;
+
+      top:0 !important;
+
+      z-index:10 !important;
+
+      margin:0 0 8px !important;
+
+      padding:6px 0 8px !important;
+
+      background:#eef2f7 !important;
+    }
+
+    #summaryOverlay .summary-actions .btn{
+      width:100% !important;
+
+      min-height:40px !important;
+
+      padding:7px 6px !important;
+
+      font-size:9.5px !important;
+      line-height:1.15 !important;
+
+      border-radius:10px !important;
+
+      white-space:normal !important;
+    }
+
+
+    /*
+    Summary paper
+    */
+
+    #summaryOverlay .a4-sheet{
+      width:100% !important;
+
+      min-height:0 !important;
+
+      margin:0 !important;
+
+      padding:12px 10px 16px !important;
+
+      box-shadow:none !important;
+
+      border-radius:12px !important;
+
+      overflow:hidden !important;
+    }
+
+
+    /*
+    BIG BROTHER header
+    */
+
+    #summaryOverlay .sum-top{
+      display:block !important;
+    }
+
+    #summaryOverlay .sum-brand h1{
+      font-size:20px !important;
+
+      letter-spacing:.2px !important;
+    }
+
+    #summaryOverlay .sum-brand p{
+      font-size:10px !important;
+    }
+
+    #summaryOverlay .sum-contact{
+      font-size:9.5px !important;
+
+      line-height:1.4 !important;
+
+      margin-top:6px !important;
+    }
+
+
+    /*
+    Summary information
+    */
+
+    #summaryOverlay .sum-meta{
+      min-width:0 !important;
+
+      text-align:left !important;
+
+      font-size:9.5px !important;
+
+      line-height:1.4 !important;
+
+      margin-top:9px !important;
+
+      padding:8px 9px !important;
+
+      background:#f6f9fd !important;
+
+      border-radius:9px !important;
+    }
+
+    #summaryOverlay .sum-divider{
+      margin:9px 0 11px !important;
+    }
+
+    #summaryOverlay .sum-title{
+      font-size:14px !important;
+
+      margin:2px 0 10px !important;
+    }
+
+
+    /*
+    Customer area
+    */
+
+    #summaryOverlay .sum-customer{
+      grid-template-columns:1fr !important;
+
+      gap:7px !important;
+
+      margin-bottom:10px !important;
+
+      font-size:10px !important;
+    }
+
+    #summaryOverlay .sum-box{
+      padding:9px 10px !important;
+
+      min-height:0 !important;
+
+      border-radius:9px !important;
+    }
+
+    #summaryOverlay .sum-box strong{
+      font-size:9px !important;
+
+      margin-bottom:5px !important;
+    }
+
+    #summaryOverlay .sum-customer-name{
+      font-size:13px !important;
+    }
+
+    #summaryOverlay .sum-contact-line{
+      font-size:9.5px !important;
+
+      margin:3px 0 !important;
+
+      line-height:1.35 !important;
+    }
+
+    #summaryOverlay .sum-contact-icon{
+      width:15px !important;
+
+      flex-basis:15px !important;
+    }
+
+
+    /*
+    Summary invoice table
+    */
+
+    #summaryOverlay .sum-table{
+      width:100% !important;
+
+      min-width:0 !important;
+
+      table-layout:fixed !important;
+
+      border-collapse:collapse !important;
+    }
+
+    #summaryOverlay .sum-table th,
+    #summaryOverlay .sum-table td{
+      font-size:7.5px !important;
+
+      line-height:1.15 !important;
+
+      padding:5px 2px !important;
+
+      white-space:normal !important;
+
+      overflow-wrap:anywhere !important;
+
+      word-break:break-word !important;
+    }
+
+    #summaryOverlay .sum-table th{
+      font-size:7px !important;
+
+      letter-spacing:0 !important;
+    }
+
+
+    /*
+    Summary total
+    */
+
+    #summaryOverlay .sum-grand,
+    #summaryOverlay .sum-grand-multi{
+      width:100% !important;
+
+      margin:11px 0 0 !important;
+
+      padding-top:7px !important;
+    }
+
+    #summaryOverlay .sum-grand{
+      gap:10px !important;
+    }
+
+    #summaryOverlay .sum-grand .label{
+      font-size:12px !important;
+    }
+
+    #summaryOverlay .sum-grand .value{
+      font-size:16px !important;
+
+      white-space:normal !important;
+
+      text-align:right !important;
+    }
+
+    #summaryOverlay .sum-grand-multi .row{
+      font-size:11px !important;
+
+      padding:4px 2px !important;
+    }
+
+
+    /*
+    Footer
+    */
+
+    #summaryOverlay .sum-footer{
+      display:block !important;
+
+      margin-top:14px !important;
+
+      padding-top:7px !important;
+
+      font-size:8px !important;
+
+      line-height:1.35 !important;
+    }
+
+    #summaryOverlay .sum-footer > * + *{
+      margin-top:4px !important;
+    }
+
+    #summaryOverlay .sum-small{
+      font-size:8px !important;
+    }
+
+
+    /*
+    ============================================================
+    SMALL PHONE
+    ============================================================
+    */
 
     @media(max-width:390px){
-      .wrap{padding:8px 8px 22px!important}
-      .cards{gap:6px!important}.card{padding:8px!important}.currency-line .amt{font-size:14px!important}
-      .filters{gap:6px!important}
-      tbody tr{grid-template-columns:24px minmax(0,1fr) minmax(0,1fr) auto!important;padding:7px 7px!important;column-gap:5px!important}
-      tbody td:nth-child(2){font-size:14px!important}
-      tbody td:nth-child(5){font-size:11.5px!important}
-      td:nth-child(11) .btn{max-width:94px!important;padding:6px 7px!important;font-size:8.5px!important}
-      #summaryOverlay .summary-actions .btn{font-size:9px!important}
-      #summaryOverlay .a4-sheet{padding:10px 8px 14px!important}
-      #summaryOverlay .sum-table th,#summaryOverlay .sum-table td{font-size:7px!important;padding:4px 1.5px!important}
+
+      .wrap{
+        padding:8px 8px 22px !important;
+      }
+
+      .cards{
+        gap:6px !important;
+      }
+
+      .card{
+        padding:8px !important;
+      }
+
+      .currency-line .amt{
+        font-size:14px !important;
+      }
+
+      .filters{
+        gap:6px !important;
+      }
+
+      tbody tr{
+        grid-template-columns:
+          22px
+          minmax(78px,90px)
+          minmax(0,1fr)
+          auto
+          !important;
+
+        padding:8px 7px !important;
+
+        column-gap:5px !important;
+      }
+
+      tbody td:nth-child(2){
+        font-size:13px !important;
+      }
+
+      tbody td:nth-child(5){
+        font-size:11px !important;
+      }
+
+      tbody td:nth-child(11) .btn{
+        max-width:94px !important;
+
+        padding:6px 7px !important;
+
+        font-size:8.5px !important;
+      }
+
+      #summaryOverlay .summary-actions .btn{
+        font-size:9px !important;
+      }
+
+      #summaryOverlay .a4-sheet{
+        padding:10px 8px 14px !important;
+      }
+
+      #summaryOverlay .sum-table th,
+      #summaryOverlay .sum-table td{
+        font-size:7px !important;
+
+        padding:4px 1.5px !important;
+      }
     }
+
   }
+
+
+  /*
+  ============================================================
+  PRINT / SAVE PDF
+  MOBILE VERSION ONLY
+  DUE DATE REMAINS HIDDEN
+  ============================================================
+  */
+
+  @media print{
+
+    #summaryOverlay .sum-table{
+      width:100% !important;
+      table-layout:fixed !important;
+    }
+
+    #summaryOverlay .sum-table th:nth-child(4),
+    #summaryOverlay .sum-table td:nth-child(4){
+      display:none !important;
+    }
+
+  }
+
   `;
 
+
+  /*
+  ============================================================
+  INJECT MOBILE CSS INTO EXISTING RECEIVABLE SYSTEM
+  ============================================================
+  */
+
   function inject(){
+
     let doc;
-    try{doc=frame.contentDocument||frame.contentWindow.document}catch(e){return}
-    if(!doc||!doc.head)return;
+
+    try{
+      doc =
+        frame.contentDocument ||
+        frame.contentWindow.document;
+    }
+    catch(error){
+      return;
+    }
+
+    if(!doc || !doc.head){
+      return;
+    }
+
+
+    /*
+    Add mobile stylesheet
+    */
+
     if(!doc.getElementById('bb-mobile-receivable-skin')){
-      const style=doc.createElement('style');
-      style.id='bb-mobile-receivable-skin';
-      style.textContent=MOBILE_CSS;
+
+      const style =
+        doc.createElement('style');
+
+      style.id =
+        'bb-mobile-receivable-skin';
+
+      style.textContent =
+        MOBILE_CSS;
+
       doc.head.appendChild(style);
     }
+
+
+    /*
+    Keep card information clean after live refresh
+    */
+
     try{
-      const win=frame.contentWindow;
-      const keepFresh=()=>{
-        const body=doc.getElementById('arBody');
-        if(!body)return;
-        body.querySelectorAll('tr').forEach(tr=>{
-          const cells=tr.children;
-          if(cells.length<11)return;
-          cells[2].setAttribute('title','Invoice date');
-          cells[3].setAttribute('title','Due date');
-        });
+
+      const win =
+        frame.contentWindow;
+
+
+      const keepFresh = () => {
+
+        const body =
+          doc.getElementById('arBody');
+
+        if(!body){
+          return;
+        }
+
+
+        body
+          .querySelectorAll('tr')
+          .forEach(tr => {
+
+            const cells =
+              tr.children;
+
+            if(cells.length < 11){
+              return;
+            }
+
+
+            /*
+            Invoice Date
+            */
+
+            cells[2]
+              .setAttribute(
+                'title',
+                'Invoice date'
+              );
+
+
+            /*
+            Due Date
+            */
+
+            cells[3]
+              .setAttribute(
+                'title',
+                'Due date'
+              );
+
+
+            /*
+            Invoice Number
+            */
+
+            cells[1]
+              .setAttribute(
+                'title',
+                String(
+                  cells[1].textContent || ''
+                ).trim()
+              );
+
+
+            /*
+            Customer Name
+            */
+
+            cells[4]
+              .setAttribute(
+                'title',
+                String(
+                  cells[4].textContent || ''
+                ).trim()
+              );
+
+          });
+
       };
+
+
       keepFresh();
-      const body=doc.getElementById('arBody');
-      if(body&&!body.__bbObserved){body.__bbObserved=true;new win.MutationObserver(()=>requestAnimationFrame(keepFresh)).observe(body,{childList:true,subtree:true});}
-    }catch(_){ }
+
+
+      const body =
+        doc.getElementById('arBody');
+
+
+      if(
+        body &&
+        !body.__bbObserved
+      ){
+
+        body.__bbObserved = true;
+
+        new win.MutationObserver(
+          () => {
+            win.requestAnimationFrame(
+              keepFresh
+            );
+          }
+        )
+        .observe(
+          body,
+          {
+            childList:true,
+            subtree:true
+          }
+        );
+
+      }
+
+    }
+    catch(error){
+      /*
+      Ignore visual enhancement errors.
+      Core receivable workflow remains untouched.
+      */
+    }
+
+
     boot.classList.add('hide');
+
   }
 
-  frame.addEventListener('load',()=>{setTimeout(inject,60);setTimeout(inject,400);setTimeout(inject,1200)});
+
+  /*
+  ============================================================
+  RUN AFTER IFRAME LOAD
+  ============================================================
+  */
+
+  frame.addEventListener(
+    'load',
+    () => {
+
+      setTimeout(
+        inject,
+        60
+      );
+
+      setTimeout(
+        inject,
+        400
+      );
+
+      setTimeout(
+        inject,
+        1200
+      );
+
+    }
+  );
+
 })();
 </script>
+
 </body>
 </html>
