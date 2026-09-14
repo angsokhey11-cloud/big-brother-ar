@@ -85,6 +85,29 @@ const HEADER_FILTER_CSS=`
 
 .view-banner{display:none!important}
 
+/* Compact only the 2 count KPI cards. Invoice cards below are untouched. */
+.cards .card:nth-child(3),
+.cards .card:nth-child(4){
+  min-height:54px!important;
+  padding:7px 9px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:8px!important;
+}
+.cards .card:nth-child(3) small,
+.cards .card:nth-child(4) small{
+  margin:0!important;
+  font-size:8.5px!important;
+  line-height:1.1!important;
+}
+.cards .card:nth-child(3)>strong,
+.cards .card:nth-child(4)>strong{
+  margin:0!important;
+  font-size:18px!important;
+  line-height:1!important;
+}
+
 .bb-mobile-actionbar{
   display:grid!important;
   grid-template-columns:72px minmax(0,1fr) minmax(0,1fr) 38px!important;
@@ -192,6 +215,8 @@ const HEADER_FILTER_CSS=`
   .topbar{padding:9px 10px!important}
   .topbar>div:first-child h1{font-size:17px!important}
   #locationPill{max-width:96px!important}
+  .cards .card:nth-child(3),.cards .card:nth-child(4){min-height:50px!important;padding:6px 8px!important}
+  .cards .card:nth-child(3)>strong,.cards .card:nth-child(4)>strong{font-size:16px!important}
   .bb-mobile-actionbar{grid-template-columns:66px minmax(0,1fr) minmax(0,1fr) 36px!important;gap:5px!important}
   .bb-mobile-actionbar .btn,.bb-filter-toggle,.bb-refresh-btn{font-size:8.2px!important;padding:5px 4px!important}
   .filters.bb-mobile-filter-panel{grid-template-columns:1fr!important}
