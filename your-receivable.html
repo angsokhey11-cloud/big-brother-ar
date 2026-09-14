@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BIG BROTHER — Your Receivable</title>
+<style>html,body{margin:0;min-height:100%;background:#f4f7fb;font-family:Arial,sans-serif}.bb-loader{min-height:100vh;display:flex;align-items:center;justify-content:center}.bb-card{background:#fff;border:1px solid #d9e2ef;border-radius:14px;padding:22px 28px;box-shadow:0 8px 30px #173a6615;color:#17457a;font-weight:800}.bb-sub{margin-top:6px;color:#6b7280;font-size:12px;font-weight:600}</style>
+</head>
+<body>
+<div class="bb-loader"><div class="bb-card">Loading BIG BROTHER Your Receivable…<div class="bb-sub">Assigned locations · searchable invoice/customer filters</div></div></div>
+<script>
+(async function(){
+  try{
+    const response=await fetch('legacy-google-v3.html?v=20260914-1',{cache:'no-store'});
+    if(!response.ok)throw new Error('Could not load Your Receivable source.');
+    let html=await response.text();
+
+    const adapter='<scr'+'ipt src="supabase-ar-adapter.js?v=20260910-3"></scr'+'ipt>';
+    const authCutover='<style id="bb-ar-auth-cutover">#singleAdminField,#batchAdminField{display:none!important}</style>';
+    const headClose=html.toLowerCase().indexOf('</head>');
+    if(headClose<0)throw new Error('Your Receivable source is missing </head>.');
+    html=html.slice(0,headClose)+adapter+'\n'+authCutover+'\n'+html.slice(headClose);
+
+    /* Force this duplicate to use the existing Your Receivable behavior. */
+    html=html.replace(
+      "const raw=(own.get('view')||'all').toLowerCase();",
+      "const raw='your';"
+    );
+
+    /* Replace free-text filters with searchable type-ahead dropdowns. */
+    html=html.replace(
+      '<input id="searchBox" placeholder="Search invoice no." oninput="filterChanged()">',
+      '<input id="searchBox" list="bbInvoiceSuggestions" placeholder="Type or choose invoice no." autocomplete="off" oninput="filterChanged()"><datalist id="bbInvoiceSuggestions"></datalist>'
+    );
+    html=html.replace(
+      '<input id="customerFilter" placeholder="Filter customer name" oninput="filterChanged()">',
+      '<input id="customerFilter" list="bbCustomerSuggestions" placeholder="Type or choose customer name" autocomplete="off" oninput="filterChanged()"><datalist id="bbCustomerSuggestions"></datalist>'
+    );
+
+    const filterPatch=`function refreshARFilterSuggestions(){
+  const invoiceList=$('bbInvoiceSuggestions');
+  const customerList=$('bbCustomerSuggestions');
+  if(!invoiceList||!customerList||!Array.isArray(rows))return;
+
+  invoiceList.replaceChildren();
+  customerList.replaceChildren();
+
+  const invoices=[...rows]
+    .filter(r=>String(r.invoiceNo||'').trim())
+    .sort((a,b)=>String(a.invoiceNo||'').localeCompare(String(b.invoiceNo||''),undefined,{numeric:true,sensitivity:'base'}));
+  const seenInvoices=new Set();
+  invoices.forEach(r=>{
+    const no=String(r.invoiceNo||'').trim();
+    if(!no||seenInvoices.has(no))return;
+    seenInvoices.add(no);
+    const option=document.createElement('option');
+    option.value=no;
+    const customer=String(r.customer||'').trim();
+    const location=String(r.locationCode||'').trim();
+    option.label=[customer,location].filter(Boolean).join(' · ');
+    invoiceList.appendChild(option);
+  });
+
+  const customerMap=new Map();
+  rows.forEach(r=>{
+    const name=String(r.customer||'').trim();
+    if(!name)return;
+    const key=name.toLowerCase();
+    if(!customerMap.has(key))customerMap.set(key,{name,count:0});
+    customerMap.get(key).count+=1;
+  });
+  [...customerMap.values()]
+    .sort((a,b)=>a.name.localeCompare(b.name,undefined,{sensitivity:'base'}))
+    .forEach(x=>{
+      const option=document.createElement('option');
+      option.value=x.name;
+      option.label=x.count+' open invoice'+(x.count===1?'':'s');
+      customerList.appendChild(option);
+    });
+}
+
+function syncCustomerFromExactInvoice(){
+  const no=String($('searchBox')?.value||'').trim().toLowerCase();
+  if(!no)return;
+  const hit=Array.isArray(rows)?rows.find(r=>String(r.invoiceNo||'').trim().toLowerCase()===no):null;
+  if(hit&&$('customerFilter')&&!String($('customerFilter').value||'').trim()){
+    $('customerFilter').value=String(hit.customer||'').trim();
+  }
+}
+
+function filterChanged(){
+  syncCustomerFromExactInvoice();
+  selectedInvoices.clear();
+  renderRows();
+}`;
+    if(!html.includes('function filterChanged(){selectedInvoices.clear();renderRows()}'))throw new Error('Your Receivable filter marker was not found.');
+    html=html.replace('function filterChanged(){selectedInvoices.clear();renderRows()}',filterPatch);
+    html=html.replace('function renderRows(){','function renderRows(){\n  refreshARFilterSuggestions();');
+
+    /* Completely remove the old Admin/Salesman secret-code login form. */
+    html=html.replace(
+      /<div class="overlay" id="loginOverlay">[\s\S]*?<\/div>\s*<\/div>\s*(?=<div class="overlay hidden" id="paymentOverlay">)/,
+      ''
+    );
+    html=html.replaceAll('For Bank payment, duplicate Transaction ID will be rejected by the server. The Admin Code is verified server-side and is never saved into Payments.','For Bank payment, duplicate Transaction ID will be rejected by the server. Authorization is verified through your Supabase user permissions.');
+    html=html.replaceAll('One payment, one Admin approval, and one Bank Transaction ID can clear all selected invoices. The server recalculates every outstanding balance before saving.','One payment and one Bank Transaction ID can clear all selected invoices. Supabase permissions and current outstanding balances are verified before saving.');
+    html=html.replaceAll("if(!admin)return setPaymentError('Admin Code is required to approve payment.');",'');
+    html=html.replaceAll("if(!admin)return setBatchError('Admin Code is required to approve the whole batch.');",'');
+    html=html.replaceAll("$('singleAdminField').style.display=requesting?'none':'block';","$('singleAdminField').style.display='none';");
+    html=html.replaceAll("$('batchAdminField').style.display=requesting?'none':'block';","$('batchAdminField').style.display='none';");
+    html=html.replaceAll('✓ Approve & Save Payment','✓ Save Payment');
+    html=html.replaceAll('✓ Approve & Clear Selected Invoices','✓ Clear Selected Invoices');
+
+    const marker=`configureView();\n// V3.10: fast refresh restore -> remembered-device fallback -> manual login.\nrestoreSession();`;
+    const replacement=`// SUPABASE AUTH CUTOVER — Sales Support Your Receivable.\n$('summaryBtn').hidden=false;\n$('batchBtn').hidden=false;\n$('selectHead').hidden=false;\n$('pageTitle').textContent='Your Receivable';\n$('pageSubtitle').textContent='Credit invoices from your assigned Location Codes.';\n$('viewBanner').textContent='Your Receivable = only Credit invoices from your assigned Location Codes. Use the Invoice No. and Customer filters as searchable dropdowns or type to search.';\napiPost=window.BBARAdapter.apiPost;\ngetMasterCustomerContact_=async function(row){\n  return {phone:String(row?.customerPhone||''),address:String(row?.customerAddress||'')};\n};\nlogout=async function(){\n  await window.BBARAdapter.signOut();\n  const target='https://angsokhey11-cloud.github.io/big-brother-dashboard/';\n  try{if(window.top&&window.top!==window)window.top.location.replace(target);else window.location.replace(target);}catch(_){window.location.href=target;}\n};\n(async function(){\n  try{\n    await window.BBARAdapter.ensureSession();\n    const access=await window.BBARAdapter.accessProfile();\n    sessionToken='SUPABASE_AUTH';\n    deviceToken='';\n    sessionProfile=access;\n    try{sessionStorage.removeItem(SESSION_KEY);}catch(_){}\n    try{localStorage.removeItem(DEVICE_KEY);localStorage.removeItem(DEVICE_KEY+'_saved_at');}catch(_){}\n    $('logoutBtn').hidden=false;\n    applyProfile(access);\n    await loadAR(true);\n    refreshARFilterSuggestions();\n    startSync();\n  }catch(error){\n    sessionToken='';\n    sessionProfile=null;\n    $('logoutBtn').hidden=true;\n    const target='https://angsokhey11-cloud.github.io/big-brother-dashboard/';\n    try{if(window.top&&window.top!==window)window.top.location.replace(target);else window.location.replace(target);}catch(_){window.location.href=target;}\n  }\n})();`;
+    if(!html.includes(marker))throw new Error('Your Receivable initialization marker was not found.');
+    html=html.replace(marker,replacement);
+
+    html=html.replace('<title>BIG BROTHER - Account Receivable</title>','<title>BIG BROTHER — Your Receivable</title>');
+    html=html.replaceAll('Secure Credit receivable access.','Secure assigned-location receivable access.');
+
+    document.open();
+    document.write(html);
+    document.close();
+  }catch(error){
+    console.error(error);
+    document.body.innerHTML='<div class="bb-loader"><div class="bb-card">Could not open Your Receivable<div class="bb-sub">'+String(error && error.message || error)+'</div></div></div>';
+  }
+})();
+</script>
+</body>
+</html>
