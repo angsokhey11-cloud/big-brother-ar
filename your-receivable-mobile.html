@@ -13,7 +13,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#f4f7fb;fon
 </head>
 <body>
 <div id="boot">Loading Your Receivable…</div>
-<iframe id="arMobileFrame" src="your-receivable.html?embed=1&view=your&mobileSkin=1&v=20260914-3" title="Your Receivable"></iframe>
+<iframe id="arMobileFrame" src="your-receivable.html?embed=1&view=your&mobileSkin=1&v=20260914-4" title="Your Receivable"></iframe>
 <script>
 (function(){
   const frame=document.getElementById('arMobileFrame');
@@ -40,38 +40,78 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#f4f7fb;fon
     .panel{border:0!important;box-shadow:none!important;background:transparent!important;overflow:visible!important}
     .filters{display:grid!important;grid-template-columns:1fr 1fr!important;gap:7px!important;padding:0 0 10px!important;border:0!important}
     .filters input,.filters select,.filters button{min-width:0!important;width:100%!important;min-height:42px!important;font-size:12px!important;border-radius:11px!important}
-    #searchBox,#customerFilter{grid-column:span 1!important}
-    #locationFilter{grid-column:span 1!important}
-    #currencyFilter,#statusFilter{grid-column:span 1!important}
+    .filters input{padding:9px 10px!important;font-size:11.5px!important}
+    .filters input::placeholder{font-size:11.5px!important;color:#75869a!important}
+    #searchBox,#customerFilter,#locationFilter,#currencyFilter,#statusFilter{grid-column:span 1!important}
     .filters .btn{padding:9px 10px!important}
     #summaryBtn,#batchBtn{grid-column:span 1!important}
+
     .tablewrap{overflow:visible!important}
     table{display:block!important;width:100%!important;min-width:0!important;border-collapse:separate!important}
     thead{display:none!important}
-    tbody{display:grid!important;gap:9px!important}
-    tbody tr{position:relative!important;display:grid!important;grid-template-columns:30px minmax(0,1fr) auto!important;grid-template-areas:'check inv status' 'check customer action' 'check dates dates' 'check location location' 'check totals totals'!important;gap:5px 8px!important;background:#fff!important;border:1px solid var(--bbm-line)!important;border-radius:14px!important;padding:12px 10px!important;box-shadow:0 3px 12px rgba(23,63,119,.05)!important}
-    tbody td{display:block!important;border:0!important;padding:0!important;white-space:normal!important;font-size:11px!important;min-width:0!important;background:transparent!important}
+    tbody{display:grid!important;gap:8px!important}
+    tbody tr{
+      position:relative!important;
+      display:grid!important;
+      grid-template-columns:27px minmax(0,1fr) minmax(0,1fr) auto!important;
+      grid-template-areas:
+        'check inv inv status'
+        'check customer customer action'
+        'check invdate duedate action'
+        'check location location action'
+        'check total paid outstanding'!important;
+      column-gap:7px!important;
+      row-gap:3px!important;
+      background:#fff!important;
+      border:1px solid var(--bbm-line)!important;
+      border-radius:13px!important;
+      padding:9px 9px!important;
+      box-shadow:0 2px 9px rgba(23,63,119,.045)!important;
+      min-height:0!important;
+    }
+    tbody td{display:block!important;border:0!important;padding:0!important;white-space:normal!important;font-size:10.5px!important;min-width:0!important;background:transparent!important;line-height:1.25!important;overflow-wrap:anywhere!important}
     tbody td:nth-child(1){grid-area:check!important;display:flex!important;align-items:flex-start!important;justify-content:center!important;padding-top:2px!important}
-    tbody td:nth-child(2){grid-area:inv!important;font-size:15px!important;color:var(--bbm-navy)!important;line-height:1.2!important}
-    tbody td:nth-child(5){grid-area:customer!important;font-size:12px!important;font-weight:800!important;color:var(--bbm-text)!important}
-    tbody td:nth-child(10){grid-area:status!important;text-align:right!important}
-    tbody td:nth-child(11){grid-area:action!important;text-align:right!important}
-    tbody td:nth-child(3),tbody td:nth-child(4){grid-area:dates!important;display:inline-block!important;color:var(--bbm-muted)!important}
-    tbody td:nth-child(3)::before{content:'Invoice: ';font-weight:800;color:#50677f}
-    tbody td:nth-child(4)::before{content:'Due: ';font-weight:800;color:#50677f;margin-left:10px}
-    tbody td:nth-child(6){grid-area:location!important;color:#526b84!important}
-    tbody td:nth-child(6)::before{content:'📍 ';}
-    tbody td:nth-child(7),tbody td:nth-child(8),tbody td:nth-child(9){grid-area:totals!important;display:inline-block!important;width:32%!important;vertical-align:top!important;padding:8px 6px!important;border-radius:9px!important;background:#f7f9fc!important;text-align:left!important}
-    tbody td:nth-child(7)::before{content:'Total';display:block;font-size:9px;color:var(--bbm-muted);font-weight:700;margin-bottom:3px}
-    tbody td:nth-child(8)::before{content:'Paid';display:block;font-size:9px;color:var(--bbm-muted);font-weight:700;margin-bottom:3px}
+    tbody td:nth-child(2){grid-area:inv!important;font-size:15px!important;font-weight:900!important;color:var(--bbm-navy)!important;line-height:1.12!important;align-self:center!important}
+    tbody td:nth-child(5){grid-area:customer!important;font-size:12px!important;font-weight:800!important;color:var(--bbm-text)!important;line-height:1.18!important;align-self:center!important}
+    tbody td:nth-child(10){grid-area:status!important;text-align:right!important;align-self:start!important;justify-self:end!important}
+    tbody td:nth-child(11){grid-area:action!important;display:flex!important;align-items:center!important;justify-content:flex-end!important;align-self:stretch!important;padding-left:3px!important}
+
+    tbody td:nth-child(3){grid-area:invdate!important;color:var(--bbm-muted)!important;font-size:9.5px!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+    tbody td:nth-child(4){grid-area:duedate!important;color:var(--bbm-muted)!important;font-size:9.5px!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+    tbody td:nth-child(3)::before{content:'Invoice ';font-weight:800;color:#50677f}
+    tbody td:nth-child(4)::before{content:'Due ';font-weight:800;color:#50677f}
+    tbody td:nth-child(4){color:#c94750!important}
+
+    tbody td:nth-child(6){grid-area:location!important;color:#526b84!important;font-size:9.5px!important;line-height:1.22!important;padding-top:1px!important}
+    tbody td:nth-child(6)::before{content:'📍 ';font-size:9px}
+    tbody td:nth-child(6) small{font-size:9px!important;color:#78899b!important}
+
+    tbody td:nth-child(7){grid-area:total!important}
+    tbody td:nth-child(8){grid-area:paid!important}
+    tbody td:nth-child(9){grid-area:outstanding!important}
+    tbody td:nth-child(7),tbody td:nth-child(8),tbody td:nth-child(9){
+      width:auto!important;
+      min-width:0!important;
+      padding:6px 7px!important;
+      border-radius:8px!important;
+      background:#f7f9fc!important;
+      text-align:left!important;
+      font-size:11px!important;
+      font-weight:900!important;
+      line-height:1.15!important;
+      align-self:end!important;
+    }
+    tbody td:nth-child(7)::before{content:'Total';display:block;font-size:8px;color:var(--bbm-muted);font-weight:700;margin-bottom:2px}
+    tbody td:nth-child(8)::before{content:'Paid';display:block;font-size:8px;color:var(--bbm-muted);font-weight:700;margin-bottom:2px}
     tbody td:nth-child(9){background:#fff2f3!important;color:var(--bbm-red)!important}
-    tbody td:nth-child(9)::before{content:'Outstanding';display:block;font-size:9px;color:#7c6370;font-weight:700;margin-bottom:3px}
-    tbody td:nth-child(7),tbody td:nth-child(8),tbody td:nth-child(9){font-size:12px!important;font-weight:800!important}
-    .rowcheck,.selectall{width:20px!important;height:20px!important}
-    .status{padding:5px 8px!important;font-size:9px!important;border-radius:999px!important;white-space:nowrap!important}
-    td:nth-child(11) .btn{min-height:34px!important;padding:7px 10px!important;font-size:10px!important;border-radius:9px!important;background:var(--bbm-blue)!important;color:#fff!important}
+    tbody td:nth-child(9)::before{content:'Outstanding';display:block;font-size:8px;color:#7c6370;font-weight:700;margin-bottom:2px}
+
+    .rowcheck,.selectall{width:18px!important;height:18px!important;margin:0!important}
+    .status{padding:4px 7px!important;font-size:8.5px!important;border-radius:999px!important;white-space:nowrap!important;line-height:1.1!important}
+    td:nth-child(11) .btn{min-height:38px!important;padding:7px 10px!important;font-size:9.5px!important;line-height:1.15!important;border-radius:9px!important;background:var(--bbm-blue)!important;color:#fff!important;white-space:nowrap!important;max-width:104px!important}
     td:nth-child(11) .btn.secondary{background:#e9f1fb!important;color:#1b5aa8!important}
-    .foot{padding:10px 2px 4px!important;font-size:10px!important}
+
+    .foot{padding:9px 2px 4px!important;font-size:10px!important}
     .overlay{align-items:flex-end!important;padding:0!important;background:rgba(10,27,48,.52)!important}
     .modalbox,.loginbox{width:100%!important;max-width:none!important;max-height:92vh!important;overflow:auto!important;border-radius:22px 22px 0 0!important;padding:17px 15px calc(18px + env(safe-area-inset-bottom))!important;box-shadow:0 -14px 40px rgba(0,0,0,.18)!important}
     .modalhead{position:sticky!important;top:-17px!important;background:#fff!important;z-index:4!important;padding:12px 0 9px!important}
@@ -85,7 +125,18 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#f4f7fb;fon
     .history{margin-top:12px!important}
     .historyitem{font-size:10px!important}
     #summaryOverlay .summary-modal{border-radius:0!important;max-height:100vh!important}
-    @media(max-width:390px){.wrap{padding:8px 8px 24px!important}.cards{gap:6px!important}.card{padding:9px!important}.currency-line .amt{font-size:15px!important}.filters{gap:6px!important}tbody tr{padding:10px 8px!important}}
+
+    @media(max-width:390px){
+      .wrap{padding:8px 8px 24px!important}
+      .cards{gap:6px!important}
+      .card{padding:9px!important}
+      .currency-line .amt{font-size:15px!important}
+      .filters{gap:6px!important}
+      tbody tr{grid-template-columns:25px minmax(0,1fr) minmax(0,1fr) auto!important;padding:8px 7px!important;column-gap:5px!important}
+      tbody td:nth-child(2){font-size:14px!important}
+      tbody td:nth-child(5){font-size:11.5px!important}
+      td:nth-child(11) .btn{max-width:96px!important;padding:6px 8px!important;font-size:9px!important}
+    }
   `;
 
   function inject(){
@@ -105,9 +156,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#f4f7fb;fon
         if(!body)return;
         body.querySelectorAll('tr').forEach(tr=>{
           const cells=tr.children;
-          if(cells[3]&&cells[3].textContent.trim()!=='-' && !cells[3].dataset.bbDueStyled){
-            cells[3].dataset.bbDueStyled='1';
-          }
+          if(cells[3]&&cells[3].textContent.trim()!=='-'&&!cells[3].dataset.bbDueStyled){cells[3].dataset.bbDueStyled='1'}
         });
       };
       keepFresh();
