@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>BIG BROTHER — Your Receivable Mobile</title>
+<style>
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#f4f7fb;font-family:Arial,sans-serif}
+#arMobileFrame{display:block;width:100%;height:100%;border:0;background:#f4f7fb}
+#boot{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#f4f7fb;color:#17457a;font-weight:800;z-index:2}
+#boot.hide{display:none}
+</style>
+</head>
+<body>
+<div id="boot">Loading Your Receivable…</div>
+<iframe id="arMobileFrame" src="your-receivable.html?embed=1&view=your&mobileSkin=1&v=20260914-3" title="Your Receivable"></iframe>
+<script>
+(function(){
+  const frame=document.getElementById('arMobileFrame');
+  const boot=document.getElementById('boot');
+  const MOBILE_CSS=`
+    :root{--bbm-blue:#1768d5;--bbm-navy:#123f78;--bbm-bg:#f4f7fb;--bbm-line:#dfe7f0;--bbm-text:#18324e;--bbm-muted:#6d7e92;--bbm-red:#d73545;--bbm-green:#198754;--bbm-amber:#b57500}
+    html,body{background:var(--bbm-bg)!important;overflow-x:hidden!important}
+    body{padding:0!important;font-family:Arial,Helvetica,sans-serif!important}
+    .wrap{max-width:none!important;margin:0!important;padding:10px 10px 28px!important}
+    .topbar{margin:0 0 8px!important;align-items:center!important}
+    .topbar>div:first-child h1{font-size:21px!important;margin:0 0 2px!important;color:var(--bbm-navy)!important}
+    .subtitle{font-size:11px!important;line-height:1.35!important}
+    .userbox{gap:6px!important;justify-content:flex-end!important}
+    #accessPill,#logoutBtn{display:none!important}
+    #locationPill{font-size:10px!important;padding:7px 9px!important;background:#eaf3ff!important;border-color:#c6daf7!important;color:#175db6!important}
+    .view-banner{margin:0 0 10px!important;border:1px solid #cfe2ff!important;border-radius:12px!important;background:#eaf4ff!important;color:#1a5bb0!important;font-size:11px!important;line-height:1.45!important;padding:10px 12px!important}
+    .cards{grid-template-columns:1fr 1fr!important;gap:8px!important;margin:0 0 10px!important}
+    .card{padding:11px!important;border-radius:12px!important;box-shadow:none!important;min-height:88px!important}
+    .card small{font-size:10px!important;margin-bottom:5px!important}
+    .currency-line{display:block!important}
+    .currency-line .ccy{font-size:9px!important;display:inline-block!important;margin-right:5px!important}
+    .currency-line .amt{font-size:17px!important;white-space:normal!important}
+    .card>strong{font-size:24px!important;color:var(--bbm-navy)!important}
+    .panel{border:0!important;box-shadow:none!important;background:transparent!important;overflow:visible!important}
+    .filters{display:grid!important;grid-template-columns:1fr 1fr!important;gap:7px!important;padding:0 0 10px!important;border:0!important}
+    .filters input,.filters select,.filters button{min-width:0!important;width:100%!important;min-height:42px!important;font-size:12px!important;border-radius:11px!important}
+    #searchBox,#customerFilter{grid-column:span 1!important}
+    #locationFilter{grid-column:span 1!important}
+    #currencyFilter,#statusFilter{grid-column:span 1!important}
+    .filters .btn{padding:9px 10px!important}
+    #summaryBtn,#batchBtn{grid-column:span 1!important}
+    .tablewrap{overflow:visible!important}
+    table{display:block!important;width:100%!important;min-width:0!important;border-collapse:separate!important}
+    thead{display:none!important}
+    tbody{display:grid!important;gap:9px!important}
+    tbody tr{position:relative!important;display:grid!important;grid-template-columns:30px minmax(0,1fr) auto!important;grid-template-areas:'check inv status' 'check customer action' 'check dates dates' 'check location location' 'check totals totals'!important;gap:5px 8px!important;background:#fff!important;border:1px solid var(--bbm-line)!important;border-radius:14px!important;padding:12px 10px!important;box-shadow:0 3px 12px rgba(23,63,119,.05)!important}
+    tbody td{display:block!important;border:0!important;padding:0!important;white-space:normal!important;font-size:11px!important;min-width:0!important;background:transparent!important}
+    tbody td:nth-child(1){grid-area:check!important;display:flex!important;align-items:flex-start!important;justify-content:center!important;padding-top:2px!important}
+    tbody td:nth-child(2){grid-area:inv!important;font-size:15px!important;color:var(--bbm-navy)!important;line-height:1.2!important}
+    tbody td:nth-child(5){grid-area:customer!important;font-size:12px!important;font-weight:800!important;color:var(--bbm-text)!important}
+    tbody td:nth-child(10){grid-area:status!important;text-align:right!important}
+    tbody td:nth-child(11){grid-area:action!important;text-align:right!important}
+    tbody td:nth-child(3),tbody td:nth-child(4){grid-area:dates!important;display:inline-block!important;color:var(--bbm-muted)!important}
+    tbody td:nth-child(3)::before{content:'Invoice: ';font-weight:800;color:#50677f}
+    tbody td:nth-child(4)::before{content:'Due: ';font-weight:800;color:#50677f;margin-left:10px}
+    tbody td:nth-child(6){grid-area:location!important;color:#526b84!important}
+    tbody td:nth-child(6)::before{content:'📍 ';}
+    tbody td:nth-child(7),tbody td:nth-child(8),tbody td:nth-child(9){grid-area:totals!important;display:inline-block!important;width:32%!important;vertical-align:top!important;padding:8px 6px!important;border-radius:9px!important;background:#f7f9fc!important;text-align:left!important}
+    tbody td:nth-child(7)::before{content:'Total';display:block;font-size:9px;color:var(--bbm-muted);font-weight:700;margin-bottom:3px}
+    tbody td:nth-child(8)::before{content:'Paid';display:block;font-size:9px;color:var(--bbm-muted);font-weight:700;margin-bottom:3px}
+    tbody td:nth-child(9){background:#fff2f3!important;color:var(--bbm-red)!important}
+    tbody td:nth-child(9)::before{content:'Outstanding';display:block;font-size:9px;color:#7c6370;font-weight:700;margin-bottom:3px}
+    tbody td:nth-child(7),tbody td:nth-child(8),tbody td:nth-child(9){font-size:12px!important;font-weight:800!important}
+    .rowcheck,.selectall{width:20px!important;height:20px!important}
+    .status{padding:5px 8px!important;font-size:9px!important;border-radius:999px!important;white-space:nowrap!important}
+    td:nth-child(11) .btn{min-height:34px!important;padding:7px 10px!important;font-size:10px!important;border-radius:9px!important;background:var(--bbm-blue)!important;color:#fff!important}
+    td:nth-child(11) .btn.secondary{background:#e9f1fb!important;color:#1b5aa8!important}
+    .foot{padding:10px 2px 4px!important;font-size:10px!important}
+    .overlay{align-items:flex-end!important;padding:0!important;background:rgba(10,27,48,.52)!important}
+    .modalbox,.loginbox{width:100%!important;max-width:none!important;max-height:92vh!important;overflow:auto!important;border-radius:22px 22px 0 0!important;padding:17px 15px calc(18px + env(safe-area-inset-bottom))!important;box-shadow:0 -14px 40px rgba(0,0,0,.18)!important}
+    .modalhead{position:sticky!important;top:-17px!important;background:#fff!important;z-index:4!important;padding:12px 0 9px!important}
+    .modalbox h2{font-size:19px!important;color:var(--bbm-navy)!important}
+    .modalbox p{font-size:11px!important;margin-bottom:12px!important}
+    .grid2{grid-template-columns:1fr 1fr!important;gap:8px!important}
+    .field label{font-size:10px!important}
+    input,select,textarea{font-size:13px!important;min-height:42px!important}
+    #singleDirectRequestNote,.direct-request-note{font-size:10px!important;line-height:1.4!important}
+    #savePayBtn,#saveBatchBtn{width:100%!important;min-height:48px!important;font-size:14px!important;border-radius:12px!important;background:var(--bbm-blue)!important;color:#fff!important}
+    .history{margin-top:12px!important}
+    .historyitem{font-size:10px!important}
+    #summaryOverlay .summary-modal{border-radius:0!important;max-height:100vh!important}
+    @media(max-width:390px){.wrap{padding:8px 8px 24px!important}.cards{gap:6px!important}.card{padding:9px!important}.currency-line .amt{font-size:15px!important}.filters{gap:6px!important}tbody tr{padding:10px 8px!important}}
+  `;
+
+  function inject(){
+    let doc;
+    try{doc=frame.contentDocument||frame.contentWindow.document}catch(e){return}
+    if(!doc||!doc.head)return;
+    if(!doc.getElementById('bb-mobile-receivable-skin')){
+      const style=doc.createElement('style');
+      style.id='bb-mobile-receivable-skin';
+      style.textContent=MOBILE_CSS;
+      doc.head.appendChild(style);
+    }
+    try{
+      const win=frame.contentWindow;
+      const keepFresh=()=>{
+        const body=doc.getElementById('arBody');
+        if(!body)return;
+        body.querySelectorAll('tr').forEach(tr=>{
+          const cells=tr.children;
+          if(cells[3]&&cells[3].textContent.trim()!=='-' && !cells[3].dataset.bbDueStyled){
+            cells[3].dataset.bbDueStyled='1';
+          }
+        });
+      };
+      keepFresh();
+      const body=doc.getElementById('arBody');
+      if(body&&!body.__bbObserved){body.__bbObserved=true;new win.MutationObserver(keepFresh).observe(body,{childList:true,subtree:true})}
+    }catch(_){ }
+    boot.classList.add('hide');
+  }
+
+  frame.addEventListener('load',()=>{setTimeout(inject,80);setTimeout(inject,700);setTimeout(inject,1800)});
+})();
+</script>
+</body>
+</html>
