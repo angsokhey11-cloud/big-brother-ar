@@ -90,7 +90,9 @@
     const action=String(params.action||'');
     switch(action){
       case 'arList':
-        return rpc('bb_ar_list');
+        return String(params.view||'').toLowerCase()==='all'
+          ? rpc('bb_ar_list_all')
+          : rpc('bb_ar_list');
       case 'arDetail':
         return rpc('bb_ar_detail',{p_invoice_no:String(params.invoiceNo||'')});
       case 'arPaymentRequest':
