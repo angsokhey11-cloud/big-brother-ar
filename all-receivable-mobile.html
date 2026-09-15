@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>BIG BROTHER — All Receivable Mobile</title>
+<style>
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#f4f7fb;font-family:Arial,Helvetica,sans-serif}
+.bb-loader{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#f4f7fb;color:#17457a;font-weight:800;font-size:13px}
+</style>
+</head>
+<body>
+<div class="bb-loader">Loading All Receivable…</div>
+<script>
+(async function(){
+  'use strict';
+  try{
+    const response=await fetch('your-receivable-mobile.html?v=20260915-all-mobile-1',{cache:'no-store'});
+    if(!response.ok)throw new Error('Could not load the approved Receivable mobile skin.');
+    let html=await response.text();
+
+    /* Reuse the approved Your Receivable mobile UX, but point its real engine at All Receivable. */
+    html=html.replaceAll('BIG BROTHER — Your Receivable Mobile','BIG BROTHER — All Receivable Mobile');
+    html=html.replaceAll('Loading Your Receivable…','Loading All Receivable…');
+    html=html.replace(
+      'your-receivable.html?embed=1&view=your&mobileSkin=1&v=20260914-10',
+      'index.html?embed=1&view=all&mobileSkin=1&v=20260915-all-1'
+    );
+    html=html.replace('title="Your Receivable"','title="All Receivable"');
+
+    /* Make the mobile header wording match the company-wide permission-controlled view. */
+    html=html.replaceAll('BIG BROTHER — Your Receivable Mobile Header + Filter V2','BIG BROTHER — All Receivable Mobile Header + Filter V1');
+
+    document.open();
+    document.write(html);
+    document.close();
+  }catch(error){
+    console.error(error);
+    document.body.innerHTML='<div class="bb-loader">Could not open All Receivable Mobile · '+String(error&&error.message||error)+'</div>';
+  }
+})();
+</script>
+</body>
+</html>
