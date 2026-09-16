@@ -21,9 +21,7 @@
   }
 
   function invoiceContext(){
-    try{
-      if(typeof currentInvoice!=='undefined'&&currentInvoice)return currentInvoice;
-    }catch(_){}
+    try{if(typeof currentInvoice!=='undefined'&&currentInvoice)return currentInvoice}catch(_){}
     return null;
   }
 
@@ -35,7 +33,10 @@
 
   function ensureCalculator(){
     const cashBox=byId('cashReceiptFields');
-    if(!cashBox||byId('bbReceivableFxCalc'))return;
+    if(!cashBox)return;
+    const note=cashBox.querySelector('.cash-note');
+    if(note)note.textContent='Enter the real cash received. USD and KHR may be combined. The invoice exchange rate below converts the physical cash and the payment can continue only when it matches the Receivable Amount to Clear.';
+    if(byId('bbReceivableFxCalc'))return;
     const box=document.createElement('div');
     box.id='bbReceivableFxCalc';
     box.style.cssText='margin-top:10px;padding:10px 11px;border:1px solid #b9d8c5;background:#f8fffa;border-radius:9px;font-size:11px;line-height:1.45;color:#315b45';
@@ -70,19 +71,9 @@
     if(!rateEl||!resultEl)return;
     const c=calculation();
     if(!c){rateEl.textContent='Rate: —';resultEl.textContent='Select an invoice to calculate.';return;}
-    rateEl.textContent=c.rate>0
-      ? 'Invoice Rate: 1 USD = '+c.rate.toLocaleString('en-US')+' KHR'
-      : 'Invoice Rate: not available';
-    if(c.needsRate&&c.rate<=0){
-      resultEl.textContent='Cross-currency cash requires a valid invoice exchange rate.';
-      resultEl.style.color='#b42318';
-      return;
-    }
-    if(c.usd<=0&&c.khr<=0){
-      resultEl.textContent='Enter physical cash received in USD and/or KHR.';
-      resultEl.style.color='#315b45';
-      return;
-    }
+    rateEl.textContent=c.rate>0?'Invoice Rate: 1 USD = '+c.rate.toLocaleString('en-US')+' KHR':'Invoice Rate: not available';
+    if(c.needsRate&&c.rate<=0){resultEl.textContent='Cross-currency cash requires a valid invoice exchange rate.';resultEl.style.color='#b42318';return;}
+    if(c.usd<=0&&c.khr<=0){resultEl.textContent='Enter physical cash received in USD and/or KHR.';resultEl.style.color='#315b45';return;}
     resultEl.textContent='Cash Equivalent: '+money(c.equivalent,c.currency)+' · Amount to Clear: '+money(c.clearAmount,c.currency)+(c.match?' · ✓ MATCH':' · Not matched');
     resultEl.style.color=c.match?'#08783e':'#b42318';
   }
@@ -93,10 +84,7 @@
     if(!c)return true;
     if(c.usd<=0&&c.khr<=0){setError('Enter the physical cash received in USD and/or KHR.');return false;}
     if(c.needsRate&&c.rate<=0){setError('Exchange Rate is required for cross-currency cash.');return false;}
-    if(!c.match){
-      setError('Physical cash equals '+money(c.equivalent,c.currency)+', but Amount to Clear is '+money(c.clearAmount,c.currency)+'. Adjust USD/KHR cash until the calculation matches.');
-      return false;
-    }
+    if(!c.match){setError('Physical cash equals '+money(c.equivalent,c.currency)+', but Amount to Clear is '+money(c.clearAmount,c.currency)+'. Adjust USD/KHR cash until the calculation matches.');return false;}
     return true;
   }
 
@@ -105,9 +93,7 @@
     if(!box)return;
     const items=[...box.querySelectorAll('.historyitem')];
     if(!items.length){box.style.maxHeight='';box.style.overflowY='';return;}
-    if(!items[0].dataset.bbNewestFirst){
-      items.reverse().forEach(item=>{item.dataset.bbNewestFirst='1';box.appendChild(item)});
-    }
+    if(!items[0].dataset.bbNewestFirst){items.reverse().forEach(item=>{item.dataset.bbNewestFirst='1';box.appendChild(item)})}
     requestAnimationFrame(()=>{
       const visible=[...box.querySelectorAll('.historyitem')].slice(0,2);
       const height=visible.reduce((sum,item)=>sum+item.getBoundingClientRect().height,0)+(visible.length>1?7:0)+2;
@@ -118,19 +104,20 @@
     });
   }
 
+  function bindInput(id){
+    const el=byId(id);if(!el||el.dataset.bbFxBound)return;
+    el.dataset.bbFxBound='1';el.addEventListener('input',updateCalculator);
+  }
+
   function install(){
     ensureCalculator();
-    ['payAmount','payCashUSD','payCashKHR'].forEach(id=>byId(id)?.addEventListener('input',updateCalculator));
-    byId('payMethod')?.addEventListener('change',updateCalculator);
+    ['payAmount','payCashUSD','payCashKHR'].forEach(bindInput);
+    const method=byId('payMethod');
+    if(method&&!method.dataset.bbFxBound){method.dataset.bbFxBound='1';method.addEventListener('change',updateCalculator)}
     const save=byId('savePayBtn');
     if(save&&!save.dataset.bbFxGuard){
       save.dataset.bbFxGuard='1';
-      save.addEventListener('click',event=>{
-        if(!validateCashBeforeSave()){
-          event.preventDefault();
-          event.stopImmediatePropagation();
-        }
-      },true);
+      save.addEventListener('click',event=>{if(!validateCashBeforeSave()){event.preventDefault();event.stopImmediatePropagation()}},true);
     }
     const history=byId('paymentHistory');
     if(history&&!history.dataset.bbHistoryObserver){
@@ -139,7 +126,8 @@
       formatHistory();
     }
     const overlay=byId('paymentOverlay');
-    if(overlay){
+    if(overlay&&!overlay.dataset.bbFxObserver){
+      overlay.dataset.bbFxObserver='1';
       new MutationObserver(()=>{if(!overlay.classList.contains('hidden'))setTimeout(updateCalculator,0)}).observe(overlay,{attributes:true,attributeFilter:['class']});
     }
     updateCalculator();
