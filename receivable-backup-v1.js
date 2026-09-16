@@ -1,4 +1,4 @@
-/* BIG BROTHER — Confirmed Receivable Payment Google Sheets Backup V2.3
+/* BIG BROTHER — Confirmed Receivable Payment Google Sheets Backup V2.4
    Supabase remains authoritative. Google Sheets is audit/continuity backup only.
    Backup payloads are queued BEFORE network send so UI/navigation can never lose a payment.
    Direct-payment UI refresh runs in background after a confirmed Supabase save. */
@@ -39,7 +39,7 @@
   function paymentPayload(invoiceNo,amount,source,result,extra={}){
     const invoice=invoiceCache.get(clean(invoiceNo))||{};
     const currency=clean(extra.currency||invoice?.currency||'USD').toUpperCase();
-    const rate=num(extra.exchangeRate||invoice?.exchangeRate);
+    const rate=num(extra.exchangeRate||source?.exchangeRate||result?.exchangeRate||invoice?.exchangeRate);
     const originalAmount=num(amount);
     const amountUSD=currency==='KHR'&&rate>0?originalAmount/rate:originalAmount;
     return {
@@ -65,7 +65,7 @@
     for(const rawNo of invoiceNos){
       const no=clean(rawNo);if(!no)continue;
       const invoice=invoiceCache.get(no)||{},amount=num(invoice?.outstanding);if(amount<=0)continue;
-      dispatch(paymentPayload(no,amount,source,result,{paymentId:basePaymentId?basePaymentId+':'+no:'',backupKey:basePaymentId?'AR-BATCH:'+basePaymentId+':'+no:'',customer:invoice?.customer,location:invoice?.locationCode,currency:invoice?.currency,exchangeRate:invoice?.exchangeRate}));
+      dispatch(paymentPayload(no,amount,source,result,{paymentId:basePaymentId?basePaymentId+':'+no:'',backupKey:basePaymentId?'AR-BATCH:'+basePaymentId+':'+no:'',customer:invoice?.customer,location:invoice?.locationCode,currency:invoice?.currency,exchangeRate:source?.exchangeRate||result?.exchangeRate||invoice?.exchangeRate}));
     }
     return true;
   }
@@ -75,7 +75,7 @@
     for(const allocation of allocations){
       const no=clean(allocation?.invoiceNo),amount=num(allocation?.requestedAmount);if(!no||amount<=0)continue;
       const invoice=invoiceCache.get(no)||{};
-      dispatch(paymentPayload(no,amount,source,result,{paymentId:basePaymentId?basePaymentId+':'+no:'',backupKey:basePaymentId?'AR-REQUEST:'+basePaymentId+':'+no:'',customer:request?.customer||invoice?.customer,salesman:request?.salesmanName,location:allocation?.locationCode||invoice?.locationCode,currency:allocation?.currency||request?.currency||invoice?.currency,exchangeRate:allocation?.exchangeRate||invoice?.exchangeRate,note:request?.note,transactionId:source?.transactionId,paymentMethod:source?.paymentMethod||result?.paymentMethod}));
+      dispatch(paymentPayload(no,amount,source,result,{paymentId:basePaymentId?basePaymentId+':'+no:'',backupKey:basePaymentId?'AR-REQUEST:'+basePaymentId+':'+no:'',customer:request?.customer||invoice?.customer,salesman:request?.salesmanName,location:allocation?.locationCode||invoice?.locationCode,currency:allocation?.currency||request?.currency||invoice?.currency,exchangeRate:source?.exchangeRate||result?.exchangeRate||allocation?.exchangeRate||invoice?.exchangeRate,note:request?.note,transactionId:source?.transactionId,paymentMethod:source?.paymentMethod||result?.paymentMethod}));
     }
     return true;
   }
@@ -136,7 +136,7 @@
     if(document.querySelector('script[data-bb-receivable-payment-ui="1"]'))return;
     try{
       const script=document.createElement('script');
-      script.src='receivable-payment-ui-v1.js?v=20260916-1';
+      script.src='receivable-payment-ui-v1.js?v=20260916-2';
       script.async=false;
       script.dataset.bbReceivablePaymentUi='1';
       (document.head||document.documentElement).appendChild(script);
