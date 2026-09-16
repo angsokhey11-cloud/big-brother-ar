@@ -131,6 +131,18 @@
     return true;
   }
 
+  function loadPaymentUi(){
+    if(window.BBReceivablePaymentUIV1)return;
+    if(document.querySelector('script[data-bb-receivable-payment-ui="1"]'))return;
+    try{
+      const script=document.createElement('script');
+      script.src='receivable-payment-ui-v1.js?v=20260916-1';
+      script.async=false;
+      script.dataset.bbReceivablePaymentUi='1';
+      (document.head||document.documentElement).appendChild(script);
+    }catch(error){console.warn('BIG BROTHER receivable payment UI:',error)}
+  }
+
   let tries=0;
   const timer=setInterval(()=>{
     tries+=1;
@@ -139,7 +151,7 @@
     if((apiReady||window.apiPost?.__bbReceivableBackupLive)&&(refreshReady||window.loadAR?.__bbFastPaymentRefresh))clearInterval(timer);
     else if(tries>=80)clearInterval(timer);
   },100);
-  setTimeout(()=>{installLiveHook();installFastRefreshHook()},0);
+  setTimeout(()=>{installLiveHook();installFastRefreshHook();loadPaymentUi()},0);
   retryQueue().catch(()=>{});
   window.BBReceivableBackupV2={handle,retry:retryQueue,install:installLiveHook,endpoint:ENDPOINT};
 })();
