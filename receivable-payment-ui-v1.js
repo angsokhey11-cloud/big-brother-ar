@@ -1,9 +1,10 @@
-/* BIG BROTHER — Receivable Payment UI V1.1
+/* BIG BROTHER — Receivable Payment UI V1.2
    Shared by PC + Mobile A/R.
    - Payment History: newest first, two visible rows, scroll for older rows.
    - Adjustable payment-day USD/KHR exchange rate (never uses invoice rate for conversion).
    - Injects the payment-day rate into bb_ar_receive_payment.
    - Blocks Cash save when converted physical cash does not equal Amount to Clear.
+   - Direct Request bypasses Cash/Bank validation because Admin chooses the final method later.
    Supabase remains authoritative. */
 (function(){
   'use strict';
@@ -25,6 +26,13 @@
   function invoiceContext(){
     try{if(typeof currentInvoice!=='undefined'&&currentInvoice)return currentInvoice}catch(_){}
     return null;
+  }
+
+  function isDirectRequest(){
+    const note=byId('singleDirectRequestNote');
+    if(note?.classList.contains('show'))return true;
+    try{if(typeof VIEW!=='undefined'&&VIEW==='your')return true}catch(_){}
+    return /direct request/i.test(clean(byId('savePayBtn')?.textContent));
   }
 
   function money(value,currency){
@@ -87,6 +95,7 @@
   }
 
   function validateCashBeforeSave(){
+    if(isDirectRequest())return true;
     if(clean(byId('payMethod')?.value)!=='Cash')return true;
     const c=calculation();
     if(!c)return true;
