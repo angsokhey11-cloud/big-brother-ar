@@ -1,4 +1,4 @@
-/* BIG BROTHER — Confirmed Receivable Payment Google Sheets Backup V2.4
+/* BIG BROTHER — Confirmed Receivable Payment Google Sheets Backup V2.5
    Supabase remains authoritative. Google Sheets is audit/continuity backup only.
    Backup payloads are queued BEFORE network send so UI/navigation can never lose a payment.
    Direct-payment UI refresh runs in background after a confirmed Supabase save. */
@@ -136,7 +136,7 @@
     if(document.querySelector('script[data-bb-receivable-payment-ui="1"]'))return;
     try{
       const script=document.createElement('script');
-      script.src='receivable-payment-ui-v1.js?v=20260916-2';
+      script.src='receivable-payment-ui-v1.js?v=20260916-3';
       script.async=false;
       script.dataset.bbReceivablePaymentUi='1';
       (document.head||document.documentElement).appendChild(script);
