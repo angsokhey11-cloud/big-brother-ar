@@ -15,7 +15,7 @@
     let html=await response.text();
 
     const adapter='<scr'+'ipt src="supabase-ar-adapter.js?v=20260915-ar-all-public-1"></scr'+'ipt>\n'
-      +'<scr'+'ipt src="receivable-backup-v1.js?v=20260916-4"></scr'+'ipt>';
+      +'<scr'+'ipt src="receivable-backup-v1.js?v=20260916-5"></scr'+'ipt>';
     const authCutover='<style id="bb-ar-auth-cutover">#singleAdminField,#batchAdminField{display:none!important}</style>';
     const headClose=html.toLowerCase().indexOf('</head>');
     if(headClose<0)throw new Error('Accounts Receivable source is missing </head>.');
