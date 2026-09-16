@@ -1,4 +1,4 @@
-/* BIG BROTHER — Confirmed Receivable Payment Google Sheets Backup V2
+/* BIG BROTHER — Confirmed Receivable Payment Google Sheets Backup V2.1
    Supabase remains authoritative. Google Sheets is audit/continuity backup only. */
 (function(){
   'use strict';
@@ -11,71 +11,17 @@
   const invoiceCache=new Map();
   const requestCache=new Map();
 
-  function userEmail(){
-    try{
-      const s=JSON.parse(localStorage.getItem('BB_SUPABASE_DEV_SESSION_V1')||'null');
-      return clean(s?.user?.email||'');
-    }catch(_){return''}
-  }
+  function userEmail(){try{const s=JSON.parse(localStorage.getItem('BB_SUPABASE_DEV_SESSION_V1')||'null');return clean(s?.user?.email||'')}catch(_){return''}}
+  function parsePayload(value){if(value&&typeof value==='object')return value;if(typeof value!=='string'||!value.trim())return{};try{return JSON.parse(value)}catch(_){return{}}}
+  function rememberReceivables(result){(Array.isArray(result?.receivables)?result.receivables:[]).forEach(row=>{const no=clean(row?.invoiceNo);if(no)invoiceCache.set(no,row)})}
+  function rememberRequest(result){const request=result?.request;const id=clean(request?.requestId);if(id)requestCache.set(id,request)}
+  function readQueue(){try{const q=JSON.parse(localStorage.getItem(QUEUE_KEY)||'[]');return Array.isArray(q)?q:[]}catch(_){return[]}}
+  function writeQueue(q){try{localStorage.setItem(QUEUE_KEY,JSON.stringify(q.slice(-MAX_QUEUE)))}catch(_){}}
+  function queueKey(payload){return clean(payload?.supabasePaymentId)||clean(payload?.backupKey)||[clean(payload?.invoiceNo),clean(payload?.paymentDate),num(payload?.paymentAmountUSD).toFixed(2),clean(payload?.transactionId)].join('|')}
+  function enqueue(payload){const key=queueKey(payload);if(!key)return;const q=readQueue();if(!q.some(x=>queueKey(x)===key))q.push(payload);writeQueue(q)}
 
-  function parsePayload(value){
-    if(value&&typeof value==='object')return value;
-    if(typeof value!=='string'||!value.trim())return {};
-    try{return JSON.parse(value)}catch(_){return {}}
-  }
-
-  function rememberReceivables(result){
-    const rows=Array.isArray(result?.receivables)?result.receivables:[];
-    rows.forEach(row=>{
-      const no=clean(row?.invoiceNo);
-      if(no)invoiceCache.set(no,row);
-    });
-  }
-
-  function rememberRequest(result){
-    const request=result?.request;
-    const id=clean(request?.requestId);
-    if(id)requestCache.set(id,request);
-  }
-
-  function readQueue(){
-    try{
-      const q=JSON.parse(localStorage.getItem(QUEUE_KEY)||'[]');
-      return Array.isArray(q)?q:[];
-    }catch(_){return[]}
-  }
-
-  function writeQueue(q){
-    try{localStorage.setItem(QUEUE_KEY,JSON.stringify(q.slice(-MAX_QUEUE)))}catch(_){}
-  }
-
-  function queueKey(payload){
-    return clean(payload?.supabasePaymentId)||clean(payload?.backupKey)||[
-      clean(payload?.invoiceNo),clean(payload?.paymentDate),num(payload?.paymentAmountUSD).toFixed(2),clean(payload?.transactionId)
-    ].join('|');
-  }
-
-  function enqueue(payload){
-    const key=queueKey(payload);
-    if(!key)return;
-    const q=readQueue();
-    if(!q.some(x=>queueKey(x)===key))q.push(payload);
-    writeQueue(q);
-  }
-
-  async function send(payload){
-    await fetch(ENDPOINT,{
-      method:'POST',mode:'no-cors',cache:'no-store',keepalive:true,
-      headers:{'Content-Type':'text/plain;charset=UTF-8'},
-      body:JSON.stringify(payload)
-    });
-    return true;
-  }
-
-  async function sendOrQueue(payload){
-    try{await send(payload);return true}
-    catch(error){console.warn('BIG BROTHER receivable payment backup queued:',error);enqueue(payload);return false}
-  }
+  async function send(payload){await fetch(ENDPOINT,{method:'POST',mode:'no-cors',cache:'no-store',keepalive:true,headers:{'Content-Type':'text/plain;charset=UTF-8'},body:JSON.stringify(payload)});return true}
+  async function sendOrQueue(payload){try{await send(payload);return true}catch(error){console.warn('BIG BROTHER receivable payment backup queued:',error);enqueue(payload);return false}}
 
   function paymentPayload(invoiceNo,amount,source,result,extra={}){
     const invoice=invoiceCache.get(clean(invoiceNo))||{};
@@ -83,98 +29,42 @@
     const rate=num(extra.exchangeRate||invoice?.exchangeRate);
     const originalAmount=num(amount);
     const amountUSD=currency==='KHR'&&rate>0?originalAmount/rate:originalAmount;
-    return {
-      backupType:'RECEIVABLE_PAYMENT',
-      invoiceNo:clean(invoiceNo),
-      customerName:clean(extra.customer||invoice?.customer),
-      paymentAmountUSD:amountUSD,
-      paymentDate:clean(source?.paymentDate||result?.paymentDate),
-      paymentMethod:clean(extra.paymentMethod||source?.paymentMethod||result?.paymentMethod),
-      transactionId:clean(extra.transactionId||source?.transactionId||result?.transactionId),
-      salesman:clean(extra.salesman||invoice?.salesmanName||invoice?.salesperson||invoice?.salesman),
-      location:clean(extra.location||invoice?.locationCode),
-      note:clean(extra.note||source?.note),
-      supabasePaymentId:clean(extra.paymentId||result?.paymentId),
-      supabaseInvoiceId:clean(extra.invoiceId||invoice?.invoiceId),
-      createdBy:userEmail(),
-      paymentCurrency:currency,
-      originalPaymentAmount:originalAmount,
-      exchangeRate:rate,
-      backupKey:clean(extra.backupKey)
-    };
+    return {backupType:'RECEIVABLE_PAYMENT',invoiceNo:clean(invoiceNo),customerName:clean(extra.customer||invoice?.customer),paymentAmountUSD:amountUSD,paymentDate:clean(source?.paymentDate||result?.paymentDate),paymentMethod:clean(extra.paymentMethod||source?.paymentMethod||result?.paymentMethod),transactionId:clean(extra.transactionId||source?.transactionId||result?.transactionId),salesman:clean(extra.salesman||invoice?.salesmanName||invoice?.salesperson||invoice?.salesman),location:clean(extra.location||invoice?.locationCode),note:clean(extra.note||source?.note),supabasePaymentId:clean(extra.paymentId||result?.paymentId),supabaseInvoiceId:clean(extra.invoiceId||invoice?.invoiceId),createdBy:userEmail(),paymentCurrency:currency,originalPaymentAmount:originalAmount,exchangeRate:rate,backupKey:clean(extra.backupKey)};
   }
 
-  async function backupSingle(source,result){
-    const no=clean(source?.invoiceNo);
-    const amount=num(source?.amount);
-    if(!no||amount<=0)return;
-    await sendOrQueue(paymentPayload(no,amount,source,result));
-  }
-
-  async function backupBatch(source,result){
-    const invoiceNos=Array.isArray(source?.invoiceNos)?source.invoiceNos:[];
-    const basePaymentId=clean(result?.paymentId);
-    for(const rawNo of invoiceNos){
-      const no=clean(rawNo);
-      if(!no)continue;
-      const invoice=invoiceCache.get(no)||{};
-      const amount=num(invoice?.outstanding);
-      if(amount<=0)continue;
-      await sendOrQueue(paymentPayload(no,amount,source,result,{
-        paymentId:basePaymentId?basePaymentId+':'+no:'',
-        backupKey:basePaymentId?'AR-BATCH:'+basePaymentId+':'+no:'',
-        customer:invoice?.customer,location:invoice?.locationCode,currency:invoice?.currency,exchangeRate:invoice?.exchangeRate
-      }));
-    }
-  }
-
-  async function backupClearedRequest(source,result){
-    const requestId=clean(source?.requestId);
-    const request=requestCache.get(requestId)||{};
-    const allocations=Array.isArray(request?.allocations)?request.allocations:[];
-    const basePaymentId=clean(result?.paymentId);
-    for(const allocation of allocations){
-      const no=clean(allocation?.invoiceNo);
-      const amount=num(allocation?.requestedAmount);
-      if(!no||amount<=0)continue;
-      const invoice=invoiceCache.get(no)||{};
-      await sendOrQueue(paymentPayload(no,amount,source,result,{
-        paymentId:basePaymentId?basePaymentId+':'+no:'',
-        backupKey:basePaymentId?'AR-REQUEST:'+basePaymentId+':'+no:'',
-        customer:request?.customer||invoice?.customer,
-        salesman:request?.salesmanName,
-        location:invoice?.locationCode,
-        currency:allocation?.currency||request?.currency||invoice?.currency,
-        exchangeRate:invoice?.exchangeRate,
-        note:request?.note,
-        transactionId:source?.transactionId,
-        paymentMethod:source?.paymentMethod||result?.paymentMethod
-      }));
-    }
-  }
+  async function backupSingle(source,result){const no=clean(source?.invoiceNo),amount=num(source?.amount);if(!no||amount<=0)return;await sendOrQueue(paymentPayload(no,amount,source,result))}
+  async function backupBatch(source,result){const invoiceNos=Array.isArray(source?.invoiceNos)?source.invoiceNos:[],basePaymentId=clean(result?.paymentId);for(const rawNo of invoiceNos){const no=clean(rawNo);if(!no)continue;const invoice=invoiceCache.get(no)||{},amount=num(invoice?.outstanding);if(amount<=0)continue;await sendOrQueue(paymentPayload(no,amount,source,result,{paymentId:basePaymentId?basePaymentId+':'+no:'',backupKey:basePaymentId?'AR-BATCH:'+basePaymentId+':'+no:'',customer:invoice?.customer,location:invoice?.locationCode,currency:invoice?.currency,exchangeRate:invoice?.exchangeRate}))}}
+  async function backupClearedRequest(source,result){const requestId=clean(source?.requestId),request=requestCache.get(requestId)||{},allocations=Array.isArray(request?.allocations)?request.allocations:[],basePaymentId=clean(result?.paymentId);for(const allocation of allocations){const no=clean(allocation?.invoiceNo),amount=num(allocation?.requestedAmount);if(!no||amount<=0)continue;const invoice=invoiceCache.get(no)||{};await sendOrQueue(paymentPayload(no,amount,source,result,{paymentId:basePaymentId?basePaymentId+':'+no:'',backupKey:basePaymentId?'AR-REQUEST:'+basePaymentId+':'+no:'',customer:request?.customer||invoice?.customer,salesman:request?.salesmanName,location:invoice?.locationCode,currency:allocation?.currency||request?.currency||invoice?.currency,exchangeRate:invoice?.exchangeRate,note:request?.note,transactionId:source?.transactionId,paymentMethod:source?.paymentMethod||result?.paymentMethod}))}}
 
   async function handle(params={},result={}){
-    const action=clean(params?.action);
-    const paymentData=parsePayload(params?.paymentData);
-    const requestData=parsePayload(params?.requestData);
-
+    const action=clean(params?.action),paymentData=parsePayload(params?.paymentData),requestData=parsePayload(params?.requestData);
     if(action==='arList'&&result?.success)rememberReceivables(result);
     if(action==='arRequestDetail'&&result?.success)rememberRequest(result);
     if(!result?.success)return result;
-
     if(action==='arPayment')await backupSingle(paymentData,result);
     else if(action==='arBatchPayment')await backupBatch(paymentData,result);
     else if(action==='arClearRequest')await backupClearedRequest(requestData,result);
     return result;
   }
 
-  async function retryQueue(){
-    const q=readQueue();if(!q.length)return;
-    const remaining=[];
-    for(const payload of q){try{await send(payload)}catch(_){remaining.push(payload)}}
-    writeQueue(remaining);
+  async function retryQueue(){const q=readQueue();if(!q.length)return;const remaining=[];for(const payload of q){try{await send(payload)}catch(_){remaining.push(payload)}}writeQueue(remaining)}
+
+  function installLiveHook(){
+    const current=window.apiPost;
+    if(typeof current!=='function'||current.__bbReceivableBackupLive)return false;
+    const wrapped=async function(params={}){
+      const result=await current.call(this,params);
+      try{await handle(params,result)}catch(error){console.warn('BIG BROTHER A/R backup did not block payment save:',error)}
+      return result;
+    };
+    wrapped.__bbReceivableBackupLive=true;
+    window.apiPost=wrapped;
+    return true;
   }
 
+  let tries=0;
+  const timer=setInterval(()=>{tries+=1;if(installLiveHook()||tries>=80)clearInterval(timer)},100);
+  setTimeout(()=>installLiveHook(),0);
   retryQueue().catch(()=>{});
-  window.BBReceivableBackupV2={handle,retry:retryQueue,endpoint:ENDPOINT};
+  window.BBReceivableBackupV2={handle,retry:retryQueue,install:installLiveHook,endpoint:ENDPOINT};
 })();
