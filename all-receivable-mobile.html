@@ -19,12 +19,12 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#f4f7fb;fon
     if(!response.ok)throw new Error('Could not load the approved Receivable mobile skin.');
     let html=await response.text();
 
-    /* Reuse the approved Your Receivable mobile UX, but point its real engine at All Receivable. */
+    /* Reuse the approved Your Receivable mobile UX, but point its real engine at mobile-only All Receivable. */
     html=html.replaceAll('BIG BROTHER — Your Receivable Mobile','BIG BROTHER — All Receivable Mobile');
     html=html.replaceAll('Loading Your Receivable…','Loading All Receivable…');
     html=html.replace(
       'your-receivable.html?embed=1&view=your&mobileSkin=1&v=20260914-10',
-      'index.html?embed=1&view=all&mobileSkin=1&v=20260915-all-1'
+      'all-receivable-engine-mobile.html?embed=1&view=all&mobileSkin=1&v=20260916-ar-backup-1'
     );
     html=html.replace('title="Your Receivable"','title="All Receivable"');
 
