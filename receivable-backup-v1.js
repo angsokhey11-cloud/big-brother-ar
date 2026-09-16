@@ -1,6 +1,7 @@
-/* BIG BROTHER — Confirmed Receivable Payment Google Sheets Backup V2.2
+/* BIG BROTHER — Confirmed Receivable Payment Google Sheets Backup V2.3
    Supabase remains authoritative. Google Sheets is audit/continuity backup only.
-   Backup payloads are queued BEFORE network send so UI/navigation can never lose a payment. */
+   Backup payloads are queued BEFORE network send so UI/navigation can never lose a payment.
+   Direct-payment UI refresh runs in background after a confirmed Supabase save. */
 (function(){
   'use strict';
 
@@ -11,6 +12,7 @@
   const num=v=>{const n=Number(v);return Number.isFinite(n)?n:0};
   const invoiceCache=new Map();
   const requestCache=new Map();
+  let fastRefreshPending=false;
 
   function userEmail(){try{const s=JSON.parse(localStorage.getItem('BB_SUPABASE_DEV_SESSION_V1')||'null');return clean(s?.user?.email||'')}catch(_){return''}}
   function parsePayload(value){if(value&&typeof value==='object')return value;if(typeof value!=='string'||!value.trim())return{};try{return JSON.parse(value)}catch(_){return{}}}
@@ -28,7 +30,6 @@
     return true;
   }
 
-  /* Critical: persist first. The transaction UI may close/reload immediately after Supabase succeeds. */
   function dispatch(payload){
     enqueue(payload);
     send(payload).then(()=>dequeue(payload)).catch(error=>console.warn('BIG BROTHER receivable payment backup queued for retry:',error));
@@ -83,11 +84,14 @@
     const action=clean(params?.action),paymentData=parsePayload(params?.paymentData),requestData=parsePayload(params?.requestData);
     if(action==='arList')rememberReceivables(result);
     if(action==='arRequestDetail')rememberRequest(result);
-    /* Some successful RPCs return payment data without an explicit success:true. Only explicit false is failure. */
     if(result?.success===false)return result;
-    if(action==='arPayment')backupSingle(paymentData,result);
-    else if(action==='arBatchPayment')backupBatch(paymentData,result);
-    else if(action==='arClearRequest')backupClearedRequest(requestData,result);
+    if(action==='arPayment'){
+      backupSingle(paymentData,result);
+      fastRefreshPending=true;
+    }else if(action==='arBatchPayment'){
+      backupBatch(paymentData,result);
+      fastRefreshPending=true;
+    }else if(action==='arClearRequest')backupClearedRequest(requestData,result);
     return result;
   }
 
@@ -96,6 +100,22 @@
     for(const payload of q){
       try{await send(payload);dequeue(payload)}catch(_){}
     }
+  }
+
+  function installFastRefreshHook(){
+    const current=window.loadAR;
+    if(typeof current!=='function'||current.__bbFastPaymentRefresh)return false;
+    const wrapped=function(force){
+      if(fastRefreshPending){
+        fastRefreshPending=false;
+        Promise.resolve().then(()=>current.call(this,force)).catch(error=>console.warn('BIG BROTHER A/R background refresh:',error));
+        return Promise.resolve();
+      }
+      return current.call(this,force);
+    };
+    wrapped.__bbFastPaymentRefresh=true;
+    window.loadAR=wrapped;
+    return true;
   }
 
   function installLiveHook(){
@@ -112,8 +132,14 @@
   }
 
   let tries=0;
-  const timer=setInterval(()=>{tries+=1;if(installLiveHook()||tries>=80)clearInterval(timer)},100);
-  setTimeout(()=>installLiveHook(),0);
+  const timer=setInterval(()=>{
+    tries+=1;
+    const apiReady=installLiveHook();
+    const refreshReady=installFastRefreshHook();
+    if((apiReady||window.apiPost?.__bbReceivableBackupLive)&&(refreshReady||window.loadAR?.__bbFastPaymentRefresh))clearInterval(timer);
+    else if(tries>=80)clearInterval(timer);
+  },100);
+  setTimeout(()=>{installLiveHook();installFastRefreshHook()},0);
   retryQueue().catch(()=>{});
   window.BBReceivableBackupV2={handle,retry:retryQueue,install:installLiveHook,endpoint:ENDPOINT};
 })();
