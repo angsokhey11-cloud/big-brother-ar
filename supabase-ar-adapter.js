@@ -135,4 +135,14 @@
   }
 
   window.BBARAdapter={rpc,apiPost,accessProfile,ensureSession,signOut};
+
+  /* Load the audit/continuity backup only after the real Supabase adapter exists. */
+  try{
+    const script=document.createElement('script');
+    script.src='receivable-backup-v1.js?v=20260916-1';
+    script.async=false;
+    (document.head||document.documentElement).appendChild(script);
+  }catch(error){
+    console.warn('BIG BROTHER receivable backup loader:',error);
+  }
 })();
