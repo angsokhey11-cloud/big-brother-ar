@@ -22,10 +22,18 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#f4f7fb;fon
     /* Reuse the approved Your Receivable mobile UX, but point its real engine at mobile-only All Receivable. */
     html=html.replaceAll('BIG BROTHER — Your Receivable Mobile','BIG BROTHER — All Receivable Mobile');
     html=html.replaceAll('Loading Your Receivable…','Loading All Receivable…');
+    /*
+     * The mobile skin is shared with Your Receivable, but the engine must
+     * always be All Receivable. Match the iframe source by route instead of
+     * by an old cache version so future Your Receivable cache bumps cannot
+     * accidentally make this page open the personal receivable view.
+     */
+    const beforeEngine=html;
     html=html.replace(
-      'your-receivable.html?embed=1&view=your&mobileSkin=1&v=20260914-10',
-      'all-receivable-engine-mobile.html?embed=1&view=all&mobileSkin=1&v=20260921-arassigned1'
+      /src="your-receivable\.html\?embed=1&view=your&mobileSkin=1&v=[^"]+"/,
+      'src="all-receivable-engine-mobile.html?embed=1&view=all&mobileSkin=1&v=20260921-arassigned2"'
     );
+    if(html===beforeEngine)throw new Error('All Receivable engine route was not replaced.');
     html=html.replace('title="Your Receivable"','title="All Receivable"');
 
     /* Make the mobile header wording match the assigned-location company view. */
