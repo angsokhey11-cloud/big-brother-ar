@@ -94,7 +94,9 @@
           ? rpc('bb_ar_list_all')
           : rpc('bb_ar_list');
       case 'arDetail':
-        return rpc('bb_ar_detail',{p_invoice_no:String(params.invoiceNo||'')});
+        return String(params.view||'').toLowerCase()==='all'
+          ? rpc('bb_ar_detail_all',{p_invoice_no:String(params.invoiceNo||'')})
+          : rpc('bb_ar_detail',{p_invoice_no:String(params.invoiceNo||'')});
       case 'arPaymentRequest':
       case 'arBatchRequest':
         return rpc('bb_ar_create_request',{p_payload:payload(params.requestData)});
@@ -117,8 +119,14 @@
     }
   }
 
-  async function accessProfile(){
-    return rpc('bb_ar_access_profile');
+  async function accessProfile(view=''){
+    let scope=String(view||'').toLowerCase();
+    if(!scope){
+      try{scope=String(new URLSearchParams(location.search).get('view')||'').toLowerCase()}catch(_){}
+    }
+    return scope==='all'
+      ? rpc('bb_ar_access_profile_all')
+      : rpc('bb_ar_access_profile');
   }
 
   async function signOut(){
