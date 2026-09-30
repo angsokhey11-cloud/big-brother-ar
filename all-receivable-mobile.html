@@ -31,7 +31,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#f4f7fb;fon
     const beforeEngine=html;
     html=html.replace(
       /src="your-receivable\.html\?embed=1&view=your&mobileSkin=1&v=[^"]+"/,
-      'src="all-receivable-engine-mobile.html?embed=1&view=all&mobileSkin=1&v=20260921-arassigned2"'
+      'src="all-receivable-engine-mobile.html?embed=1&view=all&mobileSkin=1&v=20260930-invoiceid1"'
     );
     if(html===beforeEngine)throw new Error('All Receivable engine route was not replaced.');
     html=html.replace('title="Your Receivable"','title="All Receivable"');
