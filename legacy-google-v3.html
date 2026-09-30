@@ -233,6 +233,11 @@ let sessionToken=sessionStorage.getItem(SESSION_KEY)||'';
 let deviceToken=localStorage.getItem(DEVICE_KEY)||'';
 let sessionProfile=null,rows=[],revision='',currentInvoice=null,syncTimer=null;
 const selectedInvoices=new Set();
+function invoiceKey(row){
+  const id=String(row?.invoiceId||'').trim();
+  if(id)return id;
+  return [String(row?.invoiceNo||'').trim(),String(row?.customerId||'').trim(),String(row?.locationCode||'').trim()].join('|');
+}
 let visibleRows=[];
 
 function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
@@ -461,22 +466,22 @@ function renderRows(){
   $('sumOverdueUSD').textContent=money(totals.USD.over,'USD');$('sumOverdueKHR').textContent=money(totals.KHR.over,'KHR');
   $('sumInvoices').textContent=visibleRows.length;$('sumCustomers').textContent=customers.size;$('rowCount').textContent=`${visibleRows.length} record${visibleRows.length===1?'':'s'}`;
   if(!visibleRows.length){$('arBody').innerHTML='<tr><td colspan="11" class="empty">No open Credit invoices found for this view.</td></tr>';updateSummaryControls();return}
-  $('arBody').innerHTML=visibleRows.map(r=>`<tr><td class="checkcell"><input class="rowcheck" type="checkbox" ${selectedInvoices.has(String(r.invoiceNo))?'checked':''} onchange='toggleInvoice(${JSON.stringify(String(r.invoiceNo))},this.checked)' title="Select ${esc(r.invoiceNo)} for summary or batch payment"></td><td><strong>${esc(r.invoiceNo)}</strong></td><td>${esc(formatReceivableInvoiceDate(r.invoiceDate))}</td><td>${esc(r.dueDate||'-')}</td><td>${esc(r.customer)}</td><td>${esc(r.locationName||r.locationCode)}<br><small>${esc(r.locationCode)}</small></td><td class="money">${money(r.grandTotal,r.currency)}</td><td class="money">${money(r.amountPaid,r.currency)}</td><td class="money"><strong>${money(r.outstanding,r.currency)}</strong></td><td><span class="status ${r.arStatus.toLowerCase()}">${esc(r.arStatus)}</span></td><td><button class="btn primary" onclick='openPayment(${JSON.stringify(r.invoiceNo)})'>Receive</button></td></tr>`).join('');
+  $('arBody').innerHTML=visibleRows.map(r=>`<tr><td class="checkcell"><input class="rowcheck" type="checkbox" ${selectedInvoices.has(invoiceKey(r))?'checked':''} onchange='toggleInvoice(${JSON.stringify(invoiceKey(r))},this.checked)' title="Select ${esc(r.invoiceNo)} for summary or batch payment"></td><td><strong>${esc(r.invoiceNo)}</strong></td><td>${esc(formatReceivableInvoiceDate(r.invoiceDate))}</td><td>${esc(r.dueDate||'-')}</td><td>${esc(r.customer)}</td><td>${esc(r.locationName||r.locationCode)}<br><small>${esc(r.locationCode)}</small></td><td class="money">${money(r.grandTotal,r.currency)}</td><td class="money">${money(r.amountPaid,r.currency)}</td><td class="money"><strong>${money(r.outstanding,r.currency)}</strong></td><td><span class="status ${r.arStatus.toLowerCase()}">${esc(r.arStatus)}</span></td><td><button class="btn primary" onclick='openPayment(${JSON.stringify(invoiceKey(r))})'>Receive</button></td></tr>`).join('');
   updateSummaryControls();
 }
-function toggleInvoice(invoiceNo,checked){if(checked)selectedInvoices.add(String(invoiceNo));else selectedInvoices.delete(String(invoiceNo));updateSummaryControls()}
-function toggleSelectAll(checked){visibleRows.forEach(r=>{const k=String(r.invoiceNo);if(checked)selectedInvoices.add(k);else selectedInvoices.delete(k)});renderRows()}
+function toggleInvoice(key,checked){if(checked)selectedInvoices.add(String(key));else selectedInvoices.delete(String(key));updateSummaryControls()}
+function toggleSelectAll(checked){visibleRows.forEach(r=>{const k=invoiceKey(r);if(checked)selectedInvoices.add(k);else selectedInvoices.delete(k)});renderRows()}
 function updateSummaryControls(){
   const count=selectedInvoices.size,btn=$('summaryBtn'),batch=$('batchBtn'),all=$('selectAllBox');
   const picked=selectedSummaryRows();const currencies=[...new Set(picked.map(r=>String(r.currency||'USD').toUpperCase()))];
   btn.textContent=`🧾 Summary Invoice (${count})`;btn.disabled=count===0;
   if(count>0&&currencies.length>1){batch.textContent=`💰 Mixed Currency (${count})`;batch.disabled=true;batch.title='USD and KHR must be received in separate batch payments.'}
   else{batch.textContent=`💰 Receive Selected (${count})`;batch.disabled=count===0;batch.title=''}
-  const visibleKeys=visibleRows.map(r=>String(r.invoiceNo)),selectedVisible=visibleKeys.filter(k=>selectedInvoices.has(k)).length;
+  const visibleKeys=visibleRows.map(invoiceKey),selectedVisible=visibleKeys.filter(k=>selectedInvoices.has(k)).length;
   all.checked=visibleKeys.length>0&&selectedVisible===visibleKeys.length;all.indeterminate=selectedVisible>0&&selectedVisible<visibleKeys.length;
 }
 
-function selectedSummaryRows(){return sortReceivablesOldestFirst(rows.filter(r=>selectedInvoices.has(String(r.invoiceNo))))}
+function selectedSummaryRows(){return sortReceivablesOldestFirst(rows.filter(r=>selectedInvoices.has(invoiceKey(r))))}
 async function getMasterCustomerContact_(row){
   const fallback={phone:row?.customerPhone||'',address:row?.customerAddress||''};
   try{
@@ -832,7 +837,7 @@ async function saveSummaryPDF(){
 }
 
 
-function selectedPaymentRows(){return sortReceivablesOldestFirst(rows.filter(r=>selectedInvoices.has(String(r.invoiceNo))))}
+function selectedPaymentRows(){return sortReceivablesOldestFirst(rows.filter(r=>selectedInvoices.has(invoiceKey(r))))}
 function openBatchPayment(){
   const picked=selectedPaymentRows();if(!picked.length)return alert('Please check at least one invoice first.');
   const customers=[...new Set(picked.map(r=>String(r.customer||'').trim().toLowerCase()))];if(customers.length!==1)return alert('Batch payment can only clear invoices for one customer at a time.');
@@ -873,11 +878,11 @@ async function saveBatchPayment(){
   }catch(e){setBatchError(e.message||'Batch payment failed. Nothing was changed.')}finally{btn.disabled=false;btn.textContent='✓ Approve & Clear Selected Invoices';$('batchAdminCode').value=''}
 }
 
-async function openPayment(invoiceNo){
-  currentInvoice=rows.find(r=>r.invoiceNo===invoiceNo);if(!currentInvoice)return;
+async function openPayment(invoiceId){
+  currentInvoice=rows.find(r=>invoiceKey(r)===String(invoiceId));if(!currentInvoice)return;
   $('paymentInfo').textContent=`${currentInvoice.invoiceNo} · ${currentInvoice.customer} · ${currentInvoice.locationCode} · Outstanding ${money(currentInvoice.outstanding,currentInvoice.currency)}`;
   $('payDate').value=today();$('payAmount').value='';$('payAmount').max=currentInvoice.outstanding;configureSinglePaymentMethod();$('payMethod').value=requesting?'Bank':'Cash';$('payCashUSD').value='0';$('payCashKHR').value='0';$('payBank').value='';$('transactionId').value='';$('bankReference').value='';$('payNote').value='';$('adminCode').value='';setPaymentError('');toggleBankFields();$('paymentOverlay').classList.remove('hidden');$('paymentHistory').textContent='Loading…';
-  try{const d=await apiPost({action:'arDetail',sessionToken,view:VIEW,invoiceNo});if(!d||!d.success)throw new Error(d?.error||'Could not load payment history.');const ps=Array.isArray(d.payments)?d.payments:[];$('paymentHistory').innerHTML=ps.length?ps.map(p=>`<div class="historyitem"><strong>${money(p.amount,p.currency)}</strong> · ${esc(p.paymentDate)} · ${esc(p.paymentMethod)}${p.transactionId?`<br>Transaction ID: ${esc(p.transactionId)}`:''}${p.approvedBy?`<br>Approved by: ${esc(p.approvedBy)}`:''}</div>`).join(''):'<div class="empty" style="padding:12px">No previous payments.</div>'}catch(e){$('paymentHistory').textContent=e.message}
+  try{const d=await apiPost({action:'arDetail',sessionToken,view:VIEW,invoiceId:currentInvoice.invoiceId,invoiceNo:currentInvoice.invoiceNo});if(!d||!d.success)throw new Error(d?.error||'Could not load payment history.');const ps=Array.isArray(d.payments)?d.payments:[];$('paymentHistory').innerHTML=ps.length?ps.map(p=>`<div class="historyitem"><strong>${money(p.amount,p.currency)}</strong> · ${esc(p.paymentDate)} · ${esc(p.paymentMethod)}${p.transactionId?`<br>Transaction ID: ${esc(p.transactionId)}`:''}${p.approvedBy?`<br>Approved by: ${esc(p.approvedBy)}`:''}</div>`).join(''):'<div class="empty" style="padding:12px">No previous payments.</div>'}catch(e){$('paymentHistory').textContent=e.message}
 }
 function closePayment(){$('paymentOverlay').classList.add('hidden');currentInvoice=null}
 function configureSinglePaymentMethod(){
@@ -918,10 +923,10 @@ function renderRows(){
   if(!visibleRows.length){$('arBody').innerHTML='<tr><td colspan="11" class="empty">No open Credit invoices found for this view.</td></tr>';updateSummaryControls();return}
   $('arBody').innerHTML=visibleRows.map(r=>{
     const processing=r.arStatus==='Processing';
-    const check=`<td class="checkcell"><input class="rowcheck" type="checkbox" ${selectedInvoices.has(String(r.invoiceNo))?'checked':''} ${processing?'disabled':''} onchange='toggleInvoice(${JSON.stringify(String(r.invoiceNo))},this.checked)' title="${processing?'Processing request cannot be selected again':'Select invoice'}"></td>`;
+    const check=`<td class="checkcell"><input class="rowcheck" type="checkbox" ${selectedInvoices.has(invoiceKey(r))?'checked':''} ${processing?'disabled':''} onchange='toggleInvoice(${JSON.stringify(invoiceKey(r))},this.checked)' title="${processing?'Processing request cannot be selected again':'Select invoice'}"></td>`;
     let action='';
-    if(VIEW==='your') action=processing?`<button class="btn secondary" disabled>Processing</button>`:`<button class="btn primary" onclick='openPayment(${JSON.stringify(r.invoiceNo)})'>Direct Request</button>`;
-    else action=processing?`<button class="btn primary" onclick='openRequestReview(${JSON.stringify(r.requestId||'')})'>Review Request</button>`:`<button class="btn primary" onclick='openPayment(${JSON.stringify(r.invoiceNo)})'>Receive</button>`;
+    if(VIEW==='your') action=processing?`<button class="btn secondary" disabled>Processing</button>`:`<button class="btn primary" onclick='openPayment(${JSON.stringify(invoiceKey(r))})'>Direct Request</button>`;
+    else action=processing?`<button class="btn primary" onclick='openRequestReview(${JSON.stringify(r.requestId||'')})'>Review Request</button>`:`<button class="btn primary" onclick='openPayment(${JSON.stringify(invoiceKey(r))})'>Receive</button>`;
     return `<tr>${check}<td><strong>${esc(r.invoiceNo)}</strong></td><td>${esc(formatReceivableInvoiceDate(r.invoiceDate))}</td><td>${esc(r.dueDate||'-')}</td><td>${esc(r.customer)}</td><td>${esc(r.locationName||r.locationCode)}<br><small>${esc(r.locationCode)}</small></td><td class="money">${money(r.grandTotal,r.currency)}</td><td class="money">${money(r.amountPaid,r.currency)}</td><td class="money"><strong>${money(r.outstanding,r.currency)}</strong></td><td><span class="status ${String(r.arStatus||'outstanding').toLowerCase()}">${esc(r.arStatus)}</span>${processing&&r.requestedBy?`<br><small>${esc(r.requestedBy)}</small>`:''}</td><td>${action}</td></tr>`;
   }).join('');updateSummaryControls();
 }
@@ -931,9 +936,9 @@ function updateSummaryControls(){
   const picked=selectedPaymentRows(),currencies=[...new Set(picked.map(r=>String(r.currency||'USD').toUpperCase()))];
   const verb=VIEW==='your'?'Direct Request Selected':'Receive Selected';
   if(count>0&&currencies.length>1){batch.textContent=`💰 Mixed Currency (${count})`;batch.disabled=true;batch.title='USD and KHR must be processed separately.'}else{batch.textContent=`💰 ${verb} (${count})`;batch.disabled=count===0;batch.title=''}
-  const selectable=visibleRows.filter(r=>r.arStatus!=='Processing').map(r=>String(r.invoiceNo)),selectedVisible=selectable.filter(k=>selectedInvoices.has(k)).length;all.checked=selectable.length>0&&selectedVisible===selectable.length;all.indeterminate=selectedVisible>0&&selectedVisible<selectable.length;
+  const selectable=visibleRows.filter(r=>r.arStatus!=='Processing').map(invoiceKey),selectedVisible=selectable.filter(k=>selectedInvoices.has(k)).length;all.checked=selectable.length>0&&selectedVisible===selectable.length;all.indeterminate=selectedVisible>0&&selectedVisible<selectable.length;
 }
-function toggleSelectAll(checked){visibleRows.filter(r=>r.arStatus!=='Processing').forEach(r=>{const k=String(r.invoiceNo);if(checked)selectedInvoices.add(k);else selectedInvoices.delete(k)});renderRows()}
+function toggleSelectAll(checked){visibleRows.filter(r=>r.arStatus!=='Processing').forEach(r=>{const k=invoiceKey(r);if(checked)selectedInvoices.add(k);else selectedInvoices.delete(k)});renderRows()}
 
 
 function configureDirectRequestUI(){
@@ -976,8 +981,8 @@ function useFullSelectedAmount(){
   $('batchInfo').textContent=`${picked[0].customer} · ${picked.length} invoice${picked.length===1?'':'s'} · full outstanding selected`;
 }
 
-async function openPayment(invoiceNo){
-  currentInvoice=rows.find(r=>r.invoiceNo===invoiceNo);
+async function openPayment(invoiceId){
+  currentInvoice=rows.find(r=>invoiceKey(r)===String(invoiceId));
   if(!currentInvoice)return;
   if(currentInvoice.arStatus==='Processing')return alert('This invoice already has a Processing request.');
 
@@ -1012,7 +1017,7 @@ async function openPayment(invoiceNo){
   $('paymentHistory').textContent='Loading…';
 
   try{
-    const d=await apiPost({action:'arDetail',sessionToken,view:VIEW,invoiceNo});
+    const d=await apiPost({action:'arDetail',sessionToken,view:VIEW,invoiceId:currentInvoice.invoiceId,invoiceNo:currentInvoice.invoiceNo});
     if(!d||!d.success)throw new Error(d?.error||'Could not load payment history.');
     const ps=Array.isArray(d.payments)?d.payments:[];
     $('paymentHistory').innerHTML=ps.length
@@ -1054,7 +1059,9 @@ async function savePayment(){
     if(requesting){
       const requestData={
         sessionToken,
+        invoiceId:currentInvoice.invoiceId,
         invoiceNo:currentInvoice.invoiceNo,
+        customerId:currentInvoice.customerId,
         paymentDate:$('payDate').value,
         amount,
         note:$('payNote').value.trim(),
@@ -1075,7 +1082,9 @@ async function savePayment(){
       const paymentData={
         sessionToken,
         adminCode:admin,
+        invoiceId:currentInvoice.invoiceId,
         invoiceNo:currentInvoice.invoiceNo,
+        customerId:currentInvoice.customerId,
         paymentDate:$('payDate').value,
         amount,
         paymentMethod:method,
@@ -1172,7 +1181,9 @@ async function saveBatchPayment(){
     if(requesting){
       const requestData={
         sessionToken,
+        invoiceIds:picked.map(r=>r.invoiceId),
         invoiceNos:picked.map(r=>r.invoiceNo),
+        customerId:picked[0]?.customerId||'',
         paymentDate:$('batchDate').value,
         note:$('batchNote').value.trim(),
         requestType:'Direct Request'
@@ -1194,7 +1205,9 @@ async function saveBatchPayment(){
       const paymentData={
         sessionToken,
         adminCode:admin,
+        invoiceIds:picked.map(r=>r.invoiceId),
         invoiceNos:picked.map(r=>r.invoiceNo),
+        customerId:picked[0]?.customerId||'',
         paymentDate:$('batchDate').value,
         paymentMethod:method,
         bankPayment:method==='Bank'?$('batchBank').value.trim():'',
