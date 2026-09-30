@@ -10,11 +10,11 @@
 <script>
 (async function(){
   try{
-    const response=await fetch('legacy-google-v3.html?v=20260910-3',{cache:'no-store'});
+    const response=await fetch('legacy-google-v3.html?v=20260930-invoiceid1',{cache:'no-store'});
     if(!response.ok)throw new Error('Could not load Accounts Receivable source.');
     let html=await response.text();
 
-    const adapter='<scr'+'ipt src="supabase-ar-adapter.js?v=20260921-arassigned1"></scr'+'ipt>\n'
+    const adapter='<scr'+'ipt src="supabase-ar-adapter.js?v=20260930-invoiceid1"></scr'+'ipt>\n'
       +'<scr'+'ipt src="receivable-backup-v1.js?v=20260916-5"></scr'+'ipt>\n'
       +'<scr'+'ipt src="receivable-telegram-v1.js?v=20260920-artelegram1"></scr'+'ipt>';
     const authCutover='<style id="bb-ar-auth-cutover">#singleAdminField,#batchAdminField{display:none!important}</style>';
