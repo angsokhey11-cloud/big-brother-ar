@@ -95,15 +95,15 @@
           : rpc('bb_ar_list');
       case 'arDetail':
         return String(params.view||'').toLowerCase()==='all'
-          ? rpc('bb_ar_detail_all',{p_invoice_no:String(params.invoiceNo||'')})
-          : rpc('bb_ar_detail',{p_invoice_no:String(params.invoiceNo||'')});
+          ? rpc('bb_ar_detail_by_id_all',{p_invoice_id:String(params.invoiceId||'')})
+          : rpc('bb_ar_detail_by_id',{p_invoice_id:String(params.invoiceId||'')});
       case 'arPaymentRequest':
       case 'arBatchRequest':
-        return rpc('bb_ar_create_request',{p_payload:payload(params.requestData)});
+        return rpc('bb_ar_create_request_v2',{p_payload:payload(params.requestData)});
       case 'arPayment':
-        return rpc('bb_ar_receive_payment',{p_payload:payload(params.paymentData)});
+        return rpc('bb_ar_receive_payment_v2',{p_payload:payload(params.paymentData)});
       case 'arBatchPayment':
-        return rpc('bb_ar_receive_batch_payment',{p_payload:payload(params.paymentData)});
+        return rpc('bb_ar_receive_batch_payment_v2',{p_payload:payload(params.paymentData)});
       case 'arRequestDetail':
         return rpc('bb_ar_request_detail',{p_request_id:String(params.requestId||'')});
       case 'arClearRequest':
