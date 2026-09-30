@@ -838,15 +838,6 @@ async function saveSummaryPDF(){
 
 
 function selectedPaymentRows(){return sortReceivablesOldestFirst(rows.filter(r=>selectedInvoices.has(invoiceKey(r))))}
-function openBatchPayment(){
-  const picked=selectedPaymentRows();if(!picked.length)return alert('Please check at least one invoice first.');
-  const customers=[...new Set(picked.map(r=>String(r.customer||'').trim().toLowerCase()))];if(customers.length!==1)return alert('Batch payment can only clear invoices for one customer at a time.');
-  const currencies=[...new Set(picked.map(r=>String(r.currency||'USD').toUpperCase()))];if(currencies.length!==1)return alert('Batch payment can only clear invoices with the same currency.');
-  const currency=currencies[0],total=picked.reduce((s,r)=>s+num(r.outstanding),0);
-  $('batchInfo').textContent=`${picked[0].customer} · ${picked.length} invoice${picked.length===1?'':'s'} · one payment`;
-  $('batchList').innerHTML=picked.map(r=>`<div class="batch-item"><span><strong>${esc(r.invoiceNo)}</strong></span><span>${money(r.outstanding,r.currency)}</span></div>`).join('');
-  $('batchTotal').textContent=money(total,currency);$('batchDate').value=today();configureBatchPaymentMethod();$('batchMethod').value=requesting?'Bank':'Cash';$('batchCashUSD').value='0';$('batchCashKHR').value='0';$('batchBank').value='';$('batchTransactionId').value='';$('batchBankReference').value='';$('batchNote').value='';$('batchAdminCode').value='';setBatchError('');toggleBatchBankFields();$('batchOverlay').classList.remove('hidden');
-}
 function closeBatchPayment(){$('batchOverlay').classList.add('hidden')}
 function configureBatchPaymentMethod(){
   const sel=$('batchMethod');
@@ -865,24 +856,6 @@ function toggleBatchBankFields(){
   const isBank=$('batchMethod').value==='Bank';
   $('batchBankFields').classList.toggle('show',isBank);
   $('batchCashReceiptFields').classList.toggle('show',!isBank&&VIEW==='all');
-}
-async function saveBatchPayment(){
-  const picked=selectedPaymentRows();if(!picked.length)return setBatchError('No invoices are selected.');
-  const method=$('batchMethod').value,tx=$('batchTransactionId').value.trim(),admin=$('batchAdminCode').value.trim();setBatchError('');
-  if(method==='Bank'&&!$('batchBank').value.trim())return setBatchError('Bank Name is required.');if(method==='Bank'&&!tx)return setBatchError('Transaction ID is required for Bank payment.');if(!admin)return setBatchError('Admin Code is required to approve the whole batch.');
-  const btn=$('saveBatchBtn');btn.disabled=true;btn.textContent='Saving Batch…';
-  try{
-    const paymentData={sessionToken,adminCode:admin,invoiceNos:picked.map(r=>r.invoiceNo),paymentDate:$('batchDate').value,paymentMethod:method,bankPayment:method==='Bank'?$('batchBank').value.trim():'',transactionId:method==='Bank'?tx:'',bankReference:method==='Bank'?$('batchBankReference').value.trim():'',note:$('batchNote').value.trim()};
-    const d=await apiPost({action:'arBatchPayment',paymentData:JSON.stringify(paymentData)});if(!d||!d.success)throw new Error(d?.error||'Batch payment failed.');
-    closeBatchPayment();selectedInvoices.clear();await loadAR(true);alert(`Batch payment saved successfully.\nInvoices cleared: ${d.invoiceCount||picked.length}\nTotal: ${money(d.totalAmount,d.currency)}\nApproved by: ${d.approvedBy||'Admin'}\nPayment ID: ${d.paymentId||''}`);
-  }catch(e){setBatchError(e.message||'Batch payment failed. Nothing was changed.')}finally{btn.disabled=false;btn.textContent='✓ Approve & Clear Selected Invoices';$('batchAdminCode').value=''}
-}
-
-async function openPayment(invoiceId){
-  currentInvoice=rows.find(r=>invoiceKey(r)===String(invoiceId));if(!currentInvoice)return;
-  $('paymentInfo').textContent=`${currentInvoice.invoiceNo} · ${currentInvoice.customer} · ${currentInvoice.locationCode} · Outstanding ${money(currentInvoice.outstanding,currentInvoice.currency)}`;
-  $('payDate').value=today();$('payAmount').value='';$('payAmount').max=currentInvoice.outstanding;configureSinglePaymentMethod();$('payMethod').value=requesting?'Bank':'Cash';$('payCashUSD').value='0';$('payCashKHR').value='0';$('payBank').value='';$('transactionId').value='';$('bankReference').value='';$('payNote').value='';$('adminCode').value='';setPaymentError('');toggleBankFields();$('paymentOverlay').classList.remove('hidden');$('paymentHistory').textContent='Loading…';
-  try{const d=await apiPost({action:'arDetail',sessionToken,view:VIEW,invoiceId:currentInvoice.invoiceId,invoiceNo:currentInvoice.invoiceNo});if(!d||!d.success)throw new Error(d?.error||'Could not load payment history.');const ps=Array.isArray(d.payments)?d.payments:[];$('paymentHistory').innerHTML=ps.length?ps.map(p=>`<div class="historyitem"><strong>${money(p.amount,p.currency)}</strong> · ${esc(p.paymentDate)} · ${esc(p.paymentMethod)}${p.transactionId?`<br>Transaction ID: ${esc(p.transactionId)}`:''}${p.approvedBy?`<br>Approved by: ${esc(p.approvedBy)}`:''}</div>`).join(''):'<div class="empty" style="padding:12px">No previous payments.</div>'}catch(e){$('paymentHistory').textContent=e.message}
 }
 function closePayment(){$('paymentOverlay').classList.add('hidden');currentInvoice=null}
 function configureSinglePaymentMethod(){
@@ -904,13 +877,6 @@ function toggleBankFields(){
   $('cashReceiptFields').classList.toggle('show',!isBank&&VIEW==='all');
 }
 
-async function savePayment(){
-  if(!currentInvoice)return;const amount=num($('payAmount').value),method=$('payMethod').value,tx=$('transactionId').value.trim(),admin=$('adminCode').value.trim();setPaymentError('');
-  if(requesting&&method!=='Bank')return setPaymentError('Salesman payment requests are Bank only. Cash must be cleared directly by Accountant.');
-  if(amount<=0)return setPaymentError('Payment amount must be greater than zero.');if(amount>num(currentInvoice.outstanding)+.000001)return setPaymentError('Payment cannot exceed outstanding balance.');if(method==='Bank'&&!$('payBank').value.trim())return setPaymentError('Bank Name is required.');if(method==='Bank'&&!tx)return setPaymentError('Transaction ID is required for Bank payment.');if(!admin)return setPaymentError('Admin Code is required to approve payment.');
-  const btn=$('savePayBtn');btn.disabled=true;btn.textContent='Saving…';
-  try{const paymentData={sessionToken,adminCode:admin,invoiceNo:currentInvoice.invoiceNo,paymentDate:$('payDate').value,amount,paymentMethod:method,bankPayment:method==='Bank'?$('payBank').value.trim():'',transactionId:method==='Bank'?tx:'',bankReference:method==='Bank'?$('bankReference').value.trim():'',note:$('payNote').value.trim()};const d=await apiPost({action:'arPayment',paymentData:JSON.stringify(paymentData)});if(!d||!d.success)throw new Error(d?.error||'Payment failed.');closePayment();await loadAR(true);alert(`Payment saved successfully.\nApproved by: ${d.approvedBy||'Admin'}\nPayment ID: ${d.paymentId||''}`)}catch(e){setPaymentError(e.message||'Payment failed. Nothing was changed.')}finally{btn.disabled=false;btn.textContent='✓ Approve & Save Payment';$('adminCode').value=''}
-}
 // V3.13 — Summary Share to Telegram + Save to Device + combined Print/Save PDF
 // V3.12 — DD/MM/YYYY invoice date + oldest-to-newest receivable order
 // V3.11 — Salesman Request -> Admin Clear workflow
