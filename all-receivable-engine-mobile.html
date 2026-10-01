@@ -44,7 +44,7 @@
     html=html.replaceAll('Secure Credit receivable access.','Secure Supabase receivable access.');
 
     if(!html.includes('</body>'))throw new Error('A/R document body missing for Real Invoice viewer.');
-    html=html.replace('</body>', '<scr'+'ipt src="receivable-real-invoice-view-v1.js?v=20261001-arreal-layout3"></scr'+'ipt></body>');
+    html=html.replace('</body>', '<scr'+'ipt src="receivable-real-invoice-view-v1.js?v=20261001-desktopfit4"></scr'+'ipt></body>');
     document.open();
     document.write(html);
     document.close();
