@@ -2,7 +2,7 @@
 (function(){
 'use strict';
 const BASE='https://sjfhlaclgmkwwofzstok.supabase.co',KEY='sb_publishable_w762jR65CWwlO30fKQsYOw_6L9grx8S',BUCKET='bb-real-invoices';
-let available=new Set(),currentSignature='',requestId=0,overlay=null,activeOriginal=null,activePreview=0;
+let available=new Set(),currentSignature='',requestId=0,overlay=null,activeOriginal=null,activePreview=0,preparedFile=null;
 function inject(){
  if(document.getElementById('bbAROriginalStyles'))return;
  const s=document.createElement('style');s.id='bbAROriginalStyles';s.textContent=[
@@ -26,7 +26,7 @@ function viewer(){
  inject();overlay=document.createElement('div');overlay.id='bbOriginalOverlay';overlay.hidden=true;
  overlay.innerHTML='<section class="bb-original-panel" role="dialog" aria-modal="true" aria-label="Original invoice"><div class="bb-original-head"><strong id="bbOriginalLabel">Original invoice</strong><div class="bb-original-actions"><button type="button" id="bbOriginalDownload">⬇ Download</button><button type="button" id="bbOriginalTelegram">✈ Share to Telegram</button><button type="button" id="bbOriginalClose">Close ✕</button></div></div><div class="bb-original-body" id="bbOriginalBody"></div><div id="bbOriginalHelp" class="bb-original-help" role="status" hidden></div></section>';
  document.body.appendChild(overlay);
- const close=()=>{overlay.hidden=true;activePreview++;activeOriginal=null;overlay.querySelector('#bbOriginalBody').replaceChildren();overlay.querySelector('#bbOriginalHelp').hidden=true;};
+ const close=()=>{overlay.hidden=true;activePreview++;activeOriginal=null;preparedFile=null;overlay.querySelector('#bbOriginalBody').replaceChildren();overlay.querySelector('#bbOriginalHelp').hidden=true;};
  overlay.querySelector('#bbOriginalClose').onclick=close;
  overlay.querySelector('#bbOriginalDownload').onclick=()=>void downloadOriginal();
  overlay.querySelector('#bbOriginalTelegram').onclick=()=>void shareOriginal();
@@ -109,7 +109,7 @@ async function downloadOriginal(){
  if(!activeOriginal)return;
  const original=activeOriginal,button=viewer().querySelector('#bbOriginalDownload');
  button.disabled=true;feedback('Preparing your original invoice…');
- try{const file=await originalFile(original);saveFile(file);feedback('Original invoice downloaded.');}
+ try{const file=preparedFile||await originalFile(original);saveFile(file);feedback('Original invoice downloaded.');}
  catch(e){feedback(e.message||'Download failed.');}
  finally{button.disabled=false;}
 }
@@ -118,7 +118,8 @@ async function shareOriginal(){
  const original=activeOriginal,button=viewer().querySelector('#bbOriginalTelegram');
  button.disabled=true;feedback('Preparing the invoice file for sharing…');
  try{
-  const file=await originalFile(original);
+  const file=preparedFile;
+  if(!file){feedback('Invoice file is still loading. Please try again.');return;}
   if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){
    try{
     await navigator.share({files:[file],title:'BIG BROTHER Invoice '+original.no,text:'Original invoice for '+original.customer});
@@ -156,8 +157,15 @@ async function open(id,no,customer){
   const value=await res.json();if(!res.ok||!value.signedURL)throw Error(value.message||value.error||'Unable to open original');
   if(box.hidden||sequence!==activePreview)return;
   activeOriginal={path:doc.path,no,customer};
+  preparedFile=null;
   box.querySelector('#bbOriginalDownload').disabled=false;
-  box.querySelector('#bbOriginalTelegram').disabled=false;
+  // Preload the file so native sharing can begin directly from the user tap.
+  // Waiting for a network request inside a click can lose browser share permission.
+  originalFile(activeOriginal).then(file=>{
+   if(sequence===activePreview&&!box.hidden){preparedFile=file;box.querySelector('#bbOriginalTelegram').disabled=false;}
+  }).catch(error=>{
+   if(sequence===activePreview&&!box.hidden)feedback('Download is available, but direct sharing is unavailable: '+error.message);
+  });
   const signed=value.signedURL.startsWith('http')?value.signedURL:BASE+'/storage/v1'+value.signedURL;
   body.replaceChildren();
   if(/\.pdf$/i.test(doc.path)){
