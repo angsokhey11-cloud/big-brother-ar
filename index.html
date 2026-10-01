@@ -40,7 +40,7 @@
     html=html.replaceAll('Secure Credit receivable access.','Secure Supabase receivable access.');
     // Shared, invoice-ID-safe paper original viewer. Loads after A/R core functions.
     if(!html.includes('</body>'))throw new Error('A/R document body missing for Real Invoice viewer.');
-    html=html.replace('</body>', '<scr'+'ipt src="receivable-real-invoice-view-v1.js?v=20261001-arreal1"></scr'+'ipt>\\n</body>');
+    html=html.replace('</body>', '<scr'+'ipt src="receivable-real-invoice-view-v1.js?v=20261001-arreal1"></scr'+'ipt></body>');
     document.open();document.write(html);document.close();
   }catch(error){
     console.error(error);
