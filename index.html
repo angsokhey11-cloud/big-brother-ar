@@ -42,6 +42,10 @@
     if(!html.includes('</body>'))throw new Error('A/R document body missing for Real Invoice viewer.');
     html=html.replace('</body>', '<scr'+'ipt src="receivable-real-invoice-view-v1.js?v=20261001-downloadshare5"></scr'+'ipt></body>');
     html=html.replace('</body>', '<scr'+'ipt src="receivable-batch-real-invoice-v1.js?v=20261001-batchreal3"></scr'+'ipt></body>');
+    // Admin-only historical opening A/R migration remains inside desktop All Receivable.
+    if(new URLSearchParams(location.search).get('view')==='all'){
+      html=html.replace('</body>', '<scr'+'ipt src="receivable-ar-migration-v1.js?v=20261001-arimport1"></scr'+'ipt></body>');
+    }
     document.open();document.write(html);document.close();
   }catch(error){
     console.error(error);
