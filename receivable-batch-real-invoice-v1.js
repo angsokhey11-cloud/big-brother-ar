@@ -172,7 +172,7 @@ async function shareBatch(){
  indicator('Preparing one ZIP file to share…');
  // Open Telegram from the original user tap on desktop: popup blockers may
  // reject a tab opened only after the package has finished generating.
- const shouldOpenTelegram=!(navigator.share&&navigator.canShare&&pkg.cachedZip&&navigator.canShare({files:[pkg.cachedZip]}));
+ const shouldOpenTelegram=!navigator.share;
  const telegramTab=shouldOpenTelegram?window.open('https://web.telegram.org/','_blank','noopener,noreferrer'):null;
  try{
   const bundle=pkg.cachedZip||await packageZip(pkg);
