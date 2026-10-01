@@ -50,6 +50,16 @@ async function downloadTemplate(){
   ];
   const instructions=X.utils.aoa_to_sheet(notes);instructions['!cols']=[27,105];
   X.utils.book_append_sheet(w,instructions,'Instructions');
+  // Download the live master references so admins need not guess IDs.
+  try{
+   const refs=await window.BBARAdapter.rpc('bb_ar_migration_references');
+   const customers=X.utils.json_to_sheet(Array.isArray(refs.customers)?refs.customers:[],{header:['customer_id','customer_name','location_code']});
+   const locations=X.utils.json_to_sheet(Array.isArray(refs.locations)?refs.locations:[],{header:['location_code','location_name']});
+   customers['!cols']=[{wch:24},{wch:48},{wch:22}];
+   locations['!cols']=[{wch:25},{wch:48}];
+   X.utils.book_append_sheet(w,customers,'Customer IDs');
+   X.utils.book_append_sheet(w,locations,'Location Codes');
+  }catch(error){console.warn('Template references unavailable:',error)}
   X.writeFile(w,'BIG_BROTHER_Historical_AR_Template.xlsx');
   status('Excel template downloaded. Fill the Historical AR sheet and upload it here.');
  }catch(e){csvTemplate();status('Excel download unavailable, so an Excel-compatible CSV template was downloaded. '+e.message)}
@@ -102,14 +112,14 @@ async function readFile(file){
  const book=X.read(data,{type:'array',cellDates:false});
  const sheet=book.Sheets['Historical AR']||book.Sheets[book.SheetNames[0]];
  if(!sheet)throw Error('No worksheet was found.');
- return dataRows(X.utils.sheet_to_json(sheet,{header:1,raw:false,defval:'',blankrows:false}));
+ return dataRows(X.utils.sheet_to_json(sheet,{header:1,raw:true,defval:'',blankrows:false}));
 }
 function setWorking(v){working=v;$('arMigrationFile').disabled=v;$('arMigrationPreviewButton').disabled=v||!batch;$('arMigrationCommit').disabled=v||!previewOK;$('arMigrationDownload').disabled=v}
 function showResult(result){
  const errors=Array.isArray(result.errors)?result.errors:[];
  const preview=Array.isArray(result.rows)?result.rows:[];
  $('arMigrationIssues').replaceChildren();
- for(const issue of errors.slice(0,50)){const p=document.createElement('p');p.style.cssText='margin:4px 0;color:#a42f32';p.textContent='Row '+issue.row+': '+issue.error;$('arMigrationIssues').append(p)}
+ for(const issue of errors.slice(0,50)){const p=document.createElement('p');p.style.cssText='margin:4px 0;color:#a42f32';p.textContent='Spreadsheet row '+(Number(issue.row)+1)+': '+issue.error;$('arMigrationIssues').append(p)}
  const table=$('arMigrationTable');table.replaceChildren();
  if(preview.length){
   const head=document.createElement('tr');
