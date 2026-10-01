@@ -79,8 +79,13 @@ async function build(){
    'Originals not uploaded or not accessible: '+(missing.length?missing.join(', '):'None'),
    'Each original is matched using its unique internal invoice ID.'
   ].join('\n');
-  packageData={files,filename,manifestText,missing,customer,signature};
+  packageData={files,filename,manifestText,missing,customer,signature,cachedZip:null};
   previousSignature=signature;
+  if(files.length>1 && navigator.share && navigator.canShare && !navigator.canShare({files})){
+   indicator('Preparing a single ZIP for this phone’s share sheet…');
+   packageData.cachedZip=await packageZip(packageData);
+   if(seq!==buildSeq||!visible())return;
+  }
   buttonsBusy(files.length<=1);
   indicator((files.length-1)+' originals ready'+(missing.length?' · Missing: '+missing.join(', '):' · All selected originals included')+'. '+(files.length<=1?'Upload an original first, or use the existing Summary sharing button.':'Summary image included.'));
  }catch(e){
@@ -140,7 +145,7 @@ async function downloadBatch(){
  const btn=$('bbDownloadSummaryOriginals');btn.disabled=true;
  indicator('Creating ZIP package…');
  try{
-  const file=await packageZip(pkg);download(file);
+  const file=pkg.cachedZip||await packageZip(pkg);download(file);
   indicator('Summary and '+(pkg.files.length-1)+' originals downloaded in one ZIP'+(pkg.missing.length?' · Missing: '+pkg.missing.join(', '):'')+'.');
  }catch(e){indicator(e.message||'ZIP download failed.',true)}
  finally{btn.disabled=false}
@@ -165,8 +170,12 @@ async function shareBatch(){
  }
  // When multi-file sharing is unavailable, package a single ZIP for sharing.
  indicator('Preparing one ZIP file to share…');
+ // Open Telegram from the original user tap on desktop: popup blockers may
+ // reject a tab opened only after the package has finished generating.
+ const shouldOpenTelegram=!(navigator.share&&navigator.canShare&&pkg.cachedZip&&navigator.canShare({files:[pkg.cachedZip]}));
+ const telegramTab=shouldOpenTelegram?window.open('https://web.telegram.org/','_blank','noopener,noreferrer'):null;
  try{
-  const bundle=await packageZip(pkg);
+  const bundle=pkg.cachedZip||await packageZip(pkg);
   if(navigator.share&&navigator.canShare&&navigator.canShare({files:[bundle]})){
    try{
     await navigator.share({files:[bundle],title:'BIG BROTHER Customer Invoice Package',text:'Customer: '+pkg.customer});
@@ -175,7 +184,7 @@ async function shareBatch(){
   }
   download(bundle);
   indicator('Downloaded one ZIP containing the summary and '+(files.length-1)+' originals. Open Telegram and attach this ZIP'+(pkg.missing.length?' · Missing originals: '+pkg.missing.join(', '):'')+'.');
-  window.open('https://web.telegram.org/','_blank','noopener,noreferrer');
+  if(!telegramTab)indicator('ZIP downloaded. Open Telegram and attach the package manually.');
  }catch(e){indicator(e.message||'Unable to prepare files for sharing.',true)}
  finally{btn.disabled=false}
 }
@@ -189,6 +198,7 @@ function init(){
  save.className='btn summary-save-device-btn';save.textContent='⬇ Download Package';save.disabled=true;
  const status=document.createElement('div');status.id='bbBatchOriginalStatus';status.setAttribute('role','status');
  status.style.cssText='font:12px Arial;line-height:1.4;color:#41617f;text-align:right;padding:4px 2px 8px;overflow-wrap:anywhere';
+ const printStyle=document.createElement('style');printStyle.textContent='@media print{#bbBatchOriginalStatus{display:none!important}}';document.head.append(printStyle);
  actions.style.flexWrap='wrap';
  actions.append(share,save);
  actions.after(status);
