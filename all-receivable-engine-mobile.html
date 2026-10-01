@@ -45,7 +45,7 @@
 
     if(!html.includes('</body>'))throw new Error('A/R document body missing for Real Invoice viewer.');
     html=html.replace('</body>', '<scr'+'ipt src="receivable-real-invoice-view-v1.js?v=20261001-downloadshare5"></scr'+'ipt></body>');
-    html=html.replace('</body>', '<scr'+'ipt src="receivable-batch-real-invoice-v1.js?v=20261001-batchreal1"></scr'+'ipt></body>');
+    html=html.replace('</body>', '<scr'+'ipt src="receivable-batch-real-invoice-v1.js?v=20261001-batchreal2"></scr'+'ipt></body>');
     document.open();
     document.write(html);
     document.close();
