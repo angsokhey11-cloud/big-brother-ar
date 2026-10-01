@@ -89,6 +89,11 @@ function install(){
  if(typeof renderRows!=='function'||typeof loadAR!=='function'){setTimeout(install,150);return}
  const baseRender=renderRows;renderRows=function(){const result=baseRender.apply(this,arguments);decorate();return result};
  const baseLoad=loadAR;loadAR=async function(){const result=await baseLoad.apply(this,arguments);await refresh();return result};
+ const tbody=document.getElementById('arBody');
+ if(tbody){
+  const observer=new MutationObserver(()=>{void refresh()});
+  observer.observe(tbody,{childList:true});
+ }
  setTimeout(refresh,1300);
  document.addEventListener('visibilitychange',()=>{if(!document.hidden){currentSignature='';void refresh()}});
 }
