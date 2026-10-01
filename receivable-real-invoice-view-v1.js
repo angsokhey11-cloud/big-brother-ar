@@ -15,7 +15,7 @@ function inject(){
  '.bb-original-head strong{font-size:14px;color:#18476f}.bb-original-head button{background:#e4f0fc;color:#174f81;border:0;border-radius:8px;font-weight:bold;padding:9px;cursor:pointer}',
  '.bb-original-body{min-height:0;overflow:auto;display:flex;justify-content:center;align-items:start;padding:8px;background:#edf3f9}',
  '.bb-original-body img{display:block;max-width:100%;height:auto;object-fit:contain}.bb-original-body iframe{display:block;width:100%;height:min(75dvh,850px);border:0;background:white}',
- '@media(max-width:700px){#arBody > tr > td:nth-child(11){flex-wrap:wrap!important;gap:5px!important;justify-content:flex-end!important}#arBody .bb-original-btn{max-width:100%!important;font-size:9px!important;padding:7px!important}.bb-original-panel{max-height:93dvh}.bb-original-head{padding:8px}.bb-original-body{padding:4px}}'
+ '@media(max-width:700px){#arBody > tr.bb-has-original{grid-template-areas:"check inv customer status" ". invdate duedate action" ". location location action" ". total paid outstanding" ". original original original"!important}#arBody > tr > td.bb-original-mobile-row{grid-area:original!important;display:flex!important;justify-content:flex-end!important;align-items:center!important;padding:5px 0 0!important;min-width:0!important;border-top:1px solid #e8edf5!important;margin-top:5px!important}#arBody .bb-original-btn{width:auto!important;max-width:100%!important;font-size:10px!important;white-space:nowrap!important;padding:7px 10px!important}#arBody > tr > td:nth-child(11){flex-wrap:nowrap!important;justify-content:flex-end!important} .bb-original-panel{max-height:93dvh}.bb-original-head{padding:8px}.bb-original-body{padding:4px}}'
  ].join('\n');
  document.head.appendChild(s);
 }
@@ -34,13 +34,25 @@ function decorate(){
  if(typeof visibleRows==='undefined'||!Array.isArray(visibleRows))return;
  const trs=document.querySelectorAll('#arBody > tr');
  visibleRows.forEach((r,i)=>{
-  const cell=trs[i]?.lastElementChild;if(!cell||!r?.invoiceId)return;
-  cell.querySelectorAll('.bb-original-btn').forEach(b=>b.remove());
+  const tr=trs[i];if(!tr||!r?.invoiceId)return;
+  tr.querySelectorAll('.bb-original-btn').forEach(b=>b.remove());
+  tr.querySelectorAll('.bb-original-mobile-row').forEach(td=>td.remove());
+  tr.classList.remove('bb-has-original');
   if(!available.has(String(r.invoiceId)))return;
   const button=document.createElement('button');button.type='button';button.className='bb-original-btn';
   button.textContent='📎 View Real Invoice';button.title='View the uploaded original paper invoice';
   button.onclick=()=>open(String(r.invoiceId),String(r.invoiceNo||''),String(r.customer||''));
-  cell.appendChild(button);
+  const mobile=window.matchMedia('(max-width:700px)').matches;
+  if(mobile){
+    const td=document.createElement('td');
+    td.className='bb-original-mobile-row';
+    td.appendChild(button);
+    tr.classList.add('bb-has-original');
+    tr.appendChild(td);
+  }else{
+    const action=tr.children[10];
+    if(action)action.appendChild(button);
+  }
  });
 }
 async function refresh(){
