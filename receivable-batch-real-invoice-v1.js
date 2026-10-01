@@ -81,8 +81,8 @@ async function build(){
   ].join('\n');
   packageData={files,filename,manifestText,missing,customer,signature};
   previousSignature=signature;
-  buttonsBusy(false);
-  indicator((files.length-1)+' originals ready'+(missing.length?' · Missing: '+missing.join(', '):' · All selected originals included')+'. Summary image included.');
+  buttonsBusy(files.length<=1);
+  indicator((files.length-1)+' originals ready'+(missing.length?' · Missing: '+missing.join(', '):' · All selected originals included')+'. '+(files.length<=1?'Upload an original first, or use the existing Summary sharing button.':'Summary image included.'));
  }catch(e){
   if(seq!==buildSeq)return;
   packageData=null;buttonsBusy(true);indicator(e.message||'Could not prepare original invoice package.',true);
@@ -188,9 +188,10 @@ function init(){
  const save=document.createElement('button');save.type='button';save.id='bbDownloadSummaryOriginals';
  save.className='btn summary-save-device-btn';save.textContent='⬇ Download Package';save.disabled=true;
  const status=document.createElement('div');status.id='bbBatchOriginalStatus';status.setAttribute('role','status');
- status.style.cssText='font:12px Arial;line-height:1.4;color:#41617f;text-align:right;flex-basis:100%;order:10;overflow-wrap:anywhere';
+ status.style.cssText='font:12px Arial;line-height:1.4;color:#41617f;text-align:right;padding:4px 2px 8px;overflow-wrap:anywhere';
  actions.style.flexWrap='wrap';
- actions.append(share,save,status);
+ actions.append(share,save);
+ actions.after(status);
  share.addEventListener('click',()=>void shareBatch());save.addEventListener('click',()=>void downloadBatch());
  const overlay=$('summaryOverlay');
  let wasOpen=visible();
