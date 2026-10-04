@@ -592,12 +592,16 @@ async function createSummaryImageBlob(){
   document.body.appendChild(wrapper);
 
   try{
-    const canvas=await html2canvas(clone,{
+    const renderPromise=html2canvas(clone,{
       backgroundColor:"#ffffff",
-      scale:Math.min(3,Math.max(2,window.devicePixelRatio||1)),
+      scale:2,
       useCORS:true,
       logging:false
     });
+    const canvas=await Promise.race([
+      renderPromise,
+      new Promise((_,reject)=>setTimeout(()=>reject(new Error("Summary picture preparation timed out. Please retry.")),20000))
+    ]);
 
     return await new Promise((resolve,reject)=>{
       canvas.toBlob(
