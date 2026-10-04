@@ -28,9 +28,17 @@ async function storageFile(row){
  const ss=JSON.parse(localStorage.getItem('BB_SUPABASE_DEV_SESSION_V1')||'null');
  if(!ss?.access_token)throw Error('Your session expired. Please sign in again.');
  const path=row.path.split('/').map(encodeURIComponent).join('/');
- const res=await fetch(BASE+'/storage/v1/object/authenticated/'+BUCKET+'/'+path,{
-  headers:{apikey:KEY,Authorization:'Bearer '+ss.access_token},cache:'no-store'
- });
+ const controller=new AbortController();
+ const timer=setTimeout(()=>controller.abort(),20000);
+ let res;
+ try{
+  res=await fetch(BASE+'/storage/v1/object/authenticated/'+BUCKET+'/'+path,{
+   headers:{apikey:KEY,Authorization:'Bearer '+ss.access_token},cache:'no-store',signal:controller.signal
+  });
+ }catch(error){
+  if(error?.name==='AbortError')throw Error('Loading original '+row.invoiceNo+' timed out. Please retry.');
+  throw error;
+ }finally{clearTimeout(timer)}
  if(!res.ok)throw Error('Could not load original '+row.invoiceNo+'. Please refresh and retry.');
  const blob=await res.blob();
  const extension=String(row.path).split('.').pop().toLowerCase();
@@ -51,13 +59,17 @@ async function build(){
   if(typeof createSummaryImageBlob!=='function')throw Error('Customer summary image is unavailable.');
   const ids=chosenRows.map(r=>String(r.invoiceId||'')).filter(Boolean);
   if(ids.length!==chosenRows.length)throw Error('Some selected invoices have no internal Invoice ID.');
-  const manifest=await window.BBARAdapter.rpc('bb_ar_original_manifest',{p_invoice_ids:ids});
+  const manifestPromise=Promise.race([
+   window.BBARAdapter.rpc('bb_ar_original_manifest',{p_invoice_ids:ids}),
+   new Promise((_,reject)=>setTimeout(()=>reject(Error('Checking original uploads timed out. Please retry.')),15000))
+  ]);
+  const summaryPromise=createSummaryImageBlob();
+  const [manifest,summaryBlob]=await Promise.all([manifestPromise,summaryPromise]);
   if(!Array.isArray(manifest))throw Error('Could not read the permitted invoice originals.');
   const permitted=new Map(manifest.map(row=>[String(row.invoiceId),row]));
   const missing=chosenRows.filter(r=>!permitted.has(String(r.invoiceId))).map(r=>String(r.invoiceNo));
   const customer=String(chosenRows[0].customer||'Customer');
   const filename='BIG_BROTHER_'+safe(customer)+'_Summary_'+new Date().toISOString().slice(0,10);
-  const summaryBlob=await createSummaryImageBlob();
   if(seq!==buildSeq||!visible())return;
   const files=[new File([summaryBlob],filename+'.png',{type:'image/png'})];
   let size=summaryBlob.size;
