@@ -41,7 +41,7 @@ body{padding:20px}.wrap{max-width:1500px;margin:0 auto}.topbar{display:flex;just
     <div class="view-banner" id="viewBanner">Secure Credit receivable access.</div>
     <div class="filters">
       <input id="searchBox" placeholder="Search invoice no." oninput="filterChanged()">
-      <input id="customerFilter" placeholder="Filter customer name" oninput="filterChanged()">
+      <input id="customerFilter" type="search" name="bb_ar_customer_lookup" placeholder="Filter customer name" autocomplete="off" autocapitalize="none" spellcheck="false" data-form-type="other" data-lpignore="true" data-1p-ignore="true" readonly onfocus="this.removeAttribute('readonly')" onpointerdown="this.removeAttribute('readonly')" oninput="filterChanged()">
       <select id="locationFilter" onchange="filterChanged()"><option value="">All permitted locations</option></select>
       <select id="currencyFilter" onchange="filterChanged()"><option value="">All currencies</option><option value="USD">USD ($)</option><option value="KHR">KHR (៛)</option></select>
       <select id="statusFilter" onchange="filterChanged()"><option value="">All status</option><option value="Outstanding">Outstanding</option><option value="Overdue">Overdue</option><option value="Processing">Processing</option></select>
