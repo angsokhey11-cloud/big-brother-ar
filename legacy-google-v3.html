@@ -1356,7 +1356,11 @@ async function clearRequest(){
 async function rejectRequest(){
   if(!currentRequest)return;
   const btn=$('rejectRequestBtn'),clearBtn=$('clearRequestBtn'),reason=$('rejectReason').value.trim();
-  if(!confirm(`Reject request ${currentRequest.requestId}?\n\nThe invoice balance will NOT change and the salesman can request it again.`))return;
+  const rejectMessage=`Reject request ${currentRequest.requestId}?\n\nThe invoice balance will NOT change and the salesman can request it again.`;
+  const rejectOk=window.bbConfirm
+    ? await window.bbConfirm(rejectMessage,{title:"Reject Receivable Request",okText:"Reject Request",cancelText:"Cancel"})
+    : confirm(rejectMessage);
+  if(!rejectOk)return;
   btn.disabled=true;clearBtn.disabled=true;btn.textContent='Rejecting…';$('requestReviewError').classList.remove('show');
   try{
     const d=await apiPost({action:'arRejectRequest',requestData:JSON.stringify({sessionToken,requestId:currentRequest.requestId,reason})});
