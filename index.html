@@ -15,7 +15,7 @@
     let html=await response.text();
 
     const adapter='<scr'+'ipt src="https://angsokhey11-cloud.github.io/big-brother-dashboard/bb-system-dialog-v1.js?v=20261005-dialog2"></scr'+'ipt>\n'
-      +'<scr'+'ipt src="supabase-ar-adapter.js?v=20260930-invoiceid1"></scr'+'ipt>\n'
+      +'<scr'+'ipt src="supabase-ar-adapter.js?v=20261007-sharedstorage1"></scr'+'ipt>\n'
       +'<scr'+'ipt src="receivable-backup-v1.js?v=20260916-5"></scr'+'ipt>\n'
       +'<scr'+'ipt src="receivable-telegram-v1.js?v=20260920-artelegram1"></scr'+'ipt>';
     const authCutover='<style id="bb-ar-auth-cutover">#singleAdminField,#batchAdminField{display:none!important}</style>';
@@ -41,8 +41,8 @@
     html=html.replaceAll('Secure Credit receivable access.','Secure Supabase receivable access.');
     // Shared, invoice-ID-safe paper original viewer. Loads after A/R core functions.
     if(!html.includes('</body>'))throw new Error('A/R document body missing for Real Invoice viewer.');
-    html=html.replace('</body>', '<scr'+'ipt src="receivable-real-invoice-view-v1.js?v=20261007-localblobpreview1"></scr'+'ipt></body>');
-    html=html.replace('</body>', '<scr'+'ipt src="receivable-batch-real-invoice-v1.js?v=20261004-package-timeout1"></scr'+'ipt></body>');
+    html=html.replace('</body>', '<scr'+'ipt src="receivable-real-invoice-view-v1.js?v=20261007-sharedstorage1"></scr'+'ipt></body>');
+    html=html.replace('</body>', '<scr'+'ipt src="receivable-batch-real-invoice-v1.js?v=20261007-sharedstorage1"></scr'+'ipt></body>');
     // Admin-only historical opening A/R migration remains inside desktop All Receivable.
     if(new URLSearchParams(location.search).get('view')==='all'){
       html=html.replace('</body>', '<scr'+'ipt src="receivable-ar-migration-v1.js?v=20261001-arimport1"></scr'+'ipt></body>');
