@@ -89,9 +89,11 @@ async function originalFile(original){
  const session=JSON.parse(localStorage.getItem('BB_SUPABASE_DEV_SESSION_V1')||'null');
  if(!session?.access_token)throw Error('Please sign in again.');
  const path=original.path.split('/').map(encodeURIComponent).join('/');
- const response=await fetch(BASE+'/storage/v1/object/authenticated/'+BUCKET+'/'+path,{
-  headers:{apikey:KEY,Authorization:'Bearer '+session.access_token},cache:'no-store'
- });
+ const response=window.BBARAdapter?.authenticatedFetch
+  ? await window.BBARAdapter.authenticatedFetch('/storage/v1/object/authenticated/'+BUCKET+'/'+path,{cache:'no-store'})
+  : await fetch(BASE+'/storage/v1/object/authenticated/'+BUCKET+'/'+path,{
+     headers:{apikey:KEY,Authorization:'Bearer '+session.access_token},cache:'no-store'
+    });
  if(!response.ok)throw Error('The original could not be downloaded. Please refresh and try again.');
  const blob=await response.blob();
  const ext=filenameFor(original).split('.').pop();
