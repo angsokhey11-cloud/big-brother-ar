@@ -2,7 +2,7 @@
 (function(){
 'use strict';
 const BASE='https://sjfhlaclgmkwwofzstok.supabase.co',KEY='sb_publishable_w762jR65CWwlO30fKQsYOw_6L9grx8S',BUCKET='bb-real-invoices';
-let available=new Set(),currentSignature='',requestId=0,overlay=null,activeOriginal=null,activePreview=0,preparedFile=null;
+let available=new Set(),currentSignature='',requestId=0,overlay=null,activeOriginal=null,activePreview=0,preparedFile=null,activePreviewUrl='';
 function inject(){
  if(document.getElementById('bbAROriginalStyles'))return;
  const s=document.createElement('style');s.id='bbAROriginalStyles';s.textContent=[
@@ -26,7 +26,7 @@ function viewer(){
  inject();overlay=document.createElement('div');overlay.id='bbOriginalOverlay';overlay.hidden=true;
  overlay.innerHTML='<section class="bb-original-panel" role="dialog" aria-modal="true" aria-label="Original invoice"><div class="bb-original-head"><strong id="bbOriginalLabel">Original invoice</strong><div class="bb-original-actions"><button type="button" id="bbOriginalDownload">⬇ Download</button><button type="button" id="bbOriginalTelegram">✈ Share to Telegram</button><button type="button" id="bbOriginalClose">Close ✕</button></div></div><div class="bb-original-body" id="bbOriginalBody"></div><div id="bbOriginalHelp" class="bb-original-help" role="status" hidden></div></section>';
  document.body.appendChild(overlay);
- const close=()=>{overlay.hidden=true;activePreview++;activeOriginal=null;preparedFile=null;overlay.querySelector('#bbOriginalBody').replaceChildren();overlay.querySelector('#bbOriginalHelp').hidden=true;};
+ const close=()=>{overlay.hidden=true;activePreview++;activeOriginal=null;preparedFile=null;if(activePreviewUrl){URL.revokeObjectURL(activePreviewUrl);activePreviewUrl=''}overlay.querySelector('#bbOriginalBody').replaceChildren();overlay.querySelector('#bbOriginalHelp').hidden=true;};
  overlay.querySelector('#bbOriginalClose').onclick=close;
  overlay.querySelector('#bbOriginalDownload').onclick=()=>void downloadOriginal();
  overlay.querySelector('#bbOriginalTelegram').onclick=()=>void shareOriginal();
@@ -138,7 +138,8 @@ async function shareOriginal(){
 
 async function open(id,no,customer){
  const box=viewer(),body=box.querySelector('#bbOriginalBody'),sequence=++activePreview;
- activeOriginal=null;feedback('');
+ activeOriginal=null;preparedFile=null;feedback('');
+ if(activePreviewUrl){URL.revokeObjectURL(activePreviewUrl);activePreviewUrl=''}
  box.querySelector('#bbOriginalDownload').disabled=true;
  box.querySelector('#bbOriginalTelegram').disabled=true;
  box.querySelector('#bbOriginalLabel').textContent='Original: '+no+' · '+customer;
@@ -147,33 +148,32 @@ async function open(id,no,customer){
   await window.BBARAdapter.ensureSession();
   const doc=await window.BBARAdapter.rpc('bb_real_invoice_existing',{p_id:id});
   if(!doc?.path)throw Error('No accessible uploaded original for this invoice.');
-  const session=JSON.parse(localStorage.getItem('BB_SUPABASE_DEV_SESSION_V1')||'null');
-  if(!session?.access_token)throw Error('Please sign in again.');
-  const path=doc.path.split('/').map(encodeURIComponent).join('/');
-  const res=await fetch(BASE+'/storage/v1/object/sign/'+BUCKET+'/'+path,{
-   method:'POST',headers:{apikey:KEY,Authorization:'Bearer '+session.access_token,'Content-Type':'application/json'},
-   body:JSON.stringify({expiresIn:120}),cache:'no-store'
-  });
-  const value=await res.json();if(!res.ok||!value.signedURL)throw Error(value.message||value.error||'Unable to open original');
   if(box.hidden||sequence!==activePreview)return;
+
   activeOriginal={path:doc.path,no,customer};
-  preparedFile=null;
+
+  // Fetch the authenticated object once, then use the same bytes for
+  // preview, Download and Share. This works consistently on hosted
+  // Supabase and Local Brain without depending on signed-URL behavior.
+  const file=await originalFile(activeOriginal);
+  if(box.hidden||sequence!==activePreview)return;
+
+  preparedFile=file;
+  activePreviewUrl=URL.createObjectURL(file);
   box.querySelector('#bbOriginalDownload').disabled=false;
-  // Preload the file so native sharing can begin directly from the user tap.
-  // Waiting for a network request inside a click can lose browser share permission.
-  originalFile(activeOriginal).then(file=>{
-   if(sequence===activePreview&&!box.hidden){preparedFile=file;box.querySelector('#bbOriginalTelegram').disabled=false;}
-  }).catch(error=>{
-   if(sequence===activePreview&&!box.hidden)feedback('Download is available, but direct sharing is unavailable: '+error.message);
-  });
-  const signed=value.signedURL.startsWith('http')?value.signedURL:BASE+'/storage/v1'+value.signedURL;
+  box.querySelector('#bbOriginalTelegram').disabled=false;
+
   body.replaceChildren();
   if(/\.pdf$/i.test(doc.path)){
-   const frame=document.createElement('iframe');frame.src=signed;frame.title='Original invoice PDF';body.append(frame);
+   const frame=document.createElement('iframe');frame.src=activePreviewUrl;frame.title='Original invoice PDF';body.append(frame);
   }else{
-   const img=document.createElement('img');img.src=signed;img.alt='Original paper invoice';body.append(img);
+   const img=document.createElement('img');img.src=activePreviewUrl;img.alt='Original paper invoice';body.append(img);
   }
-}catch(e){body.textContent=e.message||'Could not open original invoice.'}
+ }catch(e){
+  if(activePreviewUrl){URL.revokeObjectURL(activePreviewUrl);activePreviewUrl=''}
+  preparedFile=null;
+  body.textContent=e.message||'Could not open original invoice.';
+ }
 }
 function install(){
  inject();
