@@ -64,6 +64,16 @@
     return session;
   }
 
+  async function authenticatedFetch(path,options={}){
+    await ensureSession();
+    const headers=Object.assign(
+      {apikey:KEY,Authorization:'Bearer '+session.access_token},
+      options.headers||{}
+    );
+    const response=await fetch(URL+path,Object.assign({},options,{headers}));
+    return response;
+  }
+
   async function rpc(fn,args={}){
     await ensureSession();
     const response=await fetch(URL+'/rest/v1/rpc/'+fn,{
@@ -142,7 +152,7 @@
     saveSession(null);
   }
 
-  window.BBARAdapter={rpc,apiPost,accessProfile,ensureSession,signOut};
+  window.BBARAdapter={rpc,apiPost,accessProfile,ensureSession,signOut,authenticatedFetch,baseUrl:URL,publishableKey:KEY};
 
   /* Load the audit/continuity backup only after the real Supabase adapter exists. */
   try{
