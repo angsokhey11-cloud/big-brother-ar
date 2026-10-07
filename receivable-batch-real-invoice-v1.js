@@ -32,9 +32,11 @@ async function storageFile(row){
  const timer=setTimeout(()=>controller.abort(),20000);
  let res;
  try{
-  res=await fetch(BASE+'/storage/v1/object/authenticated/'+BUCKET+'/'+path,{
-   headers:{apikey:KEY,Authorization:'Bearer '+ss.access_token},cache:'no-store',signal:controller.signal
-  });
+  res=window.BBARAdapter?.authenticatedFetch
+   ? await window.BBARAdapter.authenticatedFetch('/storage/v1/object/authenticated/'+BUCKET+'/'+path,{cache:'no-store',signal:controller.signal})
+   : await fetch(BASE+'/storage/v1/object/authenticated/'+BUCKET+'/'+path,{
+      headers:{apikey:KEY,Authorization:'Bearer '+ss.access_token},cache:'no-store',signal:controller.signal
+     });
  }catch(error){
   if(error?.name==='AbortError')throw Error('Loading original '+row.invoiceNo+' timed out. Please retry.');
   throw error;
