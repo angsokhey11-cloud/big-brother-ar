@@ -1,9 +1,11 @@
 (function(){
+let selectedSingle=null;
 function showWallet(){
  const bank=document.getElementById('bankFields');
  if(!bank)return;
  let panel=document.getElementById('bbWalletAR');
  if(!panel){panel=document.createElement('div');panel.id='bbWalletAR';bank.append(panel);}
+ selectedSingle=null;
  const item=typeof currentInvoice!=='undefined'?currentInvoice:null;
  if(!item||document.getElementById('payMethod')?.value!=='Bank'){panel.textContent='';return;}
  panel.textContent='Loading registered bank balances…';
@@ -16,6 +18,7 @@ function showWallet(){
      const line=document.createElement('div');line.style.margin='8px 0';
      const btn=document.createElement('button');btn.type='button';btn.textContent='Use '+x.transaction_id+' — remaining '+x.remaining_amount+' '+x.currency;
      btn.onclick=()=>{
+       selectedSingle={transactionId:x.transaction_id,rate:Number(x.approved_exchange_rate),customerId:item.customerId};
        document.getElementById('transactionId').value=x.transaction_id;
        if(x.bank_name)document.getElementById('payBank').value=x.bank_name;
        const a=document.getElementById('payAmount');
@@ -37,7 +40,7 @@ function showBatchWallet(){
  box.textContent='Checking registered bank balance…';
  window.BBARAdapter.rpc('bb_customer_bank_balance_list_v2',{p_customer_id:ids[0]}).then(rows=>{
   box.replaceChildren();
-  const valid=(Array.isArray(rows)?rows:[]).filter(x=>x.invoice_currency===currency&&Number(x.remaining_amount)>0);
+  const valid=(Array.isArray(rows)?rows:[]).filter(x=>x.invoice_currency===currency&&x.currency===currency&&Number(x.remaining_amount)>0);
   if(!valid.length){box.textContent='No available registered bank balance for these invoices.';return;}
   const title=document.createElement('strong');title.textContent='Available Registered Bank Balance';box.append(title);
   valid.forEach(x=>{
@@ -59,6 +62,17 @@ function install(){
  const original=window.openPayment;
  if(typeof original==='function')window.openPayment=async function(...args){const r=await original.apply(this,args);showWallet();return r;};
  document.getElementById('payMethod')?.addEventListener('change',showWallet);
+ const originalApi=window.apiPost;
+ if(typeof originalApi==='function')window.apiPost=async function(params){
+  if(params?.action==='arPayment'&&selectedSingle&&params.paymentData){
+   try{const d=JSON.parse(params.paymentData);
+    if(d.paymentMethod==='Bank'&&d.transactionId===selectedSingle.transactionId&&d.customerId===selectedSingle.customerId){
+     d.exchangeRate=selectedSingle.rate;params={...params,paymentData:JSON.stringify(d)};
+    }
+   }catch(_){}
+  }
+  return originalApi.call(this,params);
+ };
  const oldBatch=window.openBatchPayment;
  if(typeof oldBatch==='function')window.openBatchPayment=function(...args){const result=oldBatch.apply(this,args);showBatchWallet();return result;};
  document.getElementById('batchMethod')?.addEventListener('change',showBatchWallet);
