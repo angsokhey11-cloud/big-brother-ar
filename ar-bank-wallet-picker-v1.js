@@ -1,6 +1,24 @@
 (function(){
 let selectedSingle=null;
+function protectTransactionIdFields(){
+ // The actual Admin status comes from the authenticated A/R access profile.
+ // Read-only is fail-closed while the profile loads; Supabase also guards writes.
+ const admin=typeof sessionProfile!=='undefined'&&sessionProfile?.role==='admin';
+ for(const fieldId of ['transactionId','batchTransactionId','reviewTransactionId']){
+  const input=document.getElementById(fieldId);
+  if(!input)continue;
+  input.readOnly=!admin;
+  input.setAttribute('aria-readonly',String(!admin));
+  input.placeholder=admin?'Enter manual Transaction ID or choose Use':'Choose an Admin-registered transaction (manual ID locked)';
+  const noteId='bbManualIdNote_'+fieldId;
+  let note=document.getElementById(noteId);
+  if(!note){note=document.createElement('div');note.id=noteId;note.style.cssText='font-size:11px;line-height:1.4;color:#5d7087;margin-top:4px';input.insertAdjacentElement('afterend',note);}
+  note.textContent=admin?'Admin: manual Transaction ID permitted.':'Staff: manual Transaction ID locked. Select Use for a registered balance or ask Admin to register a new payment.';
+ }
+}
+
 function showWallet(){
+ protectTransactionIdFields();
  const bank=document.getElementById('bankFields');
  if(!bank)return;
  let panel=document.getElementById('bbWalletAR');
@@ -12,9 +30,9 @@ function showWallet(){
  window.BBARAdapter.rpc('bb_customer_bank_balance_list_v2',{p_customer_id:item.customerId}).then(rows=>{
    panel.replaceChildren();
    const valid=(Array.isArray(rows)?rows:[]).filter(x=>x.invoice_currency===item.currency&&Number(x.remaining_amount)>0);
-   if(!valid.length){panel.textContent='No registered bank balance for this customer.';return;}
+   if(!valid.length){panel.textContent='No registered bank balance for this customer. Staff should ask Admin to register a new bank payment.';return;}
    const heading=document.createElement('strong');heading.textContent='Available Registered Bank Balance (optional)';panel.append(heading);
-   const hint=document.createElement('div');hint.textContent='Use a listed balance only if it belongs to this collection; otherwise enter a new Transaction ID manually above.';hint.style.cssText='font-size:12px;color:#61768c;margin-top:5px';panel.append(hint);
+   const hint=document.createElement('div');hint.textContent='Use a listed balance only when it belongs to this collection. Admin can enter a new Transaction ID manually; staff must ask Admin to register a different transfer.';hint.style.cssText='font-size:12px;color:#61768c;margin-top:5px';panel.append(hint);
    valid.forEach(x=>{
      const line=document.createElement('div');line.style.margin='8px 0';
      const btn=document.createElement('button');btn.type='button';btn.textContent='Use '+x.transaction_id+' — remaining '+x.remaining_amount+' '+x.currency;
@@ -30,6 +48,7 @@ function showWallet(){
  }).catch(e=>{panel.textContent='Balance unavailable: '+String(e.message||e)});
 }
 function showBatchWallet(){
+ protectTransactionIdFields();
  const bank=document.getElementById('batchBankFields');if(!bank)return;
  let box=document.getElementById('bbWalletBatch');
  if(!box){box=document.createElement('div');box.id='bbWalletBatch';bank.append(box);}
@@ -42,9 +61,9 @@ function showBatchWallet(){
  window.BBARAdapter.rpc('bb_customer_bank_balance_list_v2',{p_customer_id:ids[0]}).then(rows=>{
   box.replaceChildren();
   const valid=(Array.isArray(rows)?rows:[]).filter(x=>x.invoice_currency===currency&&x.currency===currency&&Number(x.remaining_amount)>0);
-  if(!valid.length){box.textContent='No available registered bank balance for these invoices.';return;}
+  if(!valid.length){box.textContent='No available registered bank balance for these invoices. Staff should ask Admin to register a new transfer.';return;}
   const title=document.createElement('strong');title.textContent='Available Registered Bank Balance (optional)';box.append(title);
-  const hint=document.createElement('div');hint.textContent='Optional: Use a registered balance or enter a different Transaction ID above.';hint.style.cssText='font-size:12px;color:#61768c;margin-top:5px';box.append(hint);
+  const hint=document.createElement('div');hint.textContent='Optional: select Use for a related registered balance. Only Admin can enter a new Transaction ID.';hint.style.cssText='font-size:12px;color:#61768c;margin-top:5px';box.append(hint);
   valid.forEach(x=>{
    const row=document.createElement('div');row.style.margin='8px 0';
    const button=document.createElement('button');button.type='button';
@@ -61,6 +80,7 @@ function showBatchWallet(){
  }).catch(e=>box.textContent='Bank balance unavailable: '+String(e.message||e));
 }
 function install(){
+ protectTransactionIdFields();
  const original=window.openPayment;
  if(typeof original==='function')window.openPayment=async function(...args){const r=await original.apply(this,args);showWallet();return r;};
  document.getElementById('payMethod')?.addEventListener('change',showWallet);
@@ -78,6 +98,13 @@ function install(){
  const oldBatch=window.openBatchPayment;
  if(typeof oldBatch==='function')window.openBatchPayment=function(...args){const result=oldBatch.apply(this,args);showBatchWallet();return result;};
  document.getElementById('batchMethod')?.addEventListener('change',showBatchWallet);
+ const oldReview=window.openRequestReview;
+ if(typeof oldReview==='function')window.openRequestReview=async function(...args){
+  protectTransactionIdFields();
+  const response=await oldReview.apply(this,args);
+  protectTransactionIdFields();
+  return response;
+ };
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install);else install();
 })();
