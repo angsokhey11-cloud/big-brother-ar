@@ -13,7 +13,8 @@ function showWallet(){
    panel.replaceChildren();
    const valid=(Array.isArray(rows)?rows:[]).filter(x=>x.invoice_currency===item.currency&&Number(x.remaining_amount)>0);
    if(!valid.length){panel.textContent='No registered bank balance for this customer.';return;}
-   const heading=document.createElement('strong');heading.textContent='Available Registered Bank Balance';panel.append(heading);
+   const heading=document.createElement('strong');heading.textContent='Available Registered Bank Balance (optional)';panel.append(heading);
+   const hint=document.createElement('div');hint.textContent='Use a listed balance only if it belongs to this collection; otherwise enter a new Transaction ID manually above.';hint.style.cssText='font-size:12px;color:#61768c;margin-top:5px';panel.append(hint);
    valid.forEach(x=>{
      const line=document.createElement('div');line.style.margin='8px 0';
      const btn=document.createElement('button');btn.type='button';btn.textContent='Use '+x.transaction_id+' — remaining '+x.remaining_amount+' '+x.currency;
@@ -42,7 +43,8 @@ function showBatchWallet(){
   box.replaceChildren();
   const valid=(Array.isArray(rows)?rows:[]).filter(x=>x.invoice_currency===currency&&x.currency===currency&&Number(x.remaining_amount)>0);
   if(!valid.length){box.textContent='No available registered bank balance for these invoices.';return;}
-  const title=document.createElement('strong');title.textContent='Available Registered Bank Balance';box.append(title);
+  const title=document.createElement('strong');title.textContent='Available Registered Bank Balance (optional)';box.append(title);
+  const hint=document.createElement('div');hint.textContent='Optional: Use a registered balance or enter a different Transaction ID above.';hint.style.cssText='font-size:12px;color:#61768c;margin-top:5px';box.append(hint);
   valid.forEach(x=>{
    const row=document.createElement('div');row.style.margin='8px 0';
    const button=document.createElement('button');button.type='button';
