@@ -50,8 +50,7 @@ async function storageFile(row){
 }
 async function build(){
  const chosenRows=chosen();
- const customerKeys=[...new Set(chosenRows.map(r=>String(r.customer||'').trim().toLowerCase()))];
- if(!chosenRows.length||customerKeys.length!==1){indicator('Select invoices from one customer to create this package.',true);return}
+ if(!chosenRows.length){indicator('Select invoices to create this package.',true);return}
  if(chosenRows.length>MAX_FILES){
   indicator('Select up to '+MAX_FILES+' invoices per package, then send another batch.',true);return
  }
@@ -70,8 +69,9 @@ async function build(){
   if(!Array.isArray(manifest))throw Error('Could not read the permitted invoice originals.');
   const permitted=new Map(manifest.map(row=>[String(row.invoiceId),row]));
   const missing=chosenRows.filter(r=>!permitted.has(String(r.invoiceId))).map(r=>String(r.invoiceNo));
-  const customer=String(chosenRows[0].customer||'Customer');
-  const filename='BIG_BROTHER_'+safe(customer)+'_Summary_'+new Date().toISOString().slice(0,10);
+  const customers=[...new Set(chosenRows.map(r=>String(r.customer||'Customer').trim()))];
+  const customer=customers.length===1?customers[0]:customers.length+' Customers';
+  const filename='BIG_BROTHER_'+(customers.length===1?safe(customer):'Multi_Customer')+'_Summary_'+new Date().toISOString().slice(0,10);
   if(seq!==buildSeq||!visible())return;
   const files=[new File([summaryBlob],filename+'.png',{type:'image/png'})];
   let size=summaryBlob.size;
@@ -87,8 +87,8 @@ async function build(){
   }
   const manifestText=[
    'BIG BROTHER — Customer Invoice Summary + Real Invoices',
-   'Customer: '+customer,
-   'Selected invoices: '+chosenRows.map(r=>r.invoiceNo).join(', '),
+   'Customers: '+customers.join(', '),
+   'Selected invoices: '+chosenRows.map(r=>String(r.customer||'Customer')+' - '+String(r.invoiceNo)).join(', '),
    'Originals attached: '+(files.length-1),
    'Originals not uploaded or not accessible: '+(missing.length?missing.join(', '):'None'),
    'Each original is matched using its unique internal invoice ID.'
