@@ -406,7 +406,7 @@
     }
   }
 
-  window.BBARCustomerExcelV1={exportExcel:exportExcel,filterSelectedCustomers:filterSelectedCustomers,getSelectedNames:function(){return [...selectedCustomers];},setSelectedNames:function(names){selectedCustomers=new Set((names||[]).map(norm));}};
+  window.BBARCustomerExcelV1={exportExcel:exportExcel,filterSelectedCustomers:filterSelectedCustomers,getSelectedNames:function(){return [...selectedCustomers];},setSelectedNames:function(names){selectedCustomers=new Set((names||[]).map(norm));},clearSelection:function(){selectedCustomers.clear();if(customerInput)customerInput.value='';refreshCustomerMenu();}};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',installUI,{once:true});
   else installUI();
 })();
