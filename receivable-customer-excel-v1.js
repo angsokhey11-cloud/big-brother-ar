@@ -1,15 +1,14 @@
-/* BIG BROTHER A/R — pending customer chooser + standalone offline XLSX export.
-   Export always refetches authorized Supabase A/R rows; it never queries raw tables.
-   Location and customer filters apply; invoice/status/currency filters do not truncate
-   a customer's open-invoice ledger. No customer data is stored remotely. */
+/* BIG BROTHER A/R — multi-select pending customer filter + standalone offline XLSX.
+   Both table and export respect the user's authorized A/R view and location.
+   When customer checkboxes are selected, they replace free-text customer filtering.
+   The Excel export refetches authorized balances, then creates one sheet/customer. */
 (function(){
   'use strict';
   if(window.BBARCustomerExcelV1)return;
 
-  var chosenExact='';
-  var customerMenu, customerInput, customerWrap, customerArrow, exportButton;
-  var menuOpen=false;
-  var exportBusy=false;
+  var selectedCustomers=new Set();
+  var customerMenu,customerInput,customerWrap,customerArrow,exportButton;
+  var menuOpen=false,exportBusy=false;
 
   function id(name){return document.getElementById(name);}
   function str(v){return String(v==null?'':v).trim();}
@@ -22,7 +21,7 @@
   function filenameSafe(s){return str(s).replace(/[<>:"/\\|?*\x00-\x1f]/g,'_').slice(0,70)||'Accounts_Receivable';}
 
   function pendingCustomers(){
-    var loc=currentLocation(), found=new Map();
+    var loc=currentLocation(),found=new Map();
     (Array.isArray(rows)?rows:[]).forEach(function(r){
       if(!allowedLocation(r,loc)||!isOpen(r))return;
       var name=str(r.customer),key=norm(name);
@@ -32,52 +31,101 @@
     });
     return [...found.values()].sort(function(a,b){return a.name.localeCompare(b.name,undefined,{sensitivity:'base'});});
   }
+  function filterSelectedCustomers(list){
+    return selectedCustomers.size?list.filter(function(r){return selectedCustomers.has(norm(r.customer));}):list;
+  }
   function setMenu(open){
     menuOpen=!!open;
     if(customerMenu)customerMenu.hidden=!menuOpen;
     if(customerArrow)customerArrow.setAttribute('aria-expanded',String(menuOpen));
   }
+  function updateInputSummary(){
+    if(!customerInput)return;
+    var count=selectedCustomers.size;
+    customerInput.placeholder=count?(count+' customer'+(count===1?'':'s')+' selected · search to add'):'Search / choose pending customers';
+    customerInput.setAttribute('aria-label',count?(count+' customers selected. Search to add more.'):'Search or select pending customers');
+    if(customerWrap)customerWrap.classList.toggle('bb-ar-has-selection',count>0);
+  }
+  function pruneLocationSelections(){
+    if(!selectedCustomers.size)return;
+    var allowed=new Set(pendingCustomers().map(function(x){return norm(x.name);}));
+    for(var key of [...selectedCustomers])if(!allowed.has(key))selectedCustomers.delete(key);
+  }
+  function renderChanged(){
+    // Checked invoice selections must not survive changes to the customer scope.
+    if(typeof selectedInvoices!=='undefined')selectedInvoices.clear();
+    if(typeof renderRows==='function')renderRows();
+  }
   function displayOptions(showAll){
-    if(!customerMenu)return;
-    var needle=showAll?'':norm(customerInput?.value), choices=pendingCustomers().filter(function(x){
-      return !needle||norm(x.name).includes(needle);
-    });
+    if(!customerMenu||!customerInput)return;
+    var scrollTop=customerMenu.scrollTop;
+    var needle=showAll?'':norm(customerInput.value);
+    var options=pendingCustomers().filter(function(x){return !needle||norm(x.name).includes(needle);});
     customerMenu.replaceChildren();
-    if(!choices.length){
+
+    var tools=document.createElement('div');
+    tools.className='bb-ar-multi-actions';
+    var all=document.createElement('button');
+    all.type='button';all.className='bb-ar-multi-action';
+    all.textContent='All customers';
+    all.title='Clear customer checkboxes and view every customer in this location';
+    all.addEventListener('click',function(){
+      selectedCustomers.clear();
+      customerInput.value='';
+      renderChanged();
+      setMenu(true);
+    });
+    var selectShown=document.createElement('button');
+    selectShown.type='button';selectShown.className='bb-ar-multi-action';
+    selectShown.textContent='✓ Select shown ('+options.length+')';
+    selectShown.disabled=!options.length;
+    selectShown.title='Select every customer currently listed in this dropdown';
+    selectShown.addEventListener('click',function(){
+      options.forEach(function(x){selectedCustomers.add(norm(x.name));});
+      renderChanged();
+      setMenu(true);
+    });
+    var counter=document.createElement('span');
+    counter.className='bb-ar-multi-counter';
+    counter.textContent=selectedCustomers.size+' selected';
+    counter.setAttribute('aria-live','polite');
+    tools.append(all,selectShown,counter);
+    customerMenu.appendChild(tools);
+
+    if(!options.length){
       var none=document.createElement('div');
       none.className='bb-ar-customer-empty';
-      none.textContent='No pending customers in this location';
+      none.textContent='No pending customers match this search';
       customerMenu.appendChild(none);
-      return;
     }
-    var all=document.createElement('button');
-    all.type='button';all.className='bb-ar-customer-option bb-ar-customer-all';
-    all.textContent='All pending customers';
-    all.addEventListener('click',function(){
-      chosenExact='';customerInput.value='';setMenu(false);filterChanged();
-    });
-    customerMenu.appendChild(all);
-    choices.forEach(function(x){
-      var b=document.createElement('button');
-      b.type='button';b.className='bb-ar-customer-option';b.title=x.name;
-      var name=document.createElement('span');name.className='bb-ar-name';name.textContent=x.name;
-      var count=document.createElement('span');count.className='bb-ar-count';count.textContent=x.count+' invoice'+(x.count===1?'':'s');
-      b.append(name,count);
-      b.addEventListener('click',function(){
-        chosenExact=norm(x.name);customerInput.value=x.name;setMenu(false);filterChanged();
+
+    options.forEach(function(x){
+      var item=document.createElement('label');
+      item.className='bb-ar-customer-option bb-ar-check-option';
+      item.title=x.name;
+      var checkbox=document.createElement('input');
+      checkbox.type='checkbox';
+      checkbox.checked=selectedCustomers.has(norm(x.name));
+      checkbox.setAttribute('aria-label','Include '+x.name+' in customer review');
+      var name=document.createElement('span');
+      name.className='bb-ar-name';name.textContent=x.name;
+      var count=document.createElement('span');
+      count.className='bb-ar-count';count.textContent=x.count+' invoice'+(x.count===1?'':'s');
+      item.append(checkbox,name,count);
+      checkbox.addEventListener('change',function(){
+        var key=norm(x.name);
+        if(checkbox.checked)selectedCustomers.add(key);
+        else selectedCustomers.delete(key);
+        renderChanged();
+        setMenu(true);
       });
-      customerMenu.appendChild(b);
+      customerMenu.appendChild(item);
     });
+    customerMenu.scrollTop=scrollTop;
   }
   function refreshCustomerMenu(){
-    if(!customerInput)return;
-    if(chosenExact&&!pendingCustomers().some(function(x){return norm(x.name)===chosenExact;})){
-      chosenExact='';customerInput.value='';
-      // Location changed: discard a customer that is no longer in the permitted scope.
-      // The caller's original renderRows already ran; rerender once with the cleared filter.
-      if(typeof filterChanged==='function')filterChanged();
-      return;
-    }
+    pruneLocationSelections();
+    updateInputSummary();
     displayOptions(false);
   }
 
@@ -90,13 +138,14 @@
     customerWrap.className='bb-ar-customer-combo';
     customerInput.parentNode.insertBefore(customerWrap,customerInput);
     customerWrap.appendChild(customerInput);
-    customerInput.setAttribute('aria-label','Search or choose a pending customer');
-    customerInput.setAttribute('placeholder','Search / choose pending customer');
+    customerInput.removeAttribute('readonly');
+    customerInput.removeAttribute('list'); // no native datalist on top of the checkbox list
+    customerInput.setAttribute('aria-label','Search or select pending customers');
 
     customerArrow=document.createElement('button');
     customerArrow.type='button';
     customerArrow.className='bb-ar-customer-arrow';
-    customerArrow.setAttribute('aria-label','Show pending customer names');
+    customerArrow.setAttribute('aria-label','Show pending customers and checkboxes');
     customerArrow.setAttribute('aria-haspopup','listbox');
     customerArrow.setAttribute('aria-expanded','false');
     customerArrow.textContent='▾';
@@ -104,7 +153,8 @@
 
     customerMenu=document.createElement('div');
     customerMenu.className='bb-ar-customer-menu';
-    customerMenu.setAttribute('role','listbox');
+    customerMenu.setAttribute('role','group');
+    customerMenu.setAttribute('aria-label','Pending customer multiple selection');
     customerMenu.hidden=true;
     customerWrap.appendChild(customerMenu);
 
@@ -114,23 +164,18 @@
       displayOptions(true);setMenu(true);
     });
     customerInput.addEventListener('focus',function(){displayOptions(false);setMenu(true);});
-    customerInput.addEventListener('input',function(){
-      chosenExact='';
-      displayOptions(false);
-      setMenu(true);
-    });
+    customerInput.addEventListener('input',function(){displayOptions(false);setMenu(true);});
     customerInput.addEventListener('keydown',function(ev){
       if(ev.key==='Escape')setMenu(false);
     });
     document.addEventListener('pointerdown',function(ev){
       if(customerWrap&&!customerWrap.contains(ev.target))setMenu(false);
     });
-    id('locationFilter')?.addEventListener('change',function(){refreshCustomerMenu();});
 
     var bar=document.createElement('div');
     bar.className='bb-ar-export-bar';
     var hint=document.createElement('span');
-    hint.textContent='Excel: all outstanding invoices · 1 sheet per customer · selected permitted location';
+    hint.textContent='Excel: selected customers · all outstanding invoices · one sheet each';
     exportButton=document.createElement('button');
     exportButton.type='button';exportButton.id='bbArExcelExport';
     exportButton.className='btn bb-ar-export-btn';
@@ -144,14 +189,19 @@
     styles.textContent=[
       '.bb-ar-customer-combo{position:relative;min-width:0;width:100%}',
       '.bb-ar-customer-combo #customerFilter{padding-right:37px;width:100%;box-sizing:border-box}',
+      '.bb-ar-customer-combo.bb-ar-has-selection #customerFilter::placeholder{color:#145b9b;opacity:1;font-weight:750}',
       '.bb-ar-customer-arrow{position:absolute;top:1px;right:1px;bottom:1px;width:36px;z-index:2;border:0;border-left:1px solid #cbd6e3;border-radius:0 8px 8px 0;background:#edf5ff;color:#17457a;font-size:21px;cursor:pointer}',
-      '.bb-ar-customer-menu{position:absolute;z-index:1200;top:calc(100% + 3px);left:0;right:0;min-width:min(340px,88vw);max-height:280px;overflow:auto;background:#fff;border:1px solid #9ebcdd;box-shadow:0 10px 28px #163b6933;border-radius:10px;padding:4px}',
+      '.bb-ar-customer-menu{position:absolute;z-index:1200;top:calc(100% + 3px);left:0;right:0;min-width:min(365px,88vw);max-height:min(45vh,330px);overflow:auto;background:#fff;border:1px solid #9ebcdd;box-shadow:0 10px 28px #163b6933;border-radius:10px;padding:4px}',
       '.bb-ar-customer-menu[hidden]{display:none!important}',
-      '.bb-ar-customer-option{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px 10px;border:0;background:#fff;color:#20384f;text-align:left;cursor:pointer;width:100%;font-size:13px;border-radius:6px}',
-      '.bb-ar-customer-option:hover,.bb-ar-customer-option:focus{background:#eaf3ff}',
-      '.bb-ar-name{font-family:"Noto Sans Khmer","Khmer OS System",Arial,sans-serif;white-space:normal}',
+      '.bb-ar-multi-actions{display:flex;align-items:center;gap:5px;flex-wrap:wrap;position:sticky;top:-4px;z-index:1;padding:6px 3px;background:#fff;border-bottom:1px solid #dce8f5}',
+      '.bb-ar-multi-action{background:#edf5ff;border:1px solid #d7e6f7;border-radius:6px;color:#1759a1;font:700 11px Arial,sans-serif;padding:6px;cursor:pointer}',
+      '.bb-ar-multi-action:disabled{opacity:.5}',
+      '.bb-ar-multi-counter{font:700 10px Arial,sans-serif;color:#536c86;margin-left:auto}',
+      '.bb-ar-customer-option{display:flex;align-items:center;gap:9px;padding:9px 10px;border:0;background:#fff;color:#20384f;text-align:left;cursor:pointer;width:100%;box-sizing:border-box;font-size:13px;border-radius:6px}',
+      '.bb-ar-customer-option:hover,.bb-ar-customer-option:focus-within{background:#eaf3ff}',
+      '.bb-ar-customer-option input[type="checkbox"]{appearance:auto!important;flex:0 0 16px!important;width:16px!important;height:16px!important;margin:0!important;padding:0!important;accent-color:#175ba2;cursor:pointer}',
+      '.bb-ar-name{font-family:"Noto Sans Khmer","Khmer OS System",Arial,sans-serif;white-space:normal;flex:1;min-width:0}',
       '.bb-ar-count{flex:none;font-size:11px;color:#65788d}',
-      '.bb-ar-customer-all{font-weight:750;color:#1759a1;border-bottom:1px solid #dbe5f0}',
       '.bb-ar-customer-empty{padding:12px;color:#718097;font-size:12px}',
       '.bb-ar-export-bar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;padding:8px 14px;border-bottom:1px solid #e1eaf5;background:#fafcff}',
       '.bb-ar-export-bar span{color:#516984;font-size:11px;font-weight:600}',
@@ -161,10 +211,26 @@
     ].join('\n');
     document.head.appendChild(styles);
 
-    // This global renderer is invoked both after initial data load and every 20s sync.
+    // The original A/R renderer calculates table + totals from "rows".
+    // Apply the checkbox scope only for that synchronous render; restore the
+    // complete authorized list afterward for payment actions and Excel export.
     var originalRender=window.renderRows;
     if(typeof originalRender==='function'){
-      window.renderRows=function(){var out=originalRender.apply(this,arguments);refreshCustomerMenu();return out;};
+      window.renderRows=function(){
+        pruneLocationSelections();
+        var allRows=rows;
+        var originalSearch=customerInput.value;
+        if(selectedCustomers.size){
+          rows=filterSelectedCustomers(allRows);
+          customerInput.value=''; // legacy text search must not remove other checked customers
+        }
+        try{return originalRender.apply(this,arguments);}
+        finally{
+          rows=allRows;
+          customerInput.value=originalSearch;
+          refreshCustomerMenu();
+        }
+      };
     }
     refreshCustomerMenu();
     return true;
@@ -308,13 +374,13 @@
     exportBusy=true;exportButton.disabled=true;exportButton.textContent='Preparing Excel…';
     try{
       if(typeof apiPost!=='function'||!sessionToken)throw new Error('A/R session is not ready.');
-      var loc=currentLocation(),typed=norm(customerInput?.value);
+      var loc=currentLocation(),typed=selectedCustomers.size?'':norm(customerInput?.value);
       var result=await apiPost({action:'arList',sessionToken:sessionToken,view:VIEW});
       if(!result||result.success!==true||!Array.isArray(result.receivables))throw new Error(result?.error||'Could not refresh authorized outstanding invoices.');
       var authorized=result.receivables.filter(function(r){
         if(!allowedLocation(r,loc)||!isOpen(r))return false;
         var key=norm(r.customer);
-        return !typed||(chosenExact?key===chosenExact:key.includes(typed));
+        return selectedCustomers.size?selectedCustomers.has(key):(!typed||key.includes(typed));
       });
       if(!authorized.length){alert('No outstanding invoices for the selected customer/location.');return;}
       var groups=new Map();
@@ -340,7 +406,7 @@
     }
   }
 
-  window.BBARCustomerExcelV1={exportExcel:exportExcel};
+  window.BBARCustomerExcelV1={exportExcel:exportExcel,filterSelectedCustomers:filterSelectedCustomers,getSelectedNames:function(){return [...selectedCustomers];},setSelectedNames:function(names){selectedCustomers=new Set((names||[]).map(norm));}};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',installUI,{once:true});
   else installUI();
 })();
