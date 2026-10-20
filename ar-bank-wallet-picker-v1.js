@@ -18,6 +18,14 @@ function protectTransactionIdFields(){
 }
 
 function bankSnapshot(customerId){try{const s=JSON.parse(localStorage.getItem('BB_SUPABASE_DEV_SESSION_V1')||'null');const t=s?.access_token||'';const sub=JSON.parse(atob(t.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))).sub;if(!sub)return null;const data=JSON.parse(localStorage.getItem('bb-bank-bulk-v1:'+sub)||'null');if(!data)return null;return (data.rows||[]).filter(x=>String(x.customer_id)===String(customerId)&&Number(x.remaining_amount)>0);}catch(_){return null;}}
+function removeUsedBankCache(customerId,transactionId){
+ try{const s=JSON.parse(localStorage.getItem('BB_SUPABASE_DEV_SESSION_V1')||'null');const sub=JSON.parse(atob((s?.access_token||'').split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))).sub;
+ if(!sub||!customerId||!transactionId)return;
+ const key='bb-bank-bulk-v1:'+sub;const saved=JSON.parse(localStorage.getItem(key)||'null');if(!saved)return;
+ saved.rows=(saved.rows||[]).filter(x=>!(String(x.customer_id)===String(customerId)&&String(x.transaction_id)===String(transactionId)));
+ localStorage.setItem(key,JSON.stringify(saved));
+ }catch(_){}
+}
 function showWallet(){
  protectTransactionIdFields();
  const bank=document.getElementById('bankFields');
@@ -96,7 +104,10 @@ function install(){
     }
    }catch(_){}
   }
-  return originalApi.call(this,params);
+  const data=params?.action==='arPayment'&&params.paymentData?(()=>{try{return JSON.parse(params.paymentData);}catch(_){return null;}})():null;
+  const result=await originalApi.call(this,params);
+  if(data?.paymentMethod==='Bank'&&data.transactionId&&data.customerId&&result?.ok!==false&&result?.success!==false){removeUsedBankCache(data.customerId,data.transactionId);}
+  return result;
  };
  const oldBatch=window.openBatchPayment;
  if(typeof oldBatch==='function')window.openBatchPayment=function(...args){const result=oldBatch.apply(this,args);showBatchWallet();return result;};
