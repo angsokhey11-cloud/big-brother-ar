@@ -199,7 +199,7 @@
       '.bb-ar-multi-counter{font:700 10px Arial,sans-serif;color:#536c86;margin-left:auto}',
       '.bb-ar-customer-option{display:flex;align-items:center;gap:9px;padding:9px 10px;border:0;background:#fff;color:#20384f;text-align:left;cursor:pointer;width:100%;box-sizing:border-box;font-size:13px;border-radius:6px}',
       '.bb-ar-customer-option:hover,.bb-ar-customer-option:focus-within{background:#eaf3ff}',
-      '.bb-ar-customer-option input[type="checkbox"]{appearance:auto!important;flex:0 0 16px!important;width:16px!important;height:16px!important;margin:0!important;padding:0!important;accent-color:#175ba2;cursor:pointer}',
+      '.bb-ar-customer-option input[type="checkbox"],.filters.bb-mobile-filter-panel .bb-ar-customer-option input[type="checkbox"]{appearance:auto!important;flex:0 0 16px!important;width:16px!important;height:16px!important;min-height:16px!important;margin:0!important;padding:0!important;accent-color:#175ba2;cursor:pointer;grid-column:auto!important}',
       '.bb-ar-name{font-family:"Noto Sans Khmer","Khmer OS System",Arial,sans-serif;white-space:normal;flex:1;min-width:0}',
       '.bb-ar-count{flex:none;font-size:11px;color:#65788d}',
       '.bb-ar-customer-empty{padding:12px;color:#718097;font-size:12px}',
@@ -207,7 +207,7 @@
       '.bb-ar-export-bar span{color:#516984;font-size:11px;font-weight:600}',
       '.bb-ar-export-btn{background:#157245;color:#fff;white-space:nowrap}',
       '.bb-ar-export-btn:disabled{opacity:.55;cursor:wait}',
-      '@media(max-width:900px){.filters.bb-mobile-filter-panel .bb-ar-customer-combo{grid-column:1/-1!important}.bb-ar-export-bar{padding:7px 10px}.bb-ar-export-bar span{max-width:60%;font-size:10px}.bb-ar-export-btn{font-size:11px;padding:8px 11px}}'
+      '@media(max-width:900px){.filters.bb-mobile-filter-panel .bb-ar-customer-combo{grid-column:1/-1!important}.filters.bb-mobile-filter-panel .bb-ar-customer-menu{top:auto;bottom:calc(100% + 3px);max-height:min(45vh,320px)}.bb-ar-export-bar{padding:7px 10px}.bb-ar-export-bar span{max-width:60%;font-size:10px}.bb-ar-export-btn{font-size:11px;padding:8px 11px}}'
     ].join('\n');
     document.head.appendChild(styles);
 
