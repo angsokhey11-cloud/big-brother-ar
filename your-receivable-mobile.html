@@ -286,9 +286,12 @@ function fitSummaryToPhone(doc){
 }
 
 function activeFilterCount(doc){
-  return ['searchBox','customerFilter','locationFilter','currencyFilter','statusFilter']
+  const others=['searchBox','locationFilter','currencyFilter','statusFilter']
     .map(id=>doc.getElementById(id))
     .filter(el=>el&&String(el.value||'').trim()).length;
+  const checked=doc.defaultView?.BBARCustomerExcelV1?.getSelectedNames?.().length||0;
+  const typed=String(doc.getElementById('customerFilter')?.value||'').trim();
+  return others+(checked||typed?1:0);
 }
 
 function buildFilterUI(doc,win){
@@ -346,6 +349,7 @@ function buildFilterUI(doc,win){
   function closeFilters(){
     filters.classList.remove('open');
     backdrop.classList.remove('open');
+    syncFilterButton();
   }
 
   filterBtn.addEventListener('click',openFilters);
@@ -383,6 +387,7 @@ function buildFilterUI(doc,win){
       const el=doc.getElementById(id);
       if(el)el.value='';
     });
+    try{win.BBARCustomerExcelV1?.clearSelection?.()}catch(_){ }
     try{if(typeof win.filterChanged==='function')win.filterChanged()}catch(_){ }
     syncFilterButton();
     closeFilters();
