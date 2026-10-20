@@ -17,6 +17,7 @@ function protectTransactionIdFields(){
  }
 }
 
+function bankSnapshot(customerId){try{const s=JSON.parse(localStorage.getItem('BB_SUPABASE_DEV_SESSION_V1')||'null');const t=s?.access_token||'';const sub=JSON.parse(atob(t.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))).sub;if(!sub)return null;const data=JSON.parse(localStorage.getItem('bb-bank-bulk-v1:'+sub)||'null');if(!data)return null;return (data.rows||[]).filter(x=>String(x.customer_id)===String(customerId)&&Number(x.remaining_amount)>0);}catch(_){return null;}}
 function showWallet(){
  protectTransactionIdFields();
  const bank=document.getElementById('bankFields');
@@ -26,8 +27,9 @@ function showWallet(){
  selectedSingle=null;
  const item=typeof currentInvoice!=='undefined'?currentInvoice:null;
  if(!item||document.getElementById('payMethod')?.value!=='Bank'){panel.textContent='';return;}
- panel.textContent='Loading registered bank balances…';
- window.BBARAdapter.rpc('bb_customer_bank_balance_list_v2',{p_customer_id:item.customerId}).then(rows=>{
+ const rows=bankSnapshot(item.customerId);
+ if(rows===null){panel.textContent='Bank balance not synced. Open Invoice Generator and press Sync Bank.';return;}
+ {
    panel.replaceChildren();
    const valid=(Array.isArray(rows)?rows:[]).filter(x=>x.invoice_currency===item.currency&&Number(x.remaining_amount)>0);
    if(!valid.length){panel.textContent='No registered bank balance for this customer. Staff should ask Admin to register a new bank payment.';return;}
@@ -45,7 +47,7 @@ function showWallet(){
      };
      line.append(btn);panel.append(line);
    });
- }).catch(e=>{panel.textContent='Balance unavailable: '+String(e.message||e)});
+ }
 }
 function showBatchWallet(){
  protectTransactionIdFields();
@@ -57,8 +59,9 @@ function showBatchWallet(){
  const ids=[...new Set(selected.map(r=>String(r.customerId||'')))];
  if(ids.length!==1||!ids[0]){box.textContent='Registered balances require invoices from one customer.';return;}
  const currency=String(selected[0]?.currency||'USD');
- box.textContent='Checking registered bank balance…';
- window.BBARAdapter.rpc('bb_customer_bank_balance_list_v2',{p_customer_id:ids[0]}).then(rows=>{
+ const rows=bankSnapshot(ids[0]);
+ if(rows===null){box.textContent='Bank balance not synced. Open Invoice Generator and press Sync Bank.';return;}
+ {
   box.replaceChildren();
   const valid=(Array.isArray(rows)?rows:[]).filter(x=>x.invoice_currency===currency&&x.currency===currency&&Number(x.remaining_amount)>0);
   if(!valid.length){box.textContent='No available registered bank balance for these invoices. Staff should ask Admin to register a new transfer.';return;}
@@ -77,7 +80,7 @@ function showBatchWallet(){
     }
    };row.append(button);box.append(row);
   });
- }).catch(e=>box.textContent='Bank balance unavailable: '+String(e.message||e));
+ }
 }
 function install(){
  protectTransactionIdFields();
