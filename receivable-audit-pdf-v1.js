@@ -6,6 +6,8 @@
 'use strict';
 const BUCKET='bb-real-invoices';
 const PDF_LIB_URLS=[
+ // Local Code Sync copies this file into Local Brain; CDN fallback is for Live only.
+ 'vendor/pdf-lib.min.js?v=20261021-local-pdf1',
  'https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js',
  'https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js'
 ];
@@ -59,6 +61,42 @@ async function loadPdfLib(){
  }
  fail('PDF library is unavailable. Connect to the internet and try again.');
 }
+/* The summary and digital invoice render through html2canvas.
+ * Its existing CDN script may not load on a completely offline LAN.
+ * html2pdf's locally bundled html2canvas provides the same canvas API fallback.
+ */
+async function ensureCanvasAvailable(){
+ if(typeof window.html2canvas==='function')return;
+ if(typeof window.html2pdf!=='function'){
+  await new Promise((resolve,reject)=>{
+   const script=document.createElement('script');
+   script.src='vendor/html2pdf.bundle.min.js?v=20261021-local-pdf1';
+   script.async=true;
+   const timer=setTimeout(()=>{
+    script.remove();
+    reject(Error('The offline invoice image renderer timed out.'));
+   },18000);
+   script.onload=()=>{clearTimeout(timer);resolve();};
+   script.onerror=()=>{
+    clearTimeout(timer);script.remove();
+    reject(Error('The offline invoice image renderer could not load. Run Code Sync and reopen A/R.'));
+   };
+   document.head.appendChild(script);
+  });
+ }
+ if(typeof window.html2pdf!=='function'){
+  fail('The offline canvas renderer is unavailable. Run Local Brain Code Sync.');
+ }
+ // html2pdf bundles html2canvas; map its canvas output to our existing call site.
+ window.html2canvas=function(element,options){
+  return window.html2pdf().set({
+   margin:0,
+   html2canvas:options||{},
+   pagebreak:{mode:[]}
+  }).from(element).toCanvas().get('canvas');
+ };
+}
+
 function ext(path){return String(path||'').split('?')[0].split('.').pop().toLowerCase();}
 async function storedBlob(entry,row){
  if(!entry?.path)fail('Stored invoice path is missing for '+label(row));
@@ -359,6 +397,8 @@ async function prepareCustomerPdf(picked){
  const signature=selectionSignature(picked);
  if(preparedPdf?.signature===signature)return preparedPdf;
  const filename=fileName(picked);
+ // Load offline HTML renderer before the existing createSummaryImageBlob() call.
+ await ensureCanvasAvailable();
  const ids=picked.map(r=>String(r.invoiceId));
  show('Checking '+picked.length+' selected invoice(s)…');
  const [PDFLib,summaryBlob,manifest]=await Promise.all([
@@ -479,6 +519,15 @@ async function shareCustomerPdf(event){
 function install(){
  const actions=document.querySelector('#summaryOverlay .summary-actions');
  if(!actions)return;
+ // Make existing Summary Picture / Telegram Picture actions work without CDN too.
+ if(typeof window.createSummaryImageBlob==='function'&&!window.__bbArOfflineCanvasWrapped){
+  const baseCreateSummaryImageBlob=window.createSummaryImageBlob;
+  window.createSummaryImageBlob=async function(){
+   await ensureCanvasAvailable();
+   return baseCreateSummaryImageBlob.apply(this,arguments);
+  };
+  window.__bbArOfflineCanvasWrapped=true;
+ }
  if($('bbAuditPdfSave'))return;
  actions.style.flexWrap='wrap';
  const legacy=$('printSavePdfBtn');
