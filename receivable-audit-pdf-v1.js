@@ -20,8 +20,9 @@ function show(message,error){
 }
 function buttonBusy(on){
  busy=on;
- const btn=$('bbAuditPdfSave');
- if(btn){btn.disabled=on;btn.textContent=on?'⏳ Preparing audit PDF…':'📑 Save PDF + Invoices';}
+ const save=$('bbAuditPdfSave'),share=$('bbShareCustomerPdf');
+ if(save){save.disabled=on;save.textContent=on?'⏳ Preparing PDF…':'📑 Save PDF + Invoices';}
+ if(share){share.disabled=on;share.textContent=on?'⏳ Preparing PDF…':'✈️ Share PDF to Telegram';}
 }
 function selectedRows(){
  if(typeof selectedSummaryRows!=='function')fail('The A/R selection is not available.');
@@ -276,59 +277,201 @@ async function findAttachment(id,map){
  const doc=await rpc('bb_real_invoice_existing',{p_id:id});
  return doc?.path?doc:null;
 }
+
+/* Customer-facing names must come from selected invoices, never from today's export date. */
+let preparedPdf=null;
+function customerNames(picked){
+ const names=new Map();
+ picked.forEach(row=>{
+  const name=String(row.customer||'').normalize('NFC').trim();
+  if(!name)fail('A selected invoice is missing its customer name.');
+  const key=name.toLocaleLowerCase();
+  if(!names.has(key))names.set(key,name);
+ });
+ return [...names.values()];
+}
+function safeFilePart(value){
+ return String(value||'').normalize('NFC')
+  .replace(/[\/\\:*?"<>|\u0000-\u001f\u007f]/g,' ')
+  .replace(/\s+/g,' ').replace(/^\.+|\.+$/g,'').trim();
+}
+function customerNameForFile(picked){
+ const names=customerNames(picked).map(safeFilePart);
+ let out='',shown=0;
+ for(const name of names){
+  const candidate=out?out+', '+name:name;
+  if([...candidate].length>155)break;
+  out=candidate;shown++;
+ }
+ if(!shown){
+  out=[...names[0]].slice(0,145).join('');shown=1;
+ }
+ if(shown<names.length)out+=', +'+(names.length-shown)+' more customers';
+ return out||'Customer';
+}
+function invoiceDatePart(value){
+ if(typeof receivableDateParts!=='function')fail('The A/R invoice date formatter is unavailable.');
+ const p=receivableDateParts(value);
+ if(!p)fail('A selected invoice is missing an invoice date.');
+ const check=new Date(Date.UTC(p.year,p.month-1,p.day));
+ if(p.year<1900||p.year>2200||check.getUTCFullYear()!==p.year||
+    check.getUTCMonth()+1!==p.month||check.getUTCDate()!==p.day){
+  fail('One selected invoice has an invalid invoice date: '+String(value));
+ }
+ return {
+  key:p.year*10000+p.month*100+p.day,
+  label:String(p.day)+'-'+['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][p.month-1]+'-'+p.year
+ };
+}
 function fileName(picked){
- const customers=[...new Set(picked.map(r=>String(r.customer||'Customer').trim()))];
- const one=customers.length===1?customers[0]:'Multi_Customer';
- const safe=String(one||'Customer').replace(/[^a-zA-Z0-9_-]/g,'_').slice(0,55)||'Customer';
- const date=new Date().toLocaleDateString('sv-SE',{timeZone:'Asia/Phnom_Penh'}).replace(/[^0-9-]/g,'_');
- return 'BIG_BROTHER_AR_Audit_'+safe+'_'+date+'.pdf';
+ const dates=new Map();
+ picked.forEach(row=>{
+  let p;
+  try{p=invoiceDatePart(row.invoiceDate);}
+  catch(error){fail((error.message||'Invoice date error')+' ('+label(row)+')');}
+  dates.set(p.key,p.label);
+ });
+ const keys=[...dates.keys()].sort((a,b)=>a-b);
+ if(!keys.length)fail('No invoice dates were found.');
+ const datePart=keys.length===1
+  ? 'Invoice Date '+dates.get(keys[0])
+  : 'Invoice Date from '+dates.get(keys[0])+' to '+dates.get(keys[keys.length-1]);
+ return customerNameForFile(picked)+' and '+datePart+'.pdf';
+}
+function selectionSignature(picked){
+ // The summary HTML and selected accounting balances make stale cached PDFs detectable.
+ return JSON.stringify({
+  invoices:picked.map(row=>[
+   row.invoiceId,row.invoiceNo,row.customerId,row.customer,row.invoiceDate,
+   row.currency,row.grandTotal,row.amountPaid,row.outstanding,row.locationCode
+  ]),
+  summary:$('summarySheet')?.innerHTML||''
+ });
+}
+function downloadFile(file){
+ const url=URL.createObjectURL(file);
+ const anchor=document.createElement('a');
+ anchor.href=url;anchor.download=file.name;
+ document.body.appendChild(anchor);anchor.click();anchor.remove();
+ setTimeout(()=>URL.revokeObjectURL(url),60000);
+}
+async function prepareCustomerPdf(picked){
+ const signature=selectionSignature(picked);
+ if(preparedPdf?.signature===signature)return preparedPdf;
+ const filename=fileName(picked);
+ const ids=picked.map(r=>String(r.invoiceId));
+ show('Checking '+picked.length+' selected invoice(s)…');
+ const [PDFLib,summaryBlob,manifest]=await Promise.all([
+  loadPdfLib(),createSummaryImageBlob(),
+  rpc('bb_ar_original_manifest',{p_invoice_ids:ids})
+ ]);
+ if(!Array.isArray(manifest))fail('Could not verify authorized invoice originals.');
+ const manifestMap=new Map(manifest.filter(r=>r?.invoiceId&&r?.path).map(r=>[String(r.invoiceId),r]));
+ const pdf=await PDFLib.PDFDocument.create();
+ pdf.setTitle('BIG BROTHER Customer Invoice Summary + Supporting Invoices');
+ pdf.setSubject('Customer receivables and supporting invoices');
+ await addPicture(pdf,summaryBlob,'image/png','summary.png');
+ let originals=0,storedDigitals=0,digitals=0,multiPage=0;
+ for(let i=0;i<picked.length;i++){
+  const row=picked[i],id=String(row.invoiceId);
+  show('Adding invoice '+(i+1)+' of '+picked.length+': '+label(row));
+  const entry=await findAttachment(id,manifestMap);
+  if(entry?.path){
+   const count=await addOriginal(pdf,await storedBlob(entry,row),entry,row);
+   if(String(entry.source||'')==='history_capture')storedDigitals++;
+   else originals++;
+   if(count>1)multiPage++;
+  }else{
+   await digitalInvoice(pdf,row);
+   digitals++;
+  }
+  await delay(0);
+ }
+ show('Finishing '+pdf.getPageCount()+' PDF page(s)…');
+ const bytes=await pdf.save({useObjectStreams:true});
+ const file=new File([bytes],filename,{type:'application/pdf'});
+ const stats={pages:pdf.getPageCount(),originals,storedDigitals,digitals,multiPage};
+ const result={file,signature,stats,customers:customerNames(picked)};
+ preparedPdf=result;
+ return result;
+}
+function exportStatus(prepared){
+ const s=prepared.stats;
+ return s.pages+' page(s), '+s.originals+' paper original(s), '+
+  s.storedDigitals+' saved digital original(s), '+s.digitals+' generated digital invoice(s).';
 }
 async function exportAudit(event){
  event?.preventDefault();event?.stopPropagation();
  if(busy)return;
- let pdf;
+ buttonBusy(true);
  try{
-  buttonBusy(true);
-  const picked=selectedRows(); // fixed selection snapshot, same A/R summary
-  const ids=picked.map(r=>String(r.invoiceId));
-  show('Checking '+picked.length+' selected invoice(s)…');
-  const [PDFLib,summaryBlob,manifest]=await Promise.all([
-   loadPdfLib(),createSummaryImageBlob(),
-   rpc('bb_ar_original_manifest',{p_invoice_ids:ids})
-  ]);
-  if(!Array.isArray(manifest))fail('Could not verify authorized original invoices.');
-  const manifestMap=new Map(manifest.filter(r=>r?.invoiceId&&r?.path).map(r=>[String(r.invoiceId),r]));
-  pdf=await PDFLib.PDFDocument.create();
-  pdf.setTitle('BIG BROTHER A/R Audit Summary + Supporting Invoices');
-  pdf.setSubject('Outstanding invoice evidence');
-  await addPicture(pdf,summaryBlob,'image/png','summary.png');
-  let originals=0,storedDigitals=0,digitals=0,multiPage=0;
-  for(let i=0;i<picked.length;i++){
-   const row=picked[i],id=String(row.invoiceId);
-   show('Adding invoice '+(i+1)+' of '+picked.length+': '+label(row));
-   const entry=await findAttachment(id,manifestMap);
-   if(entry?.path){
-    const count=await addOriginal(pdf,await storedBlob(entry,row),entry,row);
-    if(String(entry.source||'')==='history_capture')storedDigitals++;else originals++;if(count>1)multiPage++;
-   }else{
-    await digitalInvoice(pdf,row);
-    digitals++;
-   }
-   await delay(0);
-  }
-  show('Finishing '+pdf.getPageCount()+' PDF page(s)…');
-  const bytes=await pdf.save({useObjectStreams:true});
-  const url=URL.createObjectURL(new Blob([bytes],{type:'application/pdf'}));
-  const anchor=document.createElement('a');
-  anchor.href=url;anchor.download=fileName(picked);
-  document.body.appendChild(anchor);anchor.click();anchor.remove();
-  setTimeout(()=>URL.revokeObjectURL(url),60000);
-  show('Saved: '+picked.length+' invoice(s), '+originals+' paper original(s), '+storedDigitals+' stored digital original(s), '+digitals+' freshly rendered digital invoice(s).'+(multiPage?' '+multiPage+' original PDF(s) contained multiple pages.':''));
+  const picked=selectedRows();
+  const prepared=await prepareCustomerPdf(picked);
+  downloadFile(prepared.file);
+  show('Downloaded '+prepared.file.name+' — '+exportStatus(prepared));
  }catch(error){
-  console.error('A/R audit PDF:',error);
-  show(error?.message||'Audit PDF could not be prepared.',true);
-  alert('Audit PDF was not saved.\n\n'+(error?.message||'Please retry.')+'\n\nNo incomplete audit PDF was produced.');
- }finally{buttonBusy(false);pdf=null;}
+  console.error('A/R customer PDF download:',error);
+  show(error?.message||'PDF could not be prepared.',true);
+  alert('PDF was not saved.\n\n'+(error?.message||'Please retry.')+
+   '\n\nNo incomplete customer PDF was produced.');
+ }finally{buttonBusy(false);}
+}
+function mixedCustomerApproval(picked){
+ const names=customerNames(picked);
+ if(names.length<=1)return true;
+ return window.confirm(
+  'This PDF contains outstanding invoices from '+names.length+' DIFFERENT CUSTOMERS.\n\n'+
+  'Only share this file with someone authorized to see ALL selected customers.\n\n'+
+  'Continue to Telegram sharing?'
+ );
+}
+async function sendThroughShareSheet(file){
+ if(typeof navigator.share!=='function'||typeof navigator.canShare!=='function')return false;
+ if(!navigator.canShare({files:[file]}))return false;
+ try{
+  await navigator.share({
+   files:[file],
+   title:'BIG BROTHER Customer Invoice Summary',
+   text:'Customer Invoice Summary and supporting invoices'
+  });
+  show('PDF handed to your device share sheet. Select Telegram and check the recipient.');
+  return true;
+ }catch(error){
+  if(error?.name==='AbortError'){
+   show('Sharing cancelled. PDF is ready to share again.');
+   return true;
+  }
+  if(error?.name==='NotAllowedError'){
+   show('PDF is ready. Tap “Share PDF to Telegram” again to open the share sheet.');
+   return true;
+  }
+  console.warn('Customer PDF native sharing unavailable:',error);
+  return false;
+ }
+}
+async function shareCustomerPdf(event){
+ event?.preventDefault();event?.stopPropagation();
+ if(busy)return;
+ let telegramTab=null;
+ try{
+  const picked=selectedRows();
+  if(!mixedCustomerApproval(picked)){show('Sharing cancelled.');return;}
+  // On desktop, open Telegram from the actual click before asynchronous PDF creation.
+  // Telegram Web cannot accept an attachment programmatically from our site.
+  const nativeShare=typeof navigator.share==='function'&&typeof navigator.canShare==='function';
+  if(!nativeShare)telegramTab=window.open('https://web.telegram.org/','_blank','noopener,noreferrer');
+  buttonBusy(true);
+  const prepared=await prepareCustomerPdf(picked);
+  if(await sendThroughShareSheet(prepared.file))return;
+  downloadFile(prepared.file);
+  show('PDF downloaded: '+prepared.file.name+'. '+(telegramTab
+   ?'Telegram Web opened; attach the downloaded PDF to the intended customer chat.'
+   :'Open Telegram and attach this downloaded PDF to the intended customer chat.'));
+ }catch(error){
+  console.error('A/R customer PDF sharing:',error);
+  show(error?.message||'Could not share customer PDF.',true);
+  alert('Customer PDF was not shared.\n\n'+(error?.message||'Please try again.'));
+ }finally{buttonBusy(false);}
 }
 function install(){
  const actions=document.querySelector('#summaryOverlay .summary-actions');
@@ -345,6 +488,18 @@ function install(){
  legacy.id='bbAuditPdfSave';legacy.textContent='📑 Save PDF + Invoices';
  legacy.addEventListener('click',exportAudit);
  legacy.parentNode.insertBefore(print,legacy.nextSibling);
+ const share=document.createElement('button');
+ share.type='button';share.id='bbShareCustomerPdf';share.className='btn summary-telegram-btn';
+ share.textContent='✈️ Share PDF to Telegram';
+ share.addEventListener('click',shareCustomerPdf);
+ legacy.parentNode.insertBefore(share,legacy.nextSibling);
+ const overlay=$('summaryOverlay');
+ if(overlay&&typeof MutationObserver!=='undefined'){
+  const observer=new MutationObserver(()=>{
+   if(overlay.classList.contains('hidden'))preparedPdf=null;
+  });
+  observer.observe(overlay,{attributes:true,attributeFilter:['class']});
+ }
  const note=document.createElement('div');
  note.id='bbAuditPdfStatus';note.setAttribute('role','status');
  note.style.cssText='flex-basis:100%;font-size:12px;line-height:1.5;text-align:right;min-height:15px';
@@ -352,5 +507,5 @@ function install(){
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install);
 else install();
-window.BBARAuditPdfExport={save:exportAudit,selectedRows};
+window.BBARAuditPdfExport={save:exportAudit,share:shareCustomerPdf,selectedRows};
 })();
