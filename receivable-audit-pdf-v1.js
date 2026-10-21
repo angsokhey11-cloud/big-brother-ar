@@ -519,6 +519,15 @@ async function shareCustomerPdf(event){
 function install(){
  const actions=document.querySelector('#summaryOverlay .summary-actions');
  if(!actions)return;
+ // Make existing Summary Picture / Telegram Picture actions work without CDN too.
+ if(typeof window.createSummaryImageBlob==='function'&&!window.__bbArOfflineCanvasWrapped){
+  const baseCreateSummaryImageBlob=window.createSummaryImageBlob;
+  window.createSummaryImageBlob=async function(){
+   await ensureCanvasAvailable();
+   return baseCreateSummaryImageBlob.apply(this,arguments);
+  };
+  window.__bbArOfflineCanvasWrapped=true;
+ }
  if($('bbAuditPdfSave'))return;
  actions.style.flexWrap='wrap';
  const legacy=$('printSavePdfBtn');
