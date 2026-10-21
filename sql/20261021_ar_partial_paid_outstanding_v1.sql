@@ -307,6 +307,11 @@ begin
 end;
 $function$;
 
+-- Align All Receivable EXECUTE with the existing authenticated-only A/R RPCs.
+-- Existing module and location checks inside the RPC remain mandatory.
+REVOKE ALL ON FUNCTION public.bb_ar_list_all() FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.bb_ar_list_all() TO authenticated, service_role;
+
 -- Read-only post-install verification. Fail atomically if source permissions drift.
 DO $bb_ar_partpaid_verify$
 BEGIN
@@ -318,5 +323,7 @@ BEGIN
  OR position('public.bb_has_location_access' in pg_get_functiondef('public.bb_ar_list_all()'::regprocedure))=0
  OR position('public.bb_has_module_access' in pg_get_functiondef('public.bb_ar_create_request_v2(jsonb)'::regprocedure))=0
  THEN RAISE EXCEPTION 'A/R permissions guard missing after patch'; END IF;
+ IF has_function_privilege('anon','public.bb_ar_list_all()','EXECUTE')
+ THEN RAISE EXCEPTION 'All Receivable must not be directly executable by anon'; END IF;
 END;
 $bb_ar_partpaid_verify$;
