@@ -427,7 +427,10 @@ function mixedCustomerApproval(picked){
 }
 async function sendThroughShareSheet(file){
  if(typeof navigator.share!=='function'||typeof navigator.canShare!=='function')return false;
- if(!navigator.canShare({files:[file]}))return false;
+ let canShareFile=false;
+ try{canShareFile=navigator.canShare({files:[file]});}
+ catch(error){console.warn('PDF file sharing is unsupported:',error);}
+ if(!canShareFile)return false;
  try{
   await navigator.share({
    files:[file],
