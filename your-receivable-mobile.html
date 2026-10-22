@@ -13,7 +13,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#f4f7fb;fon
 </head>
 <body>
 <div id="boot">Loading Your Receivable…</div>
-<iframe id="arMobileFrame" src="your-receivable.html?embed=1&view=your&mobileSkin=1&v=20261020-ar-multicustomer3" title="Your Receivable"></iframe>
+<iframe id="arMobileFrame" src="your-receivable.html?embed=1&view=your&mobileSkin=1&v=20261022-summary-range2" title="Your Receivable"></iframe>
 <script>
 (function(){
 'use strict';
@@ -170,6 +170,16 @@ const HEADER_FILTER_CSS=`
   transition:transform .20s ease!important;
 }
 .filters.bb-mobile-filter-panel.open{transform:translateY(0)!important}
+.filters.bb-mobile-filter-panel{max-height:87dvh!important;overflow-y:auto!important;overscroll-behavior:contain!important}
+.filters.bb-mobile-filter-panel .ar-range-filters{grid-column:1/-1!important;
+ display:grid!important;grid-template-columns:1fr 1fr!important;gap:9px!important;
+ background:#f6f9fd!important;border:1px solid #dce8f7!important;
+ border-radius:10px!important;padding:10px!important;min-width:0!important}
+.filters.bb-mobile-filter-panel .ar-range-filters label{grid-column:auto!important;font-size:10px!important}
+.filters.bb-mobile-filter-panel .ar-range-filters input{grid-column:auto!important;min-width:0!important}
+.filters.bb-mobile-filter-panel .ar-range-filters .ar-clear-filters,
+.filters.bb-mobile-filter-panel .ar-range-filters .ar-range-explain{grid-column:1/-1!important}
+
 .filters.bb-mobile-filter-panel .bb-filter-head{
   grid-column:1/-1!important;
   display:flex!important;
@@ -286,12 +296,14 @@ function fitSummaryToPhone(doc){
 }
 
 function activeFilterCount(doc){
-  const others=['searchBox','locationFilter','currencyFilter','statusFilter']
+  const others=['searchBox','locationFilter','currencyFilter','statusFilter',
+    'arFromDateFilter','arToDateFilter','arMinAmountFilter','arMaxAmountFilter']
     .map(id=>doc.getElementById(id))
     .filter(el=>el&&String(el.value||'').trim()).length;
   const checked=doc.defaultView?.BBARCustomerExcelV1?.getSelectedNames?.().length||0;
   const typed=String(doc.getElementById('customerFilter')?.value||'').trim();
-  return others+(checked||typed?1:0);
+  return others+(checked||typed?1:0)+
+    (doc.getElementById('arDateFieldFilter')?.value==='dueDate'?1:0);
 }
 
 function buildFilterUI(doc,win){
@@ -319,10 +331,14 @@ function buildFilterUI(doc,win){
   bar.append(filterBtn,summary,batch,refresh);
 
   filters.classList.add('bb-mobile-filter-panel');
+  // Keep the date/amount row inside the same mobile drawer, not as a
+  // permanently visible bar that crowds small phone screens.
+  const range=doc.querySelector('.ar-range-filters');
+  if(range)filters.append(range);
 
   const head=doc.createElement('div');
   head.className='bb-filter-head';
-  head.innerHTML='<div><strong>Filters</strong><br><span>Invoice · Customer · Location · Currency · Status</span></div><button type="button" class="bb-filter-close" aria-label="Close filters">×</button>';
+  head.innerHTML='<div><strong>Filters</strong><br><span>Invoice · Customer · Date · Amount · Location</span></div><button type="button" class="bb-filter-close" aria-label="Close filters">×</button>';
   filters.prepend(head);
 
   const clear=doc.createElement('button');
@@ -382,11 +398,21 @@ function buildFilterUI(doc,win){
     });
   });
 
+  ['arDateFieldFilter','arFromDateFilter','arToDateFilter','arMinAmountFilter','arMaxAmountFilter'].forEach(id=>{
+    const field=doc.getElementById(id);
+    if(!field)return;
+    field.addEventListener('input',syncFilterButton);
+    field.addEventListener('change',syncFilterButton);
+  });
+
   clear.addEventListener('click',()=>{
-    ['searchBox','customerFilter','locationFilter','currencyFilter','statusFilter'].forEach(id=>{
+    ['searchBox','customerFilter','locationFilter','currencyFilter','statusFilter',
+      'arFromDateFilter','arToDateFilter','arMinAmountFilter','arMaxAmountFilter'].forEach(id=>{
       const el=doc.getElementById(id);
       if(el)el.value='';
     });
+    const dateKind=doc.getElementById('arDateFieldFilter');
+    if(dateKind)dateKind.value='invoiceDate';
     try{win.BBARCustomerExcelV1?.clearSelection?.()}catch(_){ }
     try{if(typeof win.filterChanged==='function')win.filterChanged()}catch(_){ }
     syncFilterButton();
