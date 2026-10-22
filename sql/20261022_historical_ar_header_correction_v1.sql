@@ -2,7 +2,6 @@
 -- Purpose: correct an imported paper invoice number and/or invoice date only.
 -- Existing customer, payment, currency, financial balances, due date and photo remain unchanged.
 -- Deployment: Supabase Cloud migration + identical Local Brain migration through controller.
-BEGIN;
 
 CREATE OR REPLACE FUNCTION public.bb_ar_migration_editable_list(
   p_search text DEFAULT '',
@@ -209,4 +208,3 @@ GRANT EXECUTE ON FUNCTION public.bb_ar_migration_editable_list(text,integer,inte
   TO authenticated,service_role;
 GRANT EXECUTE ON FUNCTION public.bb_ar_migration_correct_header(text,text,date,text,date,text)
   TO authenticated,service_role;
-COMMIT;
