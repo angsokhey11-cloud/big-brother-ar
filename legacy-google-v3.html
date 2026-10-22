@@ -1036,7 +1036,8 @@ function toggleBankFields(){
 // V3.11 — Salesman Request -> Admin Clear workflow
 function renderRows(){
   const q=normSearch($('searchBox').value),customerQ=normSearch($('customerFilter').value),loc=$('locationFilter').value.trim().toLowerCase(),ccy=$('currencyFilter').value.trim().toUpperCase(),stat=$('statusFilter').value;
-  visibleRows=sortReceivablesOldestFirst(rows.filter(r=>{const rowCcy=String(r.currency||'USD').toUpperCase();if(q&&!normSearch(r.invoiceNo).includes(q))return false;if(customerQ&&!normSearch(r.customer).includes(customerQ))return false;if(loc&&String(r.locationCode).toLowerCase()!==loc)return false;if(ccy&&rowCcy!==ccy)return false;if(stat&&r.arStatus!==stat)return false;return true}));
+  const limits=arActiveRangeFilters();
+  visibleRows=sortReceivablesOldestFirst(rows.filter(r=>{const rowCcy=String(r.currency||'USD').toUpperCase();if(q&&!normSearch(r.invoiceNo).includes(q))return false;if(customerQ&&!normSearch(r.customer).includes(customerQ))return false;if(loc&&String(r.locationCode).toLowerCase()!==loc)return false;if(ccy&&rowCcy!==ccy)return false;if(stat&&r.arStatus!==stat)return false;if(!arRangeMatch(r,limits))return false;return true}));
   const totals={USD:{out:0,over:0},KHR:{out:0,over:0}};const customers=new Set();
   visibleRows.forEach(r=>{const c=String(r.currency||'USD').toUpperCase()==='KHR'?'KHR':'USD';totals[c].out+=num(r.outstanding);if(r.arStatus==='Overdue')totals[c].over+=num(r.outstanding);if(r.customer)customers.add(r.customer.toLowerCase())});
   $('sumOutstandingUSD').textContent=money(totals.USD.out,'USD');$('sumOutstandingKHR').textContent=money(totals.KHR.out,'KHR');$('sumOverdueUSD').textContent=money(totals.USD.over,'USD');$('sumOverdueKHR').textContent=money(totals.KHR.over,'KHR');$('sumInvoices').textContent=visibleRows.length;$('sumCustomers').textContent=customers.size;$('rowCount').textContent=`${visibleRows.length} record${visibleRows.length===1?'':'s'}`;
