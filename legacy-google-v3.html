@@ -499,7 +499,7 @@ async function loadAR(force=false){
   revision=data.revision||revision;
   // Preserve selections during the 20s poll, tab-focus refresh, and manual
   // refresh. Drop only invoices no longer authorized or outstanding.
-  const available=new Set(rows.filter(r=>num(r.outstanding)>0).map(invoiceKey));
+  const available=new Set(rows.filter(r=>num(r.outstanding)>0&&r.arStatus!=='Processing').map(invoiceKey));
   for(const key of [...selectedInvoices])if(!available.has(key))selectedInvoices.delete(key);
   if(data.access)applyProfile(data.access);
   renderRows();
