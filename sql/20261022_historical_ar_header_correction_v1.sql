@@ -105,9 +105,8 @@ BEGIN
   IF v_number='' OR length(v_number)>80 OR v_number ~ '[[:cntrl:]]' THEN
     RAISE EXCEPTION 'Invoice number is required (maximum 80 characters, no control characters)';
   END IF;
-  IF p_invoice_date IS NULL OR p_invoice_date > current_date
-     OR p_invoice_date < DATE '2000-01-01' THEN
-    RAISE EXCEPTION 'Invoice date must be historical and between 2000-01-01 and today';
+  IF p_invoice_date IS NULL OR p_invoice_date > current_date THEN
+    RAISE EXCEPTION 'Invoice date must be a valid historical date (not in the future)';
   END IF;
   IF length(v_reason)<8 OR length(v_reason)>500 THEN
     RAISE EXCEPTION 'Correction reason must contain 8 to 500 characters';
@@ -118,7 +117,7 @@ BEGIN
 
   SELECT * INTO v_invoice
   FROM public.invoices i WHERE i.invoice_id=p_invoice_id FOR UPDATE;
-  IF NOT FOUND OR v_invoice.migration_note NOT LIKE 'Historical opening A/R import.%' THEN
+  IF NOT FOUND OR coalesce(v_invoice.migration_note,'') NOT LIKE 'Historical opening A/R import.%' THEN
     RAISE EXCEPTION 'Historical imported invoice not found';
   END IF;
   IF v_invoice.invoice_no IS DISTINCT FROM p_expected_invoice_no
