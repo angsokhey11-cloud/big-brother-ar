@@ -127,7 +127,8 @@ function showResult(result){
    const th=document.createElement('th');th.textContent=name;head.append(th)
   }
   table.append(head);
-  for(const r of preview.slice(0,35)){
+  // Display every server-validated invoice; do not truncate the audit preview.
+  for(const r of preview){
    const tr=document.createElement('tr');
    for(const key of ['invoice_no','invoice_date','customer_name','location_code','currency','grand_total','amount_paid','outstanding']){
     const td=document.createElement('td');td.textContent=String(r[key]??'');tr.append(td)
@@ -135,7 +136,7 @@ function showResult(result){
    table.append(tr);
   }
  }
- if(preview.length>35){const p=document.createElement('p');p.textContent='Showing first 35 of '+preview.length+' validated records.';$('arMigrationIssues').append(p)}
+ if(preview.length){const p=document.createElement('p');p.textContent='Showing all '+preview.length+(errors.length?' preview':' validated')+' record(s). Scroll the table to review every invoice before importing.';$('arMigrationIssues').append(p)}
  $('arMigrationTableWrap').hidden=!preview.length;
  previewOK=Boolean(result.success)&&!errors.length&&preview.length===batch.length;
  $('arMigrationCommit').disabled=!previewOK;
@@ -171,7 +172,7 @@ function close(){if(working)return;$('arMigrationOverlay').hidden=true;$('arMigr
 function mount(){
  if($('arMigrationToolbar')||!document.querySelector('.topbar'))return;
  const style=document.createElement('style');
- style.textContent='#arMigrationToolbar{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin:-4px 0 14px}#arMigrationOverlay{position:fixed;inset:0;background:#132940bd;z-index:11000;display:none;align-items:center;justify-content:center;padding:15px}#arMigrationOverlay[hidden]{display:none!important}.ar-mig-dialog{width:min(1050px,100%);max-height:94dvh;overflow:auto;background:#fff;border-radius:14px;padding:20px;box-shadow:0 22px 60px #07172c55}.ar-mig-buttons{display:flex;gap:10px;flex-wrap:wrap}.ar-mig-note{color:#52677c;font-size:12px;line-height:1.55}.ar-mig-table{max-height:320px;overflow:auto;border:1px solid #dbe3ed;border-radius:8px}.ar-mig-table table{min-width:760px}.ar-mig-title{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:9px}.ar-mig-title h2{margin:0;color:#183e72;font-size:20px}@media(max-width:560px){.ar-mig-dialog{padding:13px}}';
+ style.textContent='#arMigrationToolbar{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin:-4px 0 14px}#arMigrationOverlay{position:fixed;inset:0;background:#132940bd;z-index:11000;display:none;align-items:center;justify-content:center;padding:15px}#arMigrationOverlay[hidden]{display:none!important}.ar-mig-dialog{width:min(1050px,100%);max-height:94dvh;overflow:auto;background:#fff;border-radius:14px;padding:20px;box-shadow:0 22px 60px #07172c55}.ar-mig-buttons{display:flex;gap:10px;flex-wrap:wrap}.ar-mig-note{color:#52677c;font-size:12px;line-height:1.55}.ar-mig-table{max-height:min(54dvh,540px);overflow:auto;border:1px solid #dbe3ed;border-radius:8px}.ar-mig-table table{min-width:760px}.ar-mig-table th{position:sticky;top:0;z-index:1;background:#f2f6fc}.ar-mig-title{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:9px}.ar-mig-title h2{margin:0;color:#183e72;font-size:20px}@media(max-width:560px){.ar-mig-dialog{padding:13px}}';
  document.head.append(style);
  const toolbar=document.createElement('div');toolbar.id='arMigrationToolbar';
  toolbar.innerHTML='<button type="button" id="arMigrationOpen" class="btn primary">📤 Upload Historical A/R</button><button type="button" id="arMigrationDownload" class="btn secondary">📥 Download A/R Template</button>';
