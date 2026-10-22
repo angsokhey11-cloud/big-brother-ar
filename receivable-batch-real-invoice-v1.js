@@ -10,7 +10,11 @@ const MAX_FILES=35, MAX_BYTES=65*1024*1024;
 let packageData=null,buildSeq=0,previousSignature='',isBuilding=false;
 const $=id=>document.getElementById(id);
 function safe(v){return String(v||'').trim().replace(/[^a-zA-Z0-9_-]/g,'_').slice(0,65)||'Invoice'}
-function chosen(){return typeof selectedSummaryRows==='function'?selectedSummaryRows():[]}
+function chosen(){
+ // Reuse the frozen invoice list visible in the open Summary; a 20-second
+ // background refresh or filter change must not silently change this package.
+ return typeof summaryExportRows==='function'?summaryExportRows():[];
+}
 function indicator(msg,isError=false){
  const el=$('bbBatchOriginalStatus');
  if(el){el.textContent=msg||'';el.style.color=isError?'#aa3232':'#41617f'}
@@ -150,8 +154,27 @@ function download(file){
  setTimeout(()=>URL.revokeObjectURL(url),60000);
 }
 function valid(){
- const pkg=packageData;
- if(!pkg||!visible()||pkg.signature!==selectionKey(chosen())){indicator('Please wait for the current customer summary package to finish preparing.',true);return null}
+ const pkg=packageData,picked=chosen();
+ if(!pkg||!visible()||pkg.signature!==selectionKey(picked)){
+  indicator('Please wait for the current customer summary package to finish preparing.',true);return null;
+ }
+ // Fast synchronous check before native share (must keep its user gesture).
+ // Expensive server revalidation already occurs during package build and for
+ // on-demand downloads. Background A/R sync updates authorized rows in memory.
+ const live=typeof rows!=='undefined'&&Array.isArray(rows)?new Map(rows.map(r=>[String(r.invoiceId||''),r])):new Map();
+ const unchanged=picked.every(old=>{
+  const current=live.get(String(old.invoiceId||''));
+  return current&&String(current.invoiceNo||'')===String(old.invoiceNo||'')&&
+   String(current.customerId||'')===String(old.customerId||'')&&
+   String(current.invoiceDate||'')===String(old.invoiceDate||'')&&
+   String(current.dueDate||'')===String(old.dueDate||'')&&
+   String(current.currency||'USD')===String(old.currency||'USD')&&
+   ['grandTotal','amountPaid','outstanding'].every(k=>Math.abs(Number(current[k]||0)-Number(old[k]||0))<0.000001)&&
+   Number(current.outstanding||0)>0;
+ });
+ if(!unchanged){
+  indicator('An invoice changed while Summary was open. Close Summary and reopen it before downloading or sharing.',true);return null;
+ }
  return pkg;
 }
 async function downloadBatch(){
@@ -159,6 +182,8 @@ async function downloadBatch(){
  const btn=$('bbDownloadSummaryOriginals');btn.disabled=true;
  indicator('Creating ZIP package…');
  try{
+  if(typeof verifySummaryCurrent!=='function')throw Error('Summary verification is unavailable. Refresh A/R.');
+  await verifySummaryCurrent();
   const file=pkg.cachedZip||await packageZip(pkg);download(file);
   indicator('Summary and '+(pkg.files.length-1)+' originals downloaded in one ZIP'+(pkg.missing.length?' · Missing: '+pkg.missing.join(', '):'')+'.');
  }catch(e){indicator(e.message||'ZIP download failed.',true)}
