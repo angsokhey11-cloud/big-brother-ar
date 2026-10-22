@@ -95,7 +95,7 @@ function filterChanged(){
 }`;
     if(!html.includes('function filterChanged(){selectedInvoices.clear();renderRows()}'))throw new Error('Your Receivable filter marker was not found.');
     html=html.replace('function filterChanged(){selectedInvoices.clear();renderRows()}',filterPatch);
-    html=html.replace('function renderRows(){','function renderRows(){\n  refreshARFilterSuggestions();');
+    html=html.replaceAll('function renderRows(){','function renderRows(){\n  refreshARFilterSuggestions();');
 
     /* Completely remove the old Admin/Salesman secret-code login form. */
     html=html.replace(
