@@ -10,7 +10,7 @@
 <script>
 (async function(){
   try{
-    const response=await fetch('legacy-google-v3.html?v=20261018-ar-date1',{cache:'no-store'});
+    const response=await fetch('legacy-google-v3.html?v=20261022-summary-range2',{cache:'no-store'});
     if(!response.ok)throw new Error('Could not load Accounts Receivable source.');
     let html=await response.text();
 
@@ -46,7 +46,7 @@
     if(!html.includes('</body>'))throw new Error('A/R document body missing for Real Invoice viewer.');
     html=html.replace('</body>', '<scr'+'ipt src="receivable-real-invoice-view-v1.js?v=20261001-downloadshare5"></scr'+'ipt></body>');
     html=html.replace('</body>', '<scr'+'ipt src="ar-bank-wallet-picker-v1.js?v=20261011-wallet1"></scr'+'ipt></body>');
-    html=html.replace('</body>', '<scr'+'ipt src="receivable-batch-real-invoice-v1.js?v=20261001-batchreal3"></scr'+'ipt></body>');
+    html=html.replace('</body>', '<scr'+'ipt src="receivable-batch-real-invoice-v1.js?v=20261022-summary-snapshot2"></scr'+'ipt></body>');
     // Authorized A/R pending-customer dropdown and multi-sheet Excel export.
     html=html.replace('</body>', '<scr'+'ipt src="receivable-customer-excel-v1.js?v=20261020-ar-multicustomer3"></scr'+'ipt></body>');
     document.open();

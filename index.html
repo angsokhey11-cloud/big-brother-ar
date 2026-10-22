@@ -10,7 +10,7 @@
 <script>
 (async function(){
   try{
-    const response=await fetch('legacy-google-v3.html?v=20261021-partial-balances1',{cache:'no-store'});
+    const response=await fetch('legacy-google-v3.html?v=20261022-summary-range2',{cache:'no-store'});
     if(!response.ok)throw new Error('Could not load Accounts Receivable source.');
     let html=await response.text();
 
@@ -43,7 +43,7 @@
     if(!html.includes('</body>'))throw new Error('A/R document body missing for Real Invoice viewer.');
     html=html.replace('</body>', '<scr'+'ipt src="receivable-real-invoice-view-v1.js?v=20261007-sharedstorage1"></scr'+'ipt></body>');
     html=html.replace('</body>', '<scr'+'ipt src="ar-bank-wallet-picker-v1.js?v=20261020-shared-bank-cache1"></scr'+'ipt></body>');
-    html=html.replace('</body>', '<scr'+'ipt src="receivable-batch-real-invoice-v1.js?v=20261018-multicustomer1"></scr'+'ipt></body>');
+    html=html.replace('</body>', '<scr'+'ipt src="receivable-batch-real-invoice-v1.js?v=20261022-summary-snapshot2"></scr'+'ipt></body>');
     // Admin-only historical opening A/R migration remains inside desktop All Receivable.
     if(new URLSearchParams(location.search).get('view')==='all'){
       html=html.replace('</body>', '<scr'+'ipt src="receivable-ar-migration-v1.js?v=20261022-all-preview1"></scr'+'ipt></body>');
@@ -51,7 +51,7 @@
       html=html.replace('</body>', '<scr'+'ipt src="receivable-ar-correction-v1.js?v=20261022-arcorr1"></scr'+'ipt></body>');
     }
     // Audit PDF: current summary image followed by authorized invoice originals / digital fallback.
-    html=html.replace('</body>', '<scr'+'ipt src="receivable-audit-pdf-v1.js?v=20261021-local-offline1"></scr'+'ipt></body>');
+    html=html.replace('</body>', '<scr'+'ipt src="receivable-audit-pdf-v1.js?v=20261022-summary-snapshot2"></scr'+'ipt></body>');
     // Authorized A/R pending-customer dropdown and multi-sheet Excel export.
     html=html.replace('</body>', '<scr'+'ipt src="receivable-customer-excel-v1.js?v=20261020-ar-multicustomer3"></scr'+'ipt></body>');
     document.open();document.write(html);document.close();
