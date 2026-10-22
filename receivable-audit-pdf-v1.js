@@ -27,9 +27,11 @@ function buttonBusy(on){
  if(share){share.disabled=on;share.textContent=on?'⏳ Preparing PDF…':'✈️ Share PDF to Telegram';}
 }
 function selectedRows(){
- if(typeof selectedSummaryRows!=='function')fail('The A/R selection is not available.');
- const picked=selectedSummaryRows();
- if(!picked.length)fail('Select outstanding invoices before exporting.');
+ if(typeof summaryExportRows!=='function')fail('The Summary Invoice selection is not available.');
+ // The open modal owns the selected rows: auto-refresh no longer changes
+ // its PDF export source while the user is reviewing an A4 summary.
+ const picked=summaryExportRows();
+ if(!picked.length)fail('No open Summary Invoice. Check invoices and open Summary again.');
  const ids=new Set();
  for(const row of picked){
   const id=String(row.invoiceId||'').trim();
@@ -394,6 +396,10 @@ function downloadFile(file){
  setTimeout(()=>URL.revokeObjectURL(url),60000);
 }
 async function prepareCustomerPdf(picked){
+ // Even a previously prepared/cached PDF must be checked against CURRENT
+ // authorized A/R before allowing another delayed download/share.
+ if(typeof verifySummaryCurrent!=='function')fail('Summary export verification is unavailable. Refresh A/R.');
+ await verifySummaryCurrent();
  const signature=selectionSignature(picked);
  if(preparedPdf?.signature===signature)return preparedPdf;
  const filename=fileName(picked);
