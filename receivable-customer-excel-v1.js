@@ -272,7 +272,7 @@
       // search already opened the menu; a subsequent tap toggles it closed.
       if(menuOpen&&!wasEditingCustomer){setMenu(false);return;}
       menuSearch.value='';
-      displayOptions(true);setMenu(true);
+      setMenu(true);displayOptions(true);
     });
     customerInput.addEventListener('focus',function(){displayOptions(false);setMenu(true);});
     customerInput.addEventListener('input',function(){displayOptions(false);setMenu(true);});
