@@ -111,6 +111,24 @@
     displayOptions(false);
   }
 
+  // Credential managers can mistake dynamically created A/R search fields for
+  // usernames, particularly on Android. These fields are non-login searches.
+  function protectSearchFromAutofill(field){
+    if(!field)return;
+    field.removeAttribute('name');
+    field.setAttribute('autocomplete','off');
+    field.setAttribute('autocorrect','off');
+    field.setAttribute('autocapitalize','none');
+    field.setAttribute('spellcheck','false');
+    field.setAttribute('inputmode','search');
+    field.setAttribute('enterkeyhint','search');
+    field.setAttribute('data-form-type','other');
+    field.setAttribute('data-lpignore','true');
+    field.setAttribute('data-1p-ignore','true');
+    field.setAttribute('data-bwignore','true');
+    field.setAttribute('data-protonpass-ignore','true');
+  }
+
   function installUI(){
     customerInput=id('customerFilter');
     var filters=document.querySelector('.filters');
@@ -120,6 +138,9 @@
     customerWrap.className='bb-ar-customer-combo';
     customerInput.parentNode.insertBefore(customerWrap,customerInput);
     customerWrap.appendChild(customerInput);
+    // Keep the original customer input and its filtering events, but never
+    // allow browsers to classify it as a credential/login field.
+    protectSearchFromAutofill(customerInput);
     customerInput.removeAttribute('readonly');
     customerInput.removeAttribute('list'); // no native datalist on top of the checkbox list
     customerInput.setAttribute('aria-label','Search or select pending customers');
@@ -147,6 +168,7 @@
     menuSearch=document.createElement('input');
     menuSearch.type='search';
     menuSearch.className='bb-ar-menu-search';
+    protectSearchFromAutofill(menuSearch);
     menuSearch.placeholder='Search customer name…';
     menuSearch.setAttribute('aria-label','Search pending customer names in dropdown');
     menuTools.appendChild(menuSearch);
@@ -175,6 +197,11 @@
 
     customerArrow.addEventListener('click',function(ev){
       ev.preventDefault();ev.stopPropagation();
+      // Opening the list is not a text-entry action: dismiss the keyboard so
+      // all five visible names can be read before staff tap Search.
+      if(document.activeElement===customerInput||document.activeElement===menuSearch){
+        document.activeElement.blur();
+      }
       if(menuOpen){setMenu(false);return;}
       menuSearch.value='';
       displayOptions(true);setMenu(true);
