@@ -1,12 +1,13 @@
-/* BIG BROTHER A/R — multi-select pending customer filter + standalone offline XLSX.
-   Both table and export respect the user's authorized A/R view and location.
-   When customer checkboxes are selected, they replace free-text customer filtering.
-   The Excel export refetches authorized balances, then creates one sheet/customer. */
+/* BIG BROTHER A/R — spreadsheet-style pending-customer filter + offline XLSX.
+   Authorized customers are selected by default; Clear selects none. Search,
+   checkbox selections across queries, Cancel and OK are kept separate from
+   committed table/Excel scope until Apply. No server-side permissions change. */
 (function(){
   'use strict';
   if(window.BBARCustomerExcelV1)return;
 
-  var selectedCustomers=new Set();
+  var selectedCustomers=new Set(),allCustomersSelected=true;
+  var draftSelectedCustomers=new Set(),draftAllCustomersSelected=true;
   var customerMenu,customerInput,customerWrap,customerArrow,exportButton,menuSearch,menuList,menuCounter,selectShownButton;
   var menuOpen=false,exportBusy=false;
   // Both desktop and mobile use the same fixed Search Customer button.
@@ -35,30 +36,39 @@
     });
     return [...found.values()].sort(function(a,b){return a.name.localeCompare(b.name,undefined,{sensitivity:'base'});});
   }
+  function allPendingCustomerKeys(){
+    var found=new Set();
+    (Array.isArray(rows)?rows:[]).forEach(function(r){
+      if(isOpen(r)&&str(r.customer))found.add(norm(r.customer));
+    });
+    return found;
+  }
   function filterSelectedCustomers(list){
-    return selectedCustomers.size?list.filter(function(r){return selectedCustomers.has(norm(r.customer));}):list;
+    return allCustomersSelected?list:list.filter(function(r){return selectedCustomers.has(norm(r.customer));});
   }
   function setMenu(open){
+    if(open&&!menuOpen){
+      draftAllCustomersSelected=allCustomersSelected;
+      draftSelectedCustomers=new Set(selectedCustomers);
+    }
     menuOpen=!!open;
     if(customerMenu)customerMenu.hidden=!menuOpen;
     if(customerArrow)customerArrow.setAttribute('aria-expanded',String(menuOpen));
   }
   function updateInputSummary(){
     if(!customerInput)return;
-    var count=selectedCustomers.size;
-    customerInput.placeholder=count?(count+' customer'+(count===1?'':'s')+' selected · search to add'):'Search / choose pending customers';
-    customerInput.setAttribute('aria-label',count?(count+' customers selected. Search to add more.'):'Search or select pending customers');
-    if(customerWrap)customerWrap.classList.toggle('bb-ar-has-selection',count>0);
-  }
-  function pruneLocationSelections(){
-    if(!selectedCustomers.size)return;
-    var allowed=new Set(pendingCustomers().map(function(x){return norm(x.name);}));
-    for(var key of [...selectedCustomers])if(!allowed.has(key))selectedCustomers.delete(key);
+    var count=allCustomersSelected?pendingCustomers().length:selectedCustomers.size;
+    var description=allCustomersSelected?'All customers selected':count+' customers selected';
+    customerInput.placeholder=description;
+    customerInput.setAttribute('aria-label',description);
+    if(customerArrow)customerArrow.title='Search Customer · '+description;
+    if(customerWrap)customerWrap.classList.toggle('bb-ar-has-selection',!allCustomersSelected);
   }
   function renderChanged(){
-    // Checked invoice selections must not survive changes to the customer scope.
+    // An Apply/OK can change the invoice scope; clear old invoice checkboxes.
     if(typeof selectedInvoices!=='undefined')selectedInvoices.clear();
     if(typeof renderRows==='function')renderRows();
+    document.dispatchEvent(new Event('bb-ar-customer-scope-changed'));
   }
   function displayOptions(showAll){
     if(!customerMenu||!customerInput||!menuList)return;
@@ -69,14 +79,19 @@
     var options=pendingCustomers().filter(function(x){return !needle||norm(x.name).includes(needle);});
     menuList.replaceChildren();
     menuList.classList.toggle('bb-ar-five-customers',options.length>=5);
-    if(menuCounter)menuCounter.textContent=selectedCustomers.size+' selected';
+    if(menuCounter){
+      var present=pendingCustomers(),checked=draftAllCustomersSelected?
+        present.length:present.filter(function(x){return draftSelectedCustomers.has(norm(x.name));}).length;
+      menuCounter.textContent=checked+' / '+present.length+' selected';
+    }
     if(selectShownButton){
       selectShownButton.disabled=!options.length;
       selectShownButton.textContent='✓ Select shown ('+options.length+')';
       selectShownButton.onclick=function(){
-        options.forEach(function(x){selectedCustomers.add(norm(x.name));});
-        renderChanged();
-        setMenu(true);
+        if(!draftAllCustomersSelected){
+          options.forEach(function(x){draftSelectedCustomers.add(norm(x.name));});
+        }
+        displayOptions(false); // Keep earlier choices across different searches.
       };
     }
     if(!options.length){
@@ -91,7 +106,7 @@
       item.title=x.name;
       var checkbox=document.createElement('input');
       checkbox.type='checkbox';
-      checkbox.checked=selectedCustomers.has(norm(x.name));
+      checkbox.checked=draftAllCustomersSelected||draftSelectedCustomers.has(norm(x.name));
       checkbox.setAttribute('aria-label','Include '+x.name+' in customer review');
       var name=document.createElement('span');
       name.className='bb-ar-name';name.textContent=x.name;
@@ -100,18 +115,27 @@
       item.append(checkbox,name,count);
       checkbox.addEventListener('change',function(){
         var key=norm(x.name);
-        if(checkbox.checked)selectedCustomers.add(key);
-        else selectedCustomers.delete(key);
-        renderChanged();
-        setMenu(true);
+        if(draftAllCustomersSelected&&!checkbox.checked){
+          // First uncheck switches from ALL to explicit selected keys.
+          draftSelectedCustomers=allPendingCustomerKeys();
+          draftAllCustomersSelected=false;
+        }
+        if(!draftAllCustomersSelected){
+          if(checkbox.checked)draftSelectedCustomers.add(key);
+          else draftSelectedCustomers.delete(key);
+        }
+        displayOptions(false);
       });
       menuList.appendChild(item);
     });
     menuList.scrollTop=showAll?0:scrollTop;
   }
   function refreshCustomerMenu(){
-    pruneLocationSelections();
     updateInputSummary();
+    if(!menuOpen){
+      draftAllCustomersSelected=allCustomersSelected;
+      draftSelectedCustomers=new Set(selectedCustomers);
+    }
     displayOptions(false);
   }
 
@@ -188,24 +212,53 @@
     actions.className='bb-ar-multi-actions';
     var all=document.createElement('button');
     all.type='button';all.className='bb-ar-multi-action';
-    all.textContent='All customers';
+    all.textContent='Select all';
     all.addEventListener('click',function(){
-      selectedCustomers.clear();customerInput.value='';menuSearch.value='';
-      renderChanged();setMenu(true);
+      draftAllCustomersSelected=true;
+      draftSelectedCustomers.clear();
+      displayOptions(false);
+    });
+    var clear=document.createElement('button');
+    clear.type='button';clear.className='bb-ar-multi-action';
+    clear.textContent='Clear';
+    clear.addEventListener('click',function(){
+      draftAllCustomersSelected=false;
+      draftSelectedCustomers.clear();
+      displayOptions(false);
     });
     selectShownButton=document.createElement('button');
     selectShownButton.type='button';selectShownButton.className='bb-ar-multi-action';
     menuCounter=document.createElement('span');
     menuCounter.className='bb-ar-multi-counter';
     menuCounter.setAttribute('aria-live','polite');
-    actions.append(all,selectShownButton,menuCounter);
+    actions.append(all,clear,selectShownButton,menuCounter);
     menuTools.appendChild(actions);
     customerMenu.appendChild(menuTools);
     menuList=document.createElement('div');
     menuList.className='bb-ar-customer-list';
     customerMenu.appendChild(menuList);
+    var footer=document.createElement('div');
+    footer.className='bb-ar-customer-footer';
+    var cancel=document.createElement('button');
+    cancel.type='button';cancel.className='bb-ar-customer-cancel';
+    cancel.textContent='Cancel';
+    cancel.addEventListener('click',function(){setMenu(false);});
+    var ok=document.createElement('button');
+    ok.type='button';ok.className='bb-ar-customer-apply';
+    ok.textContent='OK';
+    ok.addEventListener('click',function(){
+      allCustomersSelected=draftAllCustomersSelected;
+      selectedCustomers=new Set(draftSelectedCustomers);
+      setMenu(false);
+      renderChanged();
+    });
+    footer.append(cancel,ok);
+    customerMenu.appendChild(footer);
     menuSearch.addEventListener('input',function(){displayOptions(false);});
-    menuSearch.addEventListener('keydown',function(ev){if(ev.key==='Escape')setMenu(false);});
+    menuSearch.addEventListener('keydown',function(ev){
+      if(ev.key==='Escape')setMenu(false);
+      if(ev.key==='Enter'){ev.preventDefault();ok.click();}
+    });
 
     customerArrow.addEventListener('click',function(ev){
       ev.preventDefault();ev.stopPropagation();
@@ -263,6 +316,10 @@
       '.bb-ar-multi-action{background:#edf5ff;border:1px solid #d7e6f7;border-radius:6px;color:#1759a1;font:700 11px Arial,sans-serif;padding:6px;cursor:pointer}',
       '.bb-ar-multi-action:disabled{opacity:.5}',
       '.bb-ar-multi-counter{font:700 10px Arial,sans-serif;color:#536c86;margin-left:auto}',
+      '.bb-ar-customer-footer{display:flex;justify-content:flex-end;gap:8px;padding:8px 6px 4px;border-top:1px solid #dce8f5;background:#fff;flex:none}',
+      '.bb-ar-customer-footer button{width:auto;min-width:72px;min-height:34px;padding:7px 14px;font:800 12px Arial,sans-serif;border-radius:7px;cursor:pointer}',
+      '.bb-ar-customer-cancel{border:1px solid #cbd6e3;background:#fff;color:#52657a}',
+      '.bb-ar-customer-apply{border:1px solid #14703f;background:#14703f;color:#fff}',
       '.bb-ar-customer-option{display:flex;align-items:center;gap:9px;padding:9px 10px;border:0;background:#fff;color:#20384f;text-align:left;cursor:pointer;width:100%;box-sizing:border-box;font-size:13px;border-radius:6px}',
       '.bb-ar-customer-option:hover,.bb-ar-customer-option:focus-within{background:#eaf3ff}',
       '.bb-ar-customer-option input[type="checkbox"],.filters.bb-mobile-filter-panel .bb-ar-customer-option input[type="checkbox"]{appearance:auto!important;flex:0 0 16px!important;width:16px!important;height:16px!important;min-height:16px!important;margin:0!important;padding:0!important;accent-color:#175ba2;cursor:pointer;grid-column:auto!important}',
@@ -283,13 +340,12 @@
     var originalRender=window.renderRows;
     if(typeof originalRender==='function'){
       window.renderRows=function(){
-        pruneLocationSelections();
         var allRows=rows;
         var originalSearch=customerInput.value;
-        if(selectedCustomers.size){
-          rows=filterSelectedCustomers(allRows);
-          customerInput.value=''; // legacy text search must not remove other checked customers
-        }
+        // Clear the hidden legacy input during every render; only the approved
+        // checkbox scope determines customer selection.
+        if(!allCustomersSelected)rows=filterSelectedCustomers(allRows);
+        customerInput.value='';
         try{return originalRender.apply(this,arguments);}
         finally{
           rows=allRows;
@@ -440,13 +496,12 @@
     exportBusy=true;exportButton.disabled=true;exportButton.textContent='Preparing Excel…';
     try{
       if(typeof apiPost!=='function'||!sessionToken)throw new Error('A/R session is not ready.');
-      var loc=currentLocation(),typed=selectedCustomers.size?'':norm(customerInput?.value);
+      var loc=currentLocation();
       var result=await apiPost({action:'arList',sessionToken:sessionToken,view:VIEW});
       if(!result||result.success!==true||!Array.isArray(result.receivables))throw new Error(result?.error||'Could not refresh authorized outstanding invoices.');
       var authorized=result.receivables.filter(function(r){
         if(!allowedLocation(r,loc)||!isOpen(r))return false;
-        var key=norm(r.customer);
-        return selectedCustomers.size?selectedCustomers.has(key):(!typed||key.includes(typed));
+        return allCustomersSelected||selectedCustomers.has(norm(r.customer));
       });
       if(!authorized.length){alert('No outstanding invoices for the selected customer/location.');return;}
       var groups=new Map();
@@ -472,7 +527,23 @@
     }
   }
 
-  window.BBARCustomerExcelV1={exportExcel:exportExcel,filterSelectedCustomers:filterSelectedCustomers,getSelectedNames:function(){return [...selectedCustomers];},setSelectedNames:function(names){selectedCustomers=new Set((names||[]).map(norm));},clearSelection:function(){selectedCustomers.clear();if(customerInput)customerInput.value='';refreshCustomerMenu();}};
+  window.BBARCustomerExcelV1={
+    exportExcel:exportExcel,filterSelectedCustomers:filterSelectedCustomers,
+    isFiltered:function(){return !allCustomersSelected;},
+    getSelectedNames:function(){return allCustomersSelected?[]:[...selectedCustomers];},
+    setSelectedNames:function(names){
+      allCustomersSelected=false;
+      selectedCustomers=new Set((names||[]).map(norm));
+      refreshCustomerMenu();renderChanged();
+    },
+    clearSelection:function(){
+      // Clear Filters (whole A/R screen) restores the default ALL selection.
+      allCustomersSelected=true;selectedCustomers.clear();
+      if(customerInput)customerInput.value='';
+      if(menuSearch)menuSearch.value='';
+      setMenu(false);refreshCustomerMenu();
+    }
+  };
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',installUI,{once:true});
   else installUI();
 })();
