@@ -231,6 +231,12 @@ const HEADER_FILTER_CSS=`
 .filters.bb-mobile-filter-panel .bb-ar-customer-list.bb-ar-five-customers{min-height:min(225px,34dvh)!important}
 .filters.bb-mobile-filter-panel .bb-ar-customer-option{padding:8px 9px!important;min-height:41px!important}
 .filters.bb-mobile-filter-panel .bb-ar-customer-option input[type="checkbox"]{grid-column:auto!important;min-height:16px!important;width:16px!important}
+/* Compact spreadsheet-style Select all / Clear / Select shown tools. */
+.filters.bb-mobile-filter-panel .bb-ar-multi-actions{display:flex!important;flex-wrap:wrap!important;gap:5px!important;align-items:center!important;padding:5px 0!important}
+.filters.bb-mobile-filter-panel .bb-ar-multi-action{display:inline-flex!important;align-items:center!important;justify-content:center!important;flex:0 1 auto!important;min-height:30px!important;width:auto!important;padding:5px 8px!important;border:1px solid #d7e6f7!important;border-radius:7px!important;font-size:10px!important;line-height:1.2!important}
+.filters.bb-mobile-filter-panel .bb-ar-multi-counter{margin-left:auto!important;font-size:10px!important}
+.filters.bb-mobile-filter-panel .bb-ar-customer-footer{display:flex!important;justify-content:flex-end!important;gap:8px!important}
+.filters.bb-mobile-filter-panel .bb-ar-customer-footer button{width:auto!important;min-width:75px!important;min-height:34px!important;font-size:11px!important;grid-column:auto!important}
 .bb-filter-clear{
   grid-column:1/-1!important;
   min-height:40px!important;
@@ -322,9 +328,9 @@ function activeFilterCount(doc){
     'arFromDateFilter','arToDateFilter','arMinAmountFilter','arMaxAmountFilter']
     .map(id=>doc.getElementById(id))
     .filter(el=>el&&String(el.value||'').trim()).length;
-  const checked=doc.defaultView?.BBARCustomerExcelV1?.getSelectedNames?.().length||0;
+  const customerFiltered=doc.defaultView?.BBARCustomerExcelV1?.isFiltered?.()===true;
   const typed=String(doc.getElementById('customerFilter')?.value||'').trim();
-  return others+(checked||typed?1:0)+
+  return others+(customerFiltered||typed?1:0)+
     (doc.getElementById('arDateFieldFilter')?.value==='dueDate'?1:0);
 }
 
@@ -423,6 +429,7 @@ function buildFilterUI(doc,win){
     });
   });
 
+  doc.addEventListener('bb-ar-customer-scope-changed',syncFilterButton);
   ['arDateFieldFilter','arFromDateFilter','arToDateFilter','arMinAmountFilter','arMaxAmountFilter'].forEach(id=>{
     const field=doc.getElementById(id);
     if(!field)return;
