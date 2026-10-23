@@ -199,10 +199,13 @@
       ev.preventDefault();ev.stopPropagation();
       // Opening the list is not a text-entry action: dismiss the keyboard so
       // all five visible names can be read before staff tap Search.
-      if(document.activeElement===customerInput||document.activeElement===menuSearch){
+      const wasEditingCustomer=document.activeElement===customerInput;
+      if(wasEditingCustomer||document.activeElement===menuSearch){
         document.activeElement.blur();
       }
-      if(menuOpen){setMenu(false);return;}
+      // First arrow tap must OPEN the list even if focusing the customer
+      // search already opened the menu; a subsequent tap toggles it closed.
+      if(menuOpen&&!wasEditingCustomer){setMenu(false);return;}
       menuSearch.value='';
       displayOptions(true);setMenu(true);
     });
