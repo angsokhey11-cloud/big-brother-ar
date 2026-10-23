@@ -159,8 +159,9 @@ const HEADER_FILTER_CSS=`
   bottom:0!important;
   z-index:8999!important;
   display:grid!important;
-  grid-template-columns:1fr 1fr!important;
-  gap:8px!important;
+  grid-template-columns:repeat(6,minmax(0,1fr))!important;
+  column-gap:7px!important;
+  row-gap:10px!important;
   padding:14px 12px calc(14px + env(safe-area-inset-bottom))!important;
   border:0!important;
   border-radius:20px 20px 0 0!important;
@@ -171,10 +172,14 @@ const HEADER_FILTER_CSS=`
 }
 .filters.bb-mobile-filter-panel.open{transform:translateY(0)!important}
 .filters.bb-mobile-filter-panel{max-height:87dvh!important;overflow-y:auto!important;overscroll-behavior:contain!important}
+.filters.bb-mobile-filter-panel .ar-range-collapse{grid-column:1/-1!important;min-width:0!important;border:1px solid #dce8f7!important;border-radius:11px!important;background:#f6f9fd!important;overflow:hidden!important}
+.filters.bb-mobile-filter-panel .ar-range-summary{padding:11px 10px!important;font-size:11px!important;gap:5px!important}
+.filters.bb-mobile-filter-panel .ar-range-summary-hint{font-size:9px!important}
+.filters.bb-mobile-filter-panel .ar-range-collapse[open] .ar-range-summary-hint::after{font-size:9px!important}
 .filters.bb-mobile-filter-panel .ar-range-filters{grid-column:1/-1!important;
  display:grid!important;grid-template-columns:1fr 1fr!important;gap:9px!important;
  background:#f6f9fd!important;border:1px solid #dce8f7!important;
- border-radius:10px!important;padding:10px!important;min-width:0!important}
+ border-radius:0!important;padding:10px!important;min-width:0!important;border-left:0!important;border-right:0!important;border-bottom:0!important}
 .filters.bb-mobile-filter-panel .ar-range-filters label{grid-column:auto!important;font-size:10px!important}
 .filters.bb-mobile-filter-panel .ar-range-filters input{grid-column:auto!important;min-width:0!important}
 .filters.bb-mobile-filter-panel .ar-range-filters .ar-clear-filters,
@@ -210,6 +215,19 @@ const HEADER_FILTER_CSS=`
   font-size:11px!important;
 }
 .filters.bb-mobile-filter-panel input{grid-column:1/-1!important}
+/* Compact rows: invoice/customer (2 fields), location/currency/status (3 fields) */
+.filters.bb-mobile-filter-panel #searchBox{grid-column:span 3!important;width:100%!important;min-width:0!important;font-size:10px!important}
+.filters.bb-mobile-filter-panel .bb-ar-customer-combo{grid-column:span 3!important;min-width:0!important;align-self:start!important}
+.filters.bb-mobile-filter-panel .bb-ar-customer-combo #customerFilter{grid-column:auto!important;padding-right:32px!important;font-size:10px!important}
+.filters.bb-mobile-filter-panel .bb-ar-customer-arrow{top:0!important;bottom:auto!important;right:0!important;height:42px!important;min-height:42px!important;width:31px!important;z-index:3!important}
+.filters.bb-mobile-filter-panel #locationFilter,.filters.bb-mobile-filter-panel #currencyFilter,.filters.bb-mobile-filter-panel #statusFilter{grid-column:span 2!important;min-width:0!important;font-size:9px!important;padding:7px 5px!important;white-space:nowrap!important}
+/* The customer list opens DOWNWARD inside the drawer and may scroll; no overlap with the header. */
+.filters.bb-mobile-filter-panel .bb-ar-customer-menu{position:relative!important;inset:auto!important;top:auto!important;bottom:auto!important;left:auto!important;right:auto!important;max-height:none!important;min-width:0!important;width:calc(200% + 7px)!important;max-width:calc(100vw - 24px)!important;margin:7px 0 0 calc(-100% - 7px)!important;z-index:10!important;padding:4px!important;box-sizing:border-box!important}
+.filters.bb-mobile-filter-panel .bb-ar-menu-search{width:100%!important;min-height:38px!important;font-size:12px!important;grid-column:auto!important}
+.filters.bb-mobile-filter-panel .bb-ar-customer-list{max-height:min(255px,34dvh)!important;overflow-y:auto!important}
+.filters.bb-mobile-filter-panel .bb-ar-customer-list.bb-ar-five-customers{min-height:min(225px,34dvh)!important}
+.filters.bb-mobile-filter-panel .bb-ar-customer-option{padding:8px 9px!important;min-height:41px!important}
+.filters.bb-mobile-filter-panel .bb-ar-customer-option input[type="checkbox"]{grid-column:auto!important;min-height:16px!important;width:16px!important}
 .bb-filter-clear{
   grid-column:1/-1!important;
   min-height:40px!important;
@@ -229,8 +247,9 @@ const HEADER_FILTER_CSS=`
   .cards .card:nth-child(3)>strong,.cards .card:nth-child(4)>strong{font-size:16px!important}
   .bb-mobile-actionbar{grid-template-columns:66px minmax(0,1fr) minmax(0,1fr) 36px!important;gap:5px!important}
   .bb-mobile-actionbar .btn,.bb-filter-toggle,.bb-refresh-btn{font-size:8.2px!important;padding:5px 4px!important}
-  .filters.bb-mobile-filter-panel{grid-template-columns:1fr!important}
-  .filters.bb-mobile-filter-panel input,.filters.bb-mobile-filter-panel select,.filters.bb-mobile-filter-panel .bb-filter-head,.bb-filter-clear{grid-column:1!important}
+  .filters.bb-mobile-filter-panel{grid-template-columns:repeat(6,minmax(0,1fr))!important;column-gap:5px!important}
+  .filters.bb-mobile-filter-panel #locationFilter,.filters.bb-mobile-filter-panel #currencyFilter,.filters.bb-mobile-filter-panel #statusFilter{font-size:8px!important}
+  .filters.bb-mobile-filter-panel .bb-ar-customer-menu{width:calc(200% + 5px)!important;margin-left:calc(-100% - 5px)!important}
 }
 `;
 
@@ -333,8 +352,11 @@ function buildFilterUI(doc,win){
   filters.classList.add('bb-mobile-filter-panel');
   // Keep the date/amount row inside the same mobile drawer, not as a
   // permanently visible bar that crowds small phone screens.
-  const range=doc.querySelector('.ar-range-filters');
+  const range=doc.querySelector('.ar-range-collapse');
   if(range)filters.append(range);
+  // Shorter text fits three native dropdowns on one phone row.
+  const locationChoice=doc.querySelector('#locationFilter option[value=""]');
+  if(locationChoice)locationChoice.textContent='All locations';
 
   const head=doc.createElement('div');
   head.className='bb-filter-head';
@@ -377,7 +399,7 @@ function buildFilterUI(doc,win){
     if(!el)return;
     el.addEventListener('change',()=>{
       syncFilterButton();
-      setTimeout(closeFilters,120);
+      // Keep drawer open while staff choose multiple filter dimensions.
     });
   });
 
@@ -387,7 +409,7 @@ function buildFilterUI(doc,win){
     el.addEventListener('input',syncFilterButton);
     el.addEventListener('change',()=>{
       syncFilterButton();
-      setTimeout(closeFilters,120);
+      if(id==='searchBox')setTimeout(closeFilters,120);
     });
     el.addEventListener('keydown',event=>{
       if(event.key==='Enter'){
