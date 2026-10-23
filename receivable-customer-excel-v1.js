@@ -14,6 +14,7 @@
   // The ONLY editable customer search lives inside the checkbox dropdown,
   // preventing browser password autofill on the outer field.
   var customerButtonMode=true;
+  var mobileDrawerMode=new URLSearchParams(location.search).get('mobileSkin')==='1';
 
   function id(name){return document.getElementById(name);}
   function str(v){return String(v==null?'':v).trim();}
@@ -46,6 +47,35 @@
   function filterSelectedCustomers(list){
     return allCustomersSelected?list:list.filter(function(r){return selectedCustomers.has(norm(r.customer));});
   }
+  // Desktop A/R tables live inside .panel{overflow:hidden}. When a filter
+  // produces zero invoices, the panel shrinks and clips the dropdown footer.
+  // Put ONLY the desktop menu at the document root and cap its height to the
+  // visible viewport. Its customer list scrolls; Cancel/OK never scroll away.
+  function positionDesktopMenu(){
+    if(!menuOpen||mobileDrawerMode||!customerMenu||!customerArrow)return;
+    var anchor=customerArrow.getBoundingClientRect();
+    var viewport=window.visualViewport;
+    var viewportTop=viewport?viewport.offsetTop:0;
+    var viewportHeight=viewport?viewport.height:window.innerHeight;
+    var viewportWidth=viewport?viewport.width:window.innerWidth;
+    var viewportLeft=viewport?viewport.offsetLeft:0;
+    var bottomEdge=viewportTop+viewportHeight-8;
+    var topEdge=viewportTop+8;
+    var roomBelow=Math.max(0,bottomEdge-anchor.bottom-4);
+    var roomAbove=Math.max(0,anchor.top-topEdge-4);
+    var placeAbove=roomBelow<310&&roomAbove>roomBelow;
+    var available=placeAbove?roomAbove:roomBelow;
+    var maxHeight=Math.max(130,Math.min(440,Math.floor(available)));
+    var width=Math.min(420,Math.max(330,Math.round(anchor.width)),viewportWidth-16);
+    var left=Math.max(viewportLeft+8,Math.min(anchor.left,viewportLeft+viewportWidth-width-8));
+    var top=placeAbove
+      ?Math.max(topEdge,anchor.top-maxHeight-4)
+      :Math.min(anchor.bottom+4,Math.max(topEdge,bottomEdge-maxHeight));
+    customerMenu.style.left=Math.round(left)+'px';
+    customerMenu.style.top=Math.round(top)+'px';
+    customerMenu.style.width=Math.round(width)+'px';
+    customerMenu.style.maxHeight=Math.floor(Math.min(maxHeight,bottomEdge-top))+'px';
+  }
   function setMenu(open){
     if(open&&!menuOpen){
       draftAllCustomersSelected=allCustomersSelected;
@@ -54,6 +84,7 @@
     menuOpen=!!open;
     if(customerMenu)customerMenu.hidden=!menuOpen;
     if(customerArrow)customerArrow.setAttribute('aria-expanded',String(menuOpen));
+    if(menuOpen)positionDesktopMenu();
   }
   function updateInputSummary(){
     if(!customerInput)return;
@@ -254,6 +285,17 @@
     });
     footer.append(cancel,ok);
     customerMenu.appendChild(footer);
+    if(!mobileDrawerMode){
+      // The floating menu must not be clipped by a short/empty A/R table.
+      customerMenu.classList.add('bb-ar-desktop-portal');
+      document.body.appendChild(customerMenu);
+      window.addEventListener('resize',positionDesktopMenu);
+      window.addEventListener('scroll',positionDesktopMenu,true);
+      if(window.visualViewport){
+        window.visualViewport.addEventListener('resize',positionDesktopMenu);
+        window.visualViewport.addEventListener('scroll',positionDesktopMenu);
+      }
+    }
     menuSearch.addEventListener('input',function(){displayOptions(false);});
     menuSearch.addEventListener('keydown',function(ev){
       if(ev.key==='Escape')setMenu(false);
@@ -280,7 +322,8 @@
       if(ev.key==='Escape')setMenu(false);
     });
     document.addEventListener('pointerdown',function(ev){
-      if(customerWrap&&!customerWrap.contains(ev.target))setMenu(false);
+      if(customerWrap&&!customerWrap.contains(ev.target)&&
+         customerMenu&&!customerMenu.contains(ev.target))setMenu(false);
     });
 
     var bar=document.createElement('div');
@@ -312,6 +355,10 @@
       '.bb-ar-customer-list{overflow-y:auto;overscroll-behavior:contain;max-height:min(38vh,275px);min-height:0}',
       '.bb-ar-customer-list.bb-ar-five-customers{min-height:225px}',
       '.bb-ar-customer-menu[hidden]{display:none!important}',
+      '.bb-ar-customer-menu.bb-ar-desktop-portal{position:fixed;top:auto;left:auto;right:auto;bottom:auto;z-index:20000;max-height:440px;overflow:hidden;display:flex;flex-direction:column}',
+      '.bb-ar-desktop-portal .bb-ar-customer-list{flex:1 1 auto;min-height:0;max-height:none;overflow-y:auto;overscroll-behavior:contain}',
+      '.bb-ar-desktop-portal .bb-ar-customer-list.bb-ar-five-customers{min-height:0}',
+      '.bb-ar-desktop-portal .bb-ar-customer-footer{position:relative;z-index:1;flex:0 0 auto;box-shadow:0 -3px 8px rgba(14,49,83,.05)}',
       '.bb-ar-multi-actions{display:flex;align-items:center;gap:5px;flex-wrap:wrap;position:sticky;top:-4px;z-index:1;padding:6px 3px;background:#fff;border-bottom:1px solid #dce8f5}',
       '.bb-ar-multi-action{background:#edf5ff;border:1px solid #d7e6f7;border-radius:6px;color:#1759a1;font:700 11px Arial,sans-serif;padding:6px;cursor:pointer}',
       '.bb-ar-multi-action:disabled{opacity:.5}',
