@@ -53,7 +53,7 @@
     // Audit PDF: current summary image followed by authorized invoice originals / digital fallback.
     html=html.replace('</body>', '<scr'+'ipt src="receivable-audit-pdf-v1.js?v=20261022-summary-snapshot2"></scr'+'ipt></body>');
     // Authorized A/R pending-customer dropdown and multi-sheet Excel export.
-    html=html.replace('</body>', '<scr'+'ipt src="receivable-customer-excel-v1.js?v=20261023-filtercompact1"></scr'+'ipt></body>');
+    html=html.replace('</body>', '<scr'+'ipt src="receivable-customer-excel-v1.js?v=20261023-noautofill2"></scr'+'ipt></body>');
     document.open();document.write(html);document.close();
   }catch(error){
     console.error(error);
