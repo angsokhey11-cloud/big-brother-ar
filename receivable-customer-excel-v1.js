@@ -7,7 +7,7 @@
   if(window.BBARCustomerExcelV1)return;
 
   var selectedCustomers=new Set();
-  var customerMenu,customerInput,customerWrap,customerArrow,exportButton;
+  var customerMenu,customerInput,customerWrap,customerArrow,exportButton,menuSearch,menuList,menuCounter,selectShownButton;
   var menuOpen=false,exportBusy=false;
 
   function id(name){return document.getElementById(name);}
@@ -57,48 +57,30 @@
     if(typeof renderRows==='function')renderRows();
   }
   function displayOptions(showAll){
-    if(!customerMenu||!customerInput)return;
-    var scrollTop=customerMenu.scrollTop;
-    var needle=showAll?'':norm(customerInput.value);
+    if(!customerMenu||!customerInput||!menuList)return;
+    var scrollTop=menuList.scrollTop;
+    // The dropdown search is separate from the legacy customer text filter:
+    // typing here only narrows the checkbox choices, not the authorized data.
+    var needle=showAll?'':norm(str(menuSearch&&menuSearch.value)||customerInput.value);
     var options=pendingCustomers().filter(function(x){return !needle||norm(x.name).includes(needle);});
-    customerMenu.replaceChildren();
-
-    var tools=document.createElement('div');
-    tools.className='bb-ar-multi-actions';
-    var all=document.createElement('button');
-    all.type='button';all.className='bb-ar-multi-action';
-    all.textContent='All customers';
-    all.title='Clear customer checkboxes and view every customer in this location';
-    all.addEventListener('click',function(){
-      selectedCustomers.clear();
-      customerInput.value='';
-      renderChanged();
-      setMenu(true);
-    });
-    var selectShown=document.createElement('button');
-    selectShown.type='button';selectShown.className='bb-ar-multi-action';
-    selectShown.textContent='✓ Select shown ('+options.length+')';
-    selectShown.disabled=!options.length;
-    selectShown.title='Select every customer currently listed in this dropdown';
-    selectShown.addEventListener('click',function(){
-      options.forEach(function(x){selectedCustomers.add(norm(x.name));});
-      renderChanged();
-      setMenu(true);
-    });
-    var counter=document.createElement('span');
-    counter.className='bb-ar-multi-counter';
-    counter.textContent=selectedCustomers.size+' selected';
-    counter.setAttribute('aria-live','polite');
-    tools.append(all,selectShown,counter);
-    customerMenu.appendChild(tools);
-
+    menuList.replaceChildren();
+    menuList.classList.toggle('bb-ar-five-customers',options.length>=5);
+    if(menuCounter)menuCounter.textContent=selectedCustomers.size+' selected';
+    if(selectShownButton){
+      selectShownButton.disabled=!options.length;
+      selectShownButton.textContent='✓ Select shown ('+options.length+')';
+      selectShownButton.onclick=function(){
+        options.forEach(function(x){selectedCustomers.add(norm(x.name));});
+        renderChanged();
+        setMenu(true);
+      };
+    }
     if(!options.length){
       var none=document.createElement('div');
       none.className='bb-ar-customer-empty';
       none.textContent='No pending customers match this search';
-      customerMenu.appendChild(none);
+      menuList.appendChild(none);
     }
-
     options.forEach(function(x){
       var item=document.createElement('label');
       item.className='bb-ar-customer-option bb-ar-check-option';
@@ -119,9 +101,9 @@
         renderChanged();
         setMenu(true);
       });
-      customerMenu.appendChild(item);
+      menuList.appendChild(item);
     });
-    customerMenu.scrollTop=scrollTop;
+    menuList.scrollTop=showAll?0:scrollTop;
   }
   function refreshCustomerMenu(){
     pruneLocationSelections();
@@ -158,9 +140,43 @@
     customerMenu.hidden=true;
     customerWrap.appendChild(customerMenu);
 
+    // Persistent controls prevent the mobile keyboard from losing focus after
+    // each search keystroke. All customer names remain client-side authorized rows.
+    var menuTools=document.createElement('div');
+    menuTools.className='bb-ar-menu-tools';
+    menuSearch=document.createElement('input');
+    menuSearch.type='search';
+    menuSearch.className='bb-ar-menu-search';
+    menuSearch.placeholder='Search customer name…';
+    menuSearch.setAttribute('aria-label','Search pending customer names in dropdown');
+    menuTools.appendChild(menuSearch);
+    var actions=document.createElement('div');
+    actions.className='bb-ar-multi-actions';
+    var all=document.createElement('button');
+    all.type='button';all.className='bb-ar-multi-action';
+    all.textContent='All customers';
+    all.addEventListener('click',function(){
+      selectedCustomers.clear();customerInput.value='';menuSearch.value='';
+      renderChanged();setMenu(true);
+    });
+    selectShownButton=document.createElement('button');
+    selectShownButton.type='button';selectShownButton.className='bb-ar-multi-action';
+    menuCounter=document.createElement('span');
+    menuCounter.className='bb-ar-multi-counter';
+    menuCounter.setAttribute('aria-live','polite');
+    actions.append(all,selectShownButton,menuCounter);
+    menuTools.appendChild(actions);
+    customerMenu.appendChild(menuTools);
+    menuList=document.createElement('div');
+    menuList.className='bb-ar-customer-list';
+    customerMenu.appendChild(menuList);
+    menuSearch.addEventListener('input',function(){displayOptions(false);});
+    menuSearch.addEventListener('keydown',function(ev){if(ev.key==='Escape')setMenu(false);});
+
     customerArrow.addEventListener('click',function(ev){
       ev.preventDefault();ev.stopPropagation();
       if(menuOpen){setMenu(false);return;}
+      menuSearch.value='';
       displayOptions(true);setMenu(true);
     });
     customerInput.addEventListener('focus',function(){displayOptions(false);setMenu(true);});
@@ -191,7 +207,11 @@
       '.bb-ar-customer-combo #customerFilter{padding-right:37px;width:100%;box-sizing:border-box}',
       '.bb-ar-customer-combo.bb-ar-has-selection #customerFilter::placeholder{color:#145b9b;opacity:1;font-weight:750}',
       '.bb-ar-customer-arrow{position:absolute;top:1px;right:1px;bottom:1px;width:36px;z-index:2;border:0;border-left:1px solid #cbd6e3;border-radius:0 8px 8px 0;background:#edf5ff;color:#17457a;font-size:21px;cursor:pointer}',
-      '.bb-ar-customer-menu{position:absolute;z-index:1200;top:calc(100% + 3px);left:0;right:0;min-width:min(365px,88vw);max-height:min(45vh,330px);overflow:auto;background:#fff;border:1px solid #9ebcdd;box-shadow:0 10px 28px #163b6933;border-radius:10px;padding:4px}',
+      '.bb-ar-customer-menu{position:absolute;z-index:1200;top:calc(100% + 3px);left:0;right:0;min-width:min(365px,88vw);background:#fff;border:1px solid #9ebcdd;box-shadow:0 10px 28px #163b6933;border-radius:10px;padding:4px;display:flex;flex-direction:column;box-sizing:border-box}',
+      '.bb-ar-menu-tools{flex:none;background:#fff;z-index:2;padding:5px;border-bottom:1px solid #dce8f5}',
+      '.bb-ar-menu-search{box-sizing:border-box;width:100%;min-height:38px;padding:7px 9px;font-size:13px;border:1px solid #bfcee1;border-radius:8px}',
+      '.bb-ar-customer-list{overflow-y:auto;overscroll-behavior:contain;max-height:min(38vh,275px);min-height:0}',
+      '.bb-ar-customer-list.bb-ar-five-customers{min-height:225px}',
       '.bb-ar-customer-menu[hidden]{display:none!important}',
       '.bb-ar-multi-actions{display:flex;align-items:center;gap:5px;flex-wrap:wrap;position:sticky;top:-4px;z-index:1;padding:6px 3px;background:#fff;border-bottom:1px solid #dce8f5}',
       '.bb-ar-multi-action{background:#edf5ff;border:1px solid #d7e6f7;border-radius:6px;color:#1759a1;font:700 11px Arial,sans-serif;padding:6px;cursor:pointer}',
@@ -207,7 +227,7 @@
       '.bb-ar-export-bar span{color:#516984;font-size:11px;font-weight:600}',
       '.bb-ar-export-btn{background:#157245;color:#fff;white-space:nowrap}',
       '.bb-ar-export-btn:disabled{opacity:.55;cursor:wait}',
-      '@media(max-width:900px){.filters.bb-mobile-filter-panel .bb-ar-customer-combo{grid-column:1/-1!important}.filters.bb-mobile-filter-panel .bb-ar-customer-menu{top:auto;bottom:calc(100% + 3px);max-height:min(45vh,320px)}.bb-ar-export-bar{padding:7px 10px}.bb-ar-export-bar span{max-width:60%;font-size:10px}.bb-ar-export-btn{font-size:11px;padding:8px 11px}}'
+      '@media(max-width:900px){.bb-ar-export-bar{padding:7px 10px}.bb-ar-export-bar span{max-width:60%;font-size:10px}.bb-ar-export-btn{font-size:11px;padding:8px 11px}}'
     ].join('\n');
     document.head.appendChild(styles);
 
