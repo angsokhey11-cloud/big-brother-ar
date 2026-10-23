@@ -12,6 +12,13 @@
 *{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text)}
 body{padding:20px}.wrap{max-width:1500px;margin:0 auto}.topbar{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:18px}.topbar h1{margin:0 0 5px;font-size:28px}.subtitle{margin:0;color:var(--muted)}.userbox{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}.pill{padding:8px 12px;border:1px solid #c9d8ec;border-radius:999px;background:#edf5ff;color:#245da8;font-size:12px;font-weight:700}.logout{border:1px solid #cfd8e4;background:#fff;color:#4e6076;border-radius:9px;padding:8px 12px;cursor:pointer;font-weight:700}.cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin-bottom:16px}.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:15px;box-shadow:var(--shadow)}.card small{display:block;color:var(--muted);font-weight:700;margin-bottom:7px}.card strong{font-size:24px}.card.red strong{color:var(--red)}.currency-totals{display:flex;flex-direction:column;gap:5px}.currency-line{display:flex;align-items:baseline;justify-content:space-between;gap:10px}.currency-line .ccy{font-size:11px;font-weight:800;color:var(--muted);letter-spacing:.45px}.currency-line .amt{font-size:21px;font-weight:800;color:var(--text);white-space:nowrap}.card.red .currency-line .amt{color:var(--red)}
 .panel{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}.filters{padding:14px;display:grid;grid-template-columns:1fr 1.2fr 1fr 1fr 1fr auto auto auto;gap:10px;border-bottom:1px solid var(--line)}
+.ar-range-collapse{border-bottom:1px solid var(--line);background:#fafcff}
+.ar-range-collapse>.ar-range-summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;padding:12px 14px;color:#244f7b;font-size:13px;font-weight:800;user-select:none}
+.ar-range-collapse>.ar-range-summary::-webkit-details-marker{display:none}
+.ar-range-summary-hint{font-size:11px;font-weight:750;color:#527496;white-space:nowrap}
+.ar-range-collapse[open] .ar-range-summary-hint{font-size:0}
+.ar-range-collapse[open] .ar-range-summary-hint::after{content:"Hide filters ▴";font-size:11px}
+.ar-range-collapse>.ar-range-filters{border-bottom:0}
 .ar-range-filters{padding:12px 14px;display:grid;grid-template-columns:repeat(5,minmax(115px,1fr)) auto;gap:10px;border-bottom:1px solid var(--line);align-items:end;background:#fafcff}
 .ar-range-filters label{font-size:11px;color:#425e7c;font-weight:750;display:flex;flex-direction:column;gap:5px;min-width:0}
 .ar-range-filters label input,.ar-range-filters label select{font-size:13px;padding:9px 10px;width:100%;min-width:0}
@@ -57,6 +64,8 @@ input,select,textarea{width:100%;border:1px solid #cbd6e3;border-radius:9px;padd
       <button class="btn batch-btn" id="batchBtn" onclick="openBatchPayment()" disabled hidden>💰 Receive Selected (0)</button>
       <button class="btn secondary" onclick="loadAR(true)">↻ Refresh</button>
     </div>
+    <details class="ar-range-collapse" id="arRangeCollapse">
+      <summary class="ar-range-summary" aria-label="Expand or collapse date and outstanding amount filters"><span>📅 Date &amp; Outstanding Amount</span><span class="ar-range-summary-hint">Show filters ▾</span></summary>
     <div class="ar-range-filters" role="group" aria-label="A/R invoice date and outstanding amount filters">
       <label>Filter Date By
         <select id="arDateFieldFilter" onchange="filterChanged()"><option value="invoiceDate">Invoice Date</option><option value="dueDate">Due Date</option></select>
@@ -76,6 +85,7 @@ input,select,textarea{width:100%;border:1px solid #cbd6e3;border-radius:9px;padd
       <button class="btn secondary ar-clear-filters" type="button" onclick="clearARRangeFilters()">✕ Clear Date / Amount</button>
       <div class="ar-range-explain" id="arRangeExplain" role="status" aria-live="polite">Dates are inclusive; amounts use each invoice’s outstanding balance in its own currency (USD or KHR). Use Currency to narrow comparisons. Selected Summary invoices follow the displayed filters.</div>
     </div>
+    </details>
     <div class="tablewrap">
       <table>
         <thead><tr><th class="checkcell" id="selectHead" hidden><input class="selectall" id="selectAllBox" type="checkbox" title="Select all visible invoices" onchange="toggleSelectAll(this.checked)"></th><th>Invoice No</th><th>Date</th><th>Due Date</th><th>Customer</th><th>Location</th><th class="money">Grand Total</th><th class="money">Paid</th><th class="money">Outstanding</th><th>Status</th><th>Action</th></tr></thead>
