@@ -9,6 +9,9 @@
   var selectedCustomers=new Set();
   var customerMenu,customerInput,customerWrap,customerArrow,exportButton,menuSearch,menuList,menuCounter,selectShownButton;
   var menuOpen=false,exportBusy=false;
+  // The phone has a working search INSIDE the customer list. Its outer field
+  // is a button only, so Android cannot treat it as a login/username input.
+  var mobileButtonMode=new URLSearchParams(location.search).get('mobileSkin')==='1';
 
   function id(name){return document.getElementById(name);}
   function str(v){return String(v==null?'':v).trim();}
@@ -61,7 +64,7 @@
     var scrollTop=menuList.scrollTop;
     // The dropdown search is separate from the legacy customer text filter:
     // typing here only narrows the checkbox choices, not the authorized data.
-    var needle=showAll?'':norm(str(menuSearch&&menuSearch.value)||customerInput.value);
+    var needle=showAll?'':norm(str(menuSearch&&menuSearch.value)||(mobileButtonMode?'':customerInput.value));
     var options=pendingCustomers().filter(function(x){return !needle||norm(x.name).includes(needle);});
     menuList.replaceChildren();
     menuList.classList.toggle('bb-ar-five-customers',options.length>=5);
@@ -144,14 +147,22 @@
     customerInput.removeAttribute('readonly');
     customerInput.removeAttribute('list'); // no native datalist on top of the checkbox list
     customerInput.setAttribute('aria-label','Search or select pending customers');
+    if(mobileButtonMode){
+      // Keep this legacy value-only field for the existing filter engine and
+      // invoice lookup; visually it is NOT editable and cannot trigger autofill.
+      customerInput.type='hidden';
+      customerInput.value='';
+      customerInput.tabIndex=-1;
+      customerInput.setAttribute('aria-hidden','true');
+    }
 
     customerArrow=document.createElement('button');
     customerArrow.type='button';
-    customerArrow.className='bb-ar-customer-arrow';
-    customerArrow.setAttribute('aria-label','Show pending customers and checkboxes');
+    customerArrow.className='bb-ar-customer-arrow'+(mobileButtonMode?' bb-ar-customer-trigger':'');
+    customerArrow.setAttribute('aria-label',mobileButtonMode?'Search Customer':'Show pending customers and checkboxes');
     customerArrow.setAttribute('aria-haspopup','listbox');
     customerArrow.setAttribute('aria-expanded','false');
-    customerArrow.textContent='▾';
+    customerArrow.textContent=mobileButtonMode?'Search Customer':'▾';
     customerWrap.appendChild(customerArrow);
 
     customerMenu=document.createElement('div');
@@ -236,6 +247,8 @@
       '.bb-ar-customer-combo{position:relative;min-width:0;width:100%}',
       '.bb-ar-customer-combo #customerFilter{padding-right:37px;width:100%;box-sizing:border-box}',
       '.bb-ar-customer-combo.bb-ar-has-selection #customerFilter::placeholder{color:#145b9b;opacity:1;font-weight:750}',
+      '.bb-ar-customer-combo #customerFilter[type="hidden"]{display:none!important}',
+      '.bb-ar-customer-trigger::after{content:"▾";margin-left:auto;font-size:16px}',
       '.bb-ar-customer-arrow{position:absolute;top:1px;right:1px;bottom:1px;width:36px;z-index:2;border:0;border-left:1px solid #cbd6e3;border-radius:0 8px 8px 0;background:#edf5ff;color:#17457a;font-size:21px;cursor:pointer}',
       '.bb-ar-customer-menu{position:absolute;z-index:1200;top:calc(100% + 3px);left:0;right:0;min-width:min(365px,88vw);background:#fff;border:1px solid #9ebcdd;box-shadow:0 10px 28px #163b6933;border-radius:10px;padding:4px;display:flex;flex-direction:column;box-sizing:border-box}',
       '.bb-ar-menu-tools{flex:none;background:#fff;z-index:2;padding:5px;border-bottom:1px solid #dce8f5}',
