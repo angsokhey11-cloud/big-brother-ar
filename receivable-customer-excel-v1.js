@@ -9,9 +9,10 @@
   var selectedCustomers=new Set();
   var customerMenu,customerInput,customerWrap,customerArrow,exportButton,menuSearch,menuList,menuCounter,selectShownButton;
   var menuOpen=false,exportBusy=false;
-  // The phone has a working search INSIDE the customer list. Its outer field
-  // is a button only, so Android cannot treat it as a login/username input.
-  var mobileButtonMode=new URLSearchParams(location.search).get('mobileSkin')==='1';
+  // Both desktop and mobile use the same fixed Search Customer button.
+  // The ONLY editable customer search lives inside the checkbox dropdown,
+  // preventing browser password autofill on the outer field.
+  var customerButtonMode=true;
 
   function id(name){return document.getElementById(name);}
   function str(v){return String(v==null?'':v).trim();}
@@ -64,7 +65,7 @@
     var scrollTop=menuList.scrollTop;
     // The dropdown search is separate from the legacy customer text filter:
     // typing here only narrows the checkbox choices, not the authorized data.
-    var needle=showAll?'':norm(str(menuSearch&&menuSearch.value)||(mobileButtonMode?'':customerInput.value));
+    var needle=showAll?'':norm(str(menuSearch&&menuSearch.value)||(customerButtonMode?'':customerInput.value));
     var options=pendingCustomers().filter(function(x){return !needle||norm(x.name).includes(needle);});
     menuList.replaceChildren();
     menuList.classList.toggle('bb-ar-five-customers',options.length>=5);
@@ -147,7 +148,7 @@
     customerInput.removeAttribute('readonly');
     customerInput.removeAttribute('list'); // no native datalist on top of the checkbox list
     customerInput.setAttribute('aria-label','Search or select pending customers');
-    if(mobileButtonMode){
+    if(customerButtonMode){
       // Keep this legacy value-only field for the existing filter engine and
       // invoice lookup; visually it is NOT editable and cannot trigger autofill.
       customerInput.type='hidden';
@@ -158,11 +159,11 @@
 
     customerArrow=document.createElement('button');
     customerArrow.type='button';
-    customerArrow.className='bb-ar-customer-arrow'+(mobileButtonMode?' bb-ar-customer-trigger':'');
-    customerArrow.setAttribute('aria-label',mobileButtonMode?'Search Customer':'Show pending customers and checkboxes');
+    customerArrow.className='bb-ar-customer-arrow'+(customerButtonMode?' bb-ar-customer-trigger':'');
+    customerArrow.setAttribute('aria-label',customerButtonMode?'Search Customer':'Show pending customers and checkboxes');
     customerArrow.setAttribute('aria-haspopup','listbox');
     customerArrow.setAttribute('aria-expanded','false');
-    customerArrow.textContent=mobileButtonMode?'Search Customer':'▾';
+    customerArrow.textContent=customerButtonMode?'Search Customer':'▾';
     customerWrap.appendChild(customerArrow);
 
     customerMenu=document.createElement('div');
@@ -248,6 +249,8 @@
       '.bb-ar-customer-combo #customerFilter{padding-right:37px;width:100%;box-sizing:border-box}',
       '.bb-ar-customer-combo.bb-ar-has-selection #customerFilter::placeholder{color:#145b9b;opacity:1;font-weight:750}',
       '.bb-ar-customer-combo #customerFilter[type="hidden"]{display:none!important}',
+      '.bb-ar-customer-trigger{position:relative;inset:auto;top:auto;right:auto;bottom:auto;left:auto;display:flex;align-items:center;justify-content:space-between;gap:7px;width:100%;min-height:42px;height:auto;padding:9px 12px;border:1px solid #cbd6e3;border-radius:9px;background:#eef6ff;color:#17457a;font:800 13px Arial,sans-serif;text-align:left;white-space:nowrap;cursor:pointer;box-sizing:border-box}',
+      '.bb-ar-customer-trigger:focus-visible{outline:2px solid #6198d8;outline-offset:2px}',
       '.bb-ar-customer-trigger::after{content:"▾";margin-left:auto;font-size:16px}',
       '.bb-ar-customer-arrow{position:absolute;top:1px;right:1px;bottom:1px;width:36px;z-index:2;border:0;border-left:1px solid #cbd6e3;border-radius:0 8px 8px 0;background:#edf5ff;color:#17457a;font-size:21px;cursor:pointer}',
       '.bb-ar-customer-menu{position:absolute;z-index:1200;top:calc(100% + 3px);left:0;right:0;min-width:min(365px,88vw);background:#fff;border:1px solid #9ebcdd;box-shadow:0 10px 28px #163b6933;border-radius:10px;padding:4px;display:flex;flex-direction:column;box-sizing:border-box}',
