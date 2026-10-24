@@ -26,6 +26,61 @@ function removeUsedBankCache(customerId,transactionId){
  localStorage.setItem(key,JSON.stringify(saved));
  }catch(_){}
 }
+async function refreshCustomerBankCache(customerId){
+ // A/R must fetch the REAL remaining balance after each successful use.
+ // The shared Invoice Generator bulk cache may have hidden a partially used
+ // transaction. This RPC is authorized for A/R editors and Invoice creators.
+ const id=String(customerId||'').trim();
+ if(!id||typeof window.BBARAdapter?.rpc!=='function')return false;
+ const fresh=await window.BBARAdapter.rpc('bb_customer_bank_balance_list_v2',{p_customer_id:id});
+ if(!Array.isArray(fresh))throw Error('Invalid bank balance response');
+ const session=JSON.parse(localStorage.getItem('BB_SUPABASE_DEV_SESSION_V1')||'null');
+ const jwt=String(session?.access_token||'').split('.')[1]||'';
+ if(!jwt)return false;
+ const sub=JSON.parse(atob(jwt.replace(/-/g,'+').replace(/_/g,'/'))).sub;
+ if(!sub)return false;
+ const key='bb-bank-bulk-v1:'+sub;
+ const saved=JSON.parse(localStorage.getItem(key)||'null')||{rows:[]};
+ const normalized=fresh.filter(row=>Number(row.remaining_amount)>0).map(row=>{
+  const currency=String(row.currency||'USD').toUpperCase();
+  const invoiceCurrency=String(row.invoice_currency||currency).toUpperCase();
+  const rate=Number(row.approved_exchange_rate||1);
+  const remaining=Number(row.remaining_amount||0);
+  const equiv=currency===invoiceCurrency?remaining:
+   rate>1?(currency==='KHR'?remaining/rate:remaining*rate):0;
+  return {
+   customer_id:id,transaction_id:row.transaction_id,
+   original_amount:Number(row.original_amount||0),
+   used_amount:Number(row.used_amount||0),
+   remaining_amount:remaining,amount:remaining,
+   currency,invoice_currency:invoiceCurrency,
+   approved_exchange_rate:rate,received_date:row.received_date,
+   bank_name:row.bank_name||'',
+   equivalent_remaining:equiv,equivalent_amount:equiv
+  };
+ });
+ saved.rows=(Array.isArray(saved.rows)?saved.rows:[])
+  .filter(row=>String(row.customer_id)!==id).concat(normalized);
+ saved.syncedAt=Date.now();
+ localStorage.setItem(key,JSON.stringify(saved));
+ document.dispatchEvent(new CustomEvent('bb:bank-cache-updated',{
+  detail:{customerId:id,balances:normalized,transactions:normalized,
+   syncedAt:saved.syncedAt}
+ }));
+ return true;
+}
+function addBankRefreshButton(panel,customerId,render){
+ const b=document.createElement('button');
+ b.type='button';
+ b.textContent='↻ Refresh Bank Balance';
+ b.style.cssText='display:block;margin:9px 0 6px;border:1px solid #b5c7dc;border-radius:8px;padding:7px 10px;background:#f4f8fc;color:#174a91;font-size:12px;font-weight:700';
+ b.onclick=async()=>{
+  b.disabled=true;b.textContent='Refreshing bank balance…';
+  try{await refreshCustomerBankCache(customerId);render();}
+  catch(error){b.disabled=false;b.textContent='↻ Retry Bank Refresh';console.warn('A/R bank refresh:',error);}
+ };
+ panel.prepend(b);
+}
 function showWallet(){
  protectTransactionIdFields();
  const bank=document.getElementById('bankFields');
@@ -36,9 +91,10 @@ function showWallet(){
  const item=typeof currentInvoice!=='undefined'?currentInvoice:null;
  if(!item||document.getElementById('payMethod')?.value!=='Bank'){panel.textContent='';return;}
  const rows=bankSnapshot(item.customerId);
- if(rows===null){panel.textContent='Bank balance not synced. Open Invoice Generator and press Sync Bank.';return;}
+ if(rows===null){panel.textContent='Bank balance not synced. Press Refresh Bank Balance.';addBankRefreshButton(panel,item.customerId,showWallet);return;}
  {
    panel.replaceChildren();
+   addBankRefreshButton(panel,item.customerId,showWallet);
    const valid=(Array.isArray(rows)?rows:[]).filter(x=>x.invoice_currency===item.currency&&Number(x.remaining_amount)>0);
    if(!valid.length){panel.textContent='No registered bank balance for this customer. Staff should ask Admin to register a new bank payment.';return;}
    const heading=document.createElement('strong');heading.textContent='Available Registered Bank Balance (optional)';panel.append(heading);
@@ -68,9 +124,10 @@ function showBatchWallet(){
  if(ids.length!==1||!ids[0]){box.textContent='Registered balances require invoices from one customer.';return;}
  const currency=String(selected[0]?.currency||'USD');
  const rows=bankSnapshot(ids[0]);
- if(rows===null){box.textContent='Bank balance not synced. Open Invoice Generator and press Sync Bank.';return;}
+ if(rows===null){box.textContent='Bank balance not synced. Press Refresh Bank Balance.';addBankRefreshButton(box,ids[0],showBatchWallet);return;}
  {
   box.replaceChildren();
+  addBankRefreshButton(box,ids[0],showBatchWallet);
   const valid=(Array.isArray(rows)?rows:[]).filter(x=>x.invoice_currency===currency&&x.currency===currency&&Number(x.remaining_amount)>0);
   if(!valid.length){box.textContent='No available registered bank balance for these invoices. Staff should ask Admin to register a new transfer.';return;}
   const title=document.createElement('strong');title.textContent='Available Registered Bank Balance (optional)';box.append(title);
@@ -104,9 +161,20 @@ function install(){
     }
    }catch(_){}
   }
-  const data=params?.action==='arPayment'&&params.paymentData?(()=>{try{return JSON.parse(params.paymentData);}catch(_){return null;}})():null;
+  const receiving=['arPayment','arBatchPayment'].includes(params?.action);
+  const data=receiving&&params.paymentData?(()=>{try{return JSON.parse(params.paymentData);}catch(_){return null;}})():null;
+  const batchCustomer=params?.action==='arBatchPayment'&&typeof selectedPaymentRows==='function'
+   ?(()=>{const ids=[...new Set(selectedPaymentRows().map(row=>String(row.customerId||'')))];return ids.length===1?ids[0]:'';})():'';
   const result=await originalApi.call(this,params);
-  if(data?.paymentMethod==='Bank'&&data.transactionId&&data.customerId&&result?.ok!==false&&result?.success!==false){removeUsedBankCache(data.customerId,data.transactionId);}
+  const customerId=String(data?.customerId||batchCustomer||'');
+  if(receiving&&data?.paymentMethod==='Bank'&&data.transactionId&&customerId&&result?.success===true){
+   // Hide the outdated balance immediately, then recover any remaining funds
+   // from the authoritative ledger without blocking a completed payment.
+   removeUsedBankCache(customerId,data.transactionId);
+   void refreshCustomerBankCache(customerId).catch(error=>{
+    console.warn('A/R remaining bank balance refresh:',error);
+   });
+  }
   return result;
  };
  const oldBatch=window.openBatchPayment;
