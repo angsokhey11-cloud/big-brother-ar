@@ -1,6 +1,6 @@
 /* BIG BROTHER A/R — batch original invoices for one customer summary.
    Files are fetched through authenticated Supabase Storage, kept in memory,
-   shared with the native file share sheet or exported as a private ZIP. */
+   shared as native files or one summary-first PDF; ZIP is download-only. */
 (function(){
 'use strict';
 const BASE='https://sjfhlaclgmkwwofzstok.supabase.co';
@@ -99,13 +99,8 @@ async function build(){
   ].join('\n');
   packageData={files,filename,manifestText,missing,customer,signature,cachedZip:null};
   previousSignature=signature;
-  if(files.length>1 && navigator.share && navigator.canShare && !navigator.canShare({files})){
-   indicator('Preparing a single ZIP for this phone’s share sheet…');
-   packageData.cachedZip=await packageZip(packageData);
-   if(seq!==buildSeq||!visible())return;
-  }
   buttonsBusy(files.length<=1);
-  indicator((files.length-1)+' originals ready'+(missing.length?' · Missing: '+missing.join(', '):' · All selected originals included')+'. '+(files.length<=1?'Upload an original first, or use the existing Summary sharing button.':'Summary image included.'));
+  indicator((files.length-1)+' originals ready'+(missing.length?' · Missing: '+missing.join(', '):' · All selected originals included')+'. '+(files.length<=1?'Upload an original first, or use the existing Summary sharing button.':'Native album or summary-first PDF ready for Telegram (ZIP is download-only).'));
  }catch(e){
   if(seq!==buildSeq)return;
   packageData=null;buttonsBusy(true);indicator(e.message||'Could not prepare original invoice package.',true);
@@ -189,43 +184,61 @@ async function downloadBatch(){
  }catch(e){indicator(e.message||'ZIP download failed.',true)}
  finally{btn.disabled=false}
 }
+function shareCaption(pkg,picked){
+ const totals={USD:0,KHR:0};
+ picked.forEach(r=>{
+  const c=String(r.currency||'USD').toUpperCase()==='KHR'?'KHR':'USD';
+  totals[c]+=Number(r.outstanding||0);
+ });
+ const amounts=[];
+ if(totals.USD)amounts.push('$'+totals.USD.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}));
+ if(totals.KHR)amounts.push('៛'+Math.round(totals.KHR).toLocaleString('en-US'));
+ return 'BIG BROTHER Customer Invoice Summary\nCustomer: '+pkg.customer+
+  '\nOutstanding: '+(amounts.join(' + ')||'0')+
+  '\nOpen invoices: '+picked.length;
+}
+function approveMixedCustomers(picked){
+ const customers=[...new Set(picked.map(r=>String(r.customer||'').trim()).filter(Boolean))];
+ if(customers.length<=1)return true;
+ return window.confirm('This includes invoices from '+customers.length+' DIFFERENT CUSTOMERS.\n\nOnly share with an authorized recipient.\n\nContinue?');
+}
 async function shareBatch(){
  const pkg=valid();if(!pkg)return;
- const btn=$('bbShareSummaryOriginals');
+ const picked=chosen();
+ if(!approveMixedCustomers(picked)){indicator('Sharing canceled.');return}
+ const btn=$('bbShareSummaryOriginals'),files=pkg.files;
  btn.disabled=true;
- const files=pkg.files;
- if(navigator.share&&navigator.canShare){
-  try{
-   if(navigator.canShare({files})){
-    // Native share is called before any await to preserve the user's direct tap.
-    await navigator.share({files,title:'BIG BROTHER Customer Invoice Summary',text:'Customer: '+pkg.customer});
-    indicator('Use Telegram in the share sheet to send the summary and '+(files.length-1)+' originals.');
-    btn.disabled=false;return;
-   }
-  }catch(e){
-   if(e.name==='AbortError'){indicator('Sharing canceled.');btn.disabled=false;return}
-   console.warn('Multi-file share unsupported:',e);
-  }
- }
- // When multi-file sharing is unavailable, package a single ZIP for sharing.
- indicator('Preparing one ZIP file to share…');
- // Open Telegram from the original user tap on desktop: popup blockers may
- // reject a tab opened only after the package has finished generating.
- const shouldOpenTelegram=!navigator.share;
- const telegramTab=shouldOpenTelegram?window.open('https://web.telegram.org/','_blank','noopener,noreferrer'):null;
+ const caption=shareCaption(pkg,picked);
  try{
-  const bundle=pkg.cachedZip||await packageZip(pkg);
-  if(navigator.share&&navigator.canShare&&navigator.canShare({files:[bundle]})){
+  let canShareAlbum=false;
+  try{
+   canShareAlbum=typeof navigator.share==='function'&&
+    typeof navigator.canShare==='function'&&navigator.canShare({files});
+  }catch(error){console.warn('Multi-file share capability check:',error)}
+  if(canShareAlbum){
    try{
-    await navigator.share({files:[bundle],title:'BIG BROTHER Customer Invoice Package',text:'Customer: '+pkg.customer});
-    indicator('Choose Telegram to send the package ZIP.');return;
-   }catch(e){if(e.name==='AbortError'){indicator('Sharing canceled.');return}}
+    // Share the actual summary picture followed by original invoices.
+    await navigator.share({files,title:'BIG BROTHER Customer Invoice Summary',text:caption});
+    indicator('Summary and '+(files.length-1)+' originals handed to your share sheet. Select Telegram and verify the recipient.');
+    return;
+   }catch(error){
+    if(error?.name==='AbortError'){indicator('Sharing canceled.');return}
+    console.warn('Native album share unavailable; use PDF:',error);
+   }
   }
-  download(bundle);
-  indicator('Downloaded one ZIP containing the summary and '+(files.length-1)+' originals. Open Telegram and attach this ZIP'+(pkg.missing.length?' · Missing originals: '+pkg.missing.join(', '):'')+'.');
-  if(!telegramTab)indicator('ZIP downloaded. Open Telegram and attach the package manually.');
- }catch(e){indicator(e.message||'Unable to prepare files for sharing.',true)}
- finally{btn.disabled=false}
+  // Telegram Web cannot accept attachments directly from a different website.
+  // One PDF contains the outstanding summary page plus all invoice evidence.
+  // Only the separate Download Package button generates a ZIP.
+  if(typeof window.BBARAuditPdfExport?.share!=='function'){
+   throw Error('Customer PDF sharing is not ready. Refresh A/R and try again.');
+  }
+  indicator('Preparing a summary-first PDF for Telegram instead of a ZIP…');
+  await window.BBARAuditPdfExport.share();
+  indicator('PDF sharing prepared. Page 1 shows outstanding totals; invoice copies follow. Attach the PDF in Telegram if downloaded.');
+ }catch(error){
+  console.error('Summary + originals Telegram sharing:',error);
+  indicator(error?.message||'Could not prepare Telegram sharing.',true);
+ }finally{btn.disabled=false}
 }
 function init(){
  const actions=document.querySelector('#summaryOverlay .summary-actions');
