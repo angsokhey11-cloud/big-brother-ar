@@ -396,11 +396,183 @@ async function shareDirectFiles(pkg,picked){
   else indicator('Could not share the pictures. '+(error?.message||'Please try again.'),true);
  }finally{btn.disabled=false}
 }
+function onMobileShareDevice(){
+ // Preserve the approved Android/iOS multi-file sharing exactly as before.
+ // mobileSkin is injected by both All/Your Receivable mobile shells.
+ const skin=new URLSearchParams(location.search).get('mobileSkin')==='1';
+ const agent=/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent||'');
+ const ipadDesktopUA=navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1;
+ return skin||agent||ipadDesktopUA;
+}
+function clipboardAvailable(){
+ return !!(navigator.clipboard&&typeof navigator.clipboard.write==='function'&&typeof window.ClipboardItem==='function');
+}
+function pictureClipboardPng(file){
+ // ClipboardItem supports PNG. Non-PNG originals are converted only in
+ // memory, preserving their appearance, never enhancing or uploading them.
+ if(String(file.type||'').toLowerCase()==='image/png'||/\.png$/i.test(file.name||''))return file;
+ return new Promise((resolve,reject)=>{
+  const uri=URL.createObjectURL(file);
+  const img=new Image();
+  let finished=false;
+  const timer=setTimeout(()=>complete(Error('Image conversion timed out.')),18000);
+  function complete(error,blob){
+   if(finished)return;finished=true;clearTimeout(timer);
+   URL.revokeObjectURL(uri);
+   if(error)reject(error);else resolve(blob);
+  }
+  img.onerror=()=>complete(Error('This original invoice image cannot be decoded for copying.'));
+  img.onload=()=>{
+   try{
+    const largest=Math.max(img.naturalWidth,img.naturalHeight);
+    if(!largest)throw Error('The original invoice picture is empty.');
+    const scale=Math.min(1,4096/largest);
+    const canvas=document.createElement('canvas');
+    canvas.width=Math.max(1,Math.round(img.naturalWidth*scale));
+    canvas.height=Math.max(1,Math.round(img.naturalHeight*scale));
+    const ctx=canvas.getContext('2d');
+    if(!ctx)throw Error('Picture clipboard conversion is unavailable.');
+    ctx.drawImage(img,0,0,canvas.width,canvas.height);
+    canvas.toBlob(blob=>blob?complete(null,blob):complete(Error('Could not prepare the original invoice picture.')),'image/png');
+   }catch(error){complete(error)}
+  };
+  img.src=uri;
+ });
+}
+function showDesktopClipboardPanel(){
+ const panel=$('bbArPhotoAlbums'),plan=sharePlan;
+ if(!panel||!plan||plan.mode!=='desktop')return;
+ panel.replaceChildren();
+ panel.hidden=false;
+ const title=document.createElement('div');
+ title.className='bb-ar-album-title';
+ title.textContent='📋 Share pictures to Telegram Web';
+ panel.append(title);
+ const help=document.createElement('div');
+ help.className='bb-ar-album-help';
+ help.textContent='Select the customer in Telegram, press Ctrl+V to paste the copied picture, then return here and copy the next picture. Your clipboard can hold only one picture at a time.';
+ panel.append(help);
+ const current=plan.lastCopied;
+ const progress=document.createElement('div');
+ progress.className='bb-ar-pc-clipboard-progress';
+ progress.textContent=current<0
+  ?'Ready to copy summary picture · '+plan.photos.length+' picture(s) total'
+  :'Copied '+(current+1)+' of '+plan.photos.length+': '+(current===0?'Customer summary':plan.photos[current].name);
+ panel.append(progress);
+ function button(text,onClick,secondary=false){
+  const b=document.createElement('button');
+  b.type='button';
+  b.className=secondary?'btn secondary bb-ar-pc-copy-button':'btn summary-telegram-btn bb-ar-pc-copy-button';
+  b.textContent=text;
+  b.addEventListener('click',onClick);
+  return b;
+ }
+ const buttons=document.createElement('div');
+ buttons.className='bb-ar-pc-clipboard-actions';
+ if(current>=0){
+  buttons.append(button('📋 Copy picture '+(current+1)+' again',()=>{void copyDesktopPicture(current,false)},true));
+ }
+ const next=current+1;
+ if(next<plan.photos.length){
+  buttons.append(button(next===0?'📋 Copy Summary Picture':'📋 Copy Next Picture ('+(next+1)+' / '+plan.photos.length+')',()=>{void copyDesktopPicture(next,false)}));
+ }else{
+  const done=document.createElement('div');
+  done.className='bb-ar-album-help';
+  done.textContent='All pictures have been copied in order. Check that each was pasted into the intended Telegram customer chat.';
+  panel.append(done);
+ }
+ buttons.append(button('↗ Open Telegram Web',()=>{window.open('https://web.telegram.org/','_blank','noopener')},true));
+ panel.append(buttons);
+ if(plan.documents.length){
+  const note=document.createElement('div');
+  note.className='bb-ar-album-warning';
+  note.textContent=plan.documents.length+' original PDF/document file(s) cannot be pasted as pictures. Download these originals individually and attach them manually in Telegram Web; no new PDF will be created.';
+  panel.append(note);
+  const documentList=document.createElement('div');
+  documentList.className='bb-ar-pc-original-documents';
+  plan.documents.forEach(file=>{
+   documentList.append(button('⬇ Save original '+file.name,()=>{if(valid())download(file)},true));
+  });
+  panel.append(documentList);
+ }
+ if(packageData?.missing?.length){
+  const missing=document.createElement('div');
+  missing.className='bb-ar-album-warning';
+  missing.textContent='Not uploaded: '+packageData.missing.join(', ')+'. Only available originals can be copied.';
+  panel.append(missing);
+ }
+ panel.append(button('Close sharing tools',hidePhotoPanel,true));
+}
+async function copyDesktopPicture(index,openTelegram){
+ const pkg=valid(),plan=sharePlan;
+ if(!pkg||!plan||plan.mode!=='desktop'||plan.signature!==pkg.signature){
+  indicator('The selected invoices changed. Reopen the summary and try again.',true);
+  hidePhotoPanel();return;
+ }
+ const file=plan.photos[index];
+ if(!file)return;
+ if(!clipboardAvailable()){
+  indicator('This PC browser cannot copy pictures to clipboard. Use Chrome or Edge over HTTPS.',true);
+  showDesktopClipboardPanel();return;
+ }
+ // Do not await PNG conversion before starting clipboard.write: that would
+ // lose the trusted click needed for browser clipboard permission.
+ let request;
+ try{
+  request=navigator.clipboard.write([
+   new window.ClipboardItem({'image/png':pictureClipboardPng(file)})
+  ]);
+  // Open from the actual green-button click, so popup blockers do not
+  // reject Telegram Web after an asynchronous clipboard operation.
+  if(openTelegram)window.open('https://web.telegram.org/','_blank','noopener');
+ }catch(error){
+  indicator('Unable to copy picture: '+(error?.message||'Clipboard access blocked.'),true);
+  showDesktopClipboardPanel();return;
+ }
+ try{
+  await request;
+  if(sharePlan!==plan)return;
+  plan.lastCopied=index;
+  indicator('Picture '+(index+1)+' / '+plan.photos.length+' copied to clipboard. Open the customer chat in Telegram Web and press Ctrl+V. Then return for the next picture.');
+  showDesktopClipboardPanel();
+ }catch(error){
+  if(sharePlan!==plan)return;
+  indicator('Clipboard copy failed. Return to the BIG BROTHER tab and tap Copy Picture again. '+(error?.message||''),true);
+  showDesktopClipboardPanel();
+ }
+}
+function shareDesktopPictures(pkg){
+ if(!clipboardAvailable()){
+  indicator('Clipboard image sharing needs Chrome or Edge on HTTPS. No file was downloaded.',true);
+  sharePlan={mode:'desktop',signature:pkg.signature,photos:pkg.files.filter(isPhoto),documents:pkg.files.filter(f=>!isPhoto(f)),lastCopied:-1};
+  showDesktopClipboardPanel();
+  return;
+ }
+ sharePlan={
+  mode:'desktop',signature:pkg.signature,
+  photos:pkg.files.filter(isPhoto),
+  documents:pkg.files.filter(f=>!isPhoto(f)),
+  lastCopied:-1
+ };
+ if(!sharePlan.photos.length){
+  showDesktopClipboardPanel();
+  indicator('No pictures available to copy.',true);
+  return;
+ }
+ showDesktopClipboardPanel();
+ // First clipboard write and Telegram Web launch share the same user click.
+ void copyDesktopPicture(0,true);
+}
+
 function shareBatch(){
  const pkg=valid();if(!pkg)return;
  const picked=chosen();
  if(!approveMixedCustomers(picked)){indicator('Sharing canceled.');return}
- // The familiar direct sharing flow for up to 10 pictures/files.
+ if(!onMobileShareDevice()){
+  shareDesktopPictures(pkg);
+  return;
+ }
+ // The familiar mobile direct sharing flow for up to 10 pictures/files.
  // Album controls are exclusively for packages larger than 10.
  if(pkg.files.length<=ALBUM_SIZE){
   void shareDirectFiles(pkg,picked);
@@ -444,6 +616,9 @@ function init(){
   '.bb-ar-album-share-button{white-space:normal;flex-shrink:0;min-height:36px;font-size:11px}',
   '.bb-ar-album-share-button:disabled{opacity:.5;cursor:not-allowed}',
   '.bb-ar-album-warning{background:#fff9e9;border:1px solid #f1dfa8;border-radius:8px;padding:9px;color:#7d550b;margin:9px 0;line-height:1.4;overflow-wrap:anywhere}',
+  '.bb-ar-pc-clipboard-progress{padding:9px 10px;border-radius:8px;background:#e4f3e9;color:#0c6537;font-weight:800;margin:8px 0 10px}',
+  '.bb-ar-pc-clipboard-actions,.bb-ar-pc-original-documents{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}',
+  '.bb-ar-pc-copy-button{font-size:12px;white-space:normal;min-height:36px}',
   '.bb-ar-album-close{margin-top:8px;background:#fff;border:1px solid #ccd8e7;border-radius:8px;color:#4f6075;padding:8px 13px;cursor:pointer}',
   '@media(max-width:650px){.bb-ar-album-row{flex-direction:column;align-items:stretch}.bb-ar-album-share-button{width:100%;min-height:40px}}',
   '@media print{#bbArPhotoAlbums{display:none!important}}'
