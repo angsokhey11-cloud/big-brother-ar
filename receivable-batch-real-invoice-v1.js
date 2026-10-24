@@ -1,13 +1,15 @@
-/* BIG BROTHER A/R — batch original invoices for one customer summary.
-   Files are fetched through authenticated Supabase Storage, kept in memory,
-   shared as native files or one summary-first PDF; ZIP is download-only. */
+/* BIG BROTHER A/R — share customer summary and original invoice photos.
+   Native share: groups of up to 10 photos, each launched by the user's tap.
+   Non-photo originals remain separate native-file shares (never silently lost).
+   No PDF generation or automatic download from the Share button.
+   ZIP is available only under the explicit Download Package action. */
 (function(){
 'use strict';
 const BASE='https://sjfhlaclgmkwwofzstok.supabase.co';
 const KEY='sb_publishable_w762jR65CWwlO30fKQsYOw_6L9grx8S';
 const BUCKET='bb-real-invoices';
-const MAX_FILES=35, MAX_BYTES=65*1024*1024;
-let packageData=null,buildSeq=0,previousSignature='',isBuilding=false;
+const MAX_FILES=35, MAX_BYTES=65*1024*1024, ALBUM_SIZE=10;
+let packageData=null,buildSeq=0,previousSignature='',isBuilding=false,sharePlan=null;
 const $=id=>document.getElementById(id);
 function safe(v){return String(v||'').trim().replace(/[^a-zA-Z0-9_-]/g,'_').slice(0,65)||'Invoice'}
 function chosen(){
@@ -26,7 +28,7 @@ function buttonsBusy(busy){
 }
 function selectionKey(picked){return picked.map(r=>String(r.invoiceId||'')).sort().join('|')}
 function visible(){return $('summaryOverlay')&&!$('summaryOverlay').classList.contains('hidden')}
-function reset(){buildSeq++;packageData=null;previousSignature='';isBuilding=false;buttonsBusy(true);indicator('')}
+function reset(){buildSeq++;packageData=null;previousSignature='';isBuilding=false;sharePlan=null;hidePhotoPanel();buttonsBusy(true);indicator('')}
 async function storageFile(row){
  await window.BBARAdapter.ensureSession();
  const ss=JSON.parse(localStorage.getItem('BB_SUPABASE_DEV_SESSION_V1')||'null');
@@ -98,9 +100,10 @@ async function build(){
    'Each original is matched using its unique internal invoice ID.'
   ].join('\n');
   packageData={files,filename,manifestText,missing,customer,signature,cachedZip:null};
+  sharePlan=null;hidePhotoPanel();
   previousSignature=signature;
   buttonsBusy(files.length<=1);
-  indicator((files.length-1)+' originals ready'+(missing.length?' · Missing: '+missing.join(', '):' · All selected originals included')+'. '+(files.length<=1?'Upload an original first, or use the existing Summary sharing button.':'Native album or summary-first PDF ready for Telegram (ZIP is download-only).'));
+  indicator((files.length-1)+' originals ready'+(missing.length?' · Missing: '+missing.join(', '):' · All selected originals included')+'. '+(files.length<=1?'Upload an original first, or use the existing Summary sharing button.':'Use Share to send photos in groups of 10. No generated PDF or automatic ZIP.'));
  }catch(e){
   if(seq!==buildSeq)return;
   packageData=null;buttonsBusy(true);indicator(e.message||'Could not prepare original invoice package.',true);
@@ -202,47 +205,170 @@ function approveMixedCustomers(picked){
  if(customers.length<=1)return true;
  return window.confirm('This includes invoices from '+customers.length+' DIFFERENT CUSTOMERS.\n\nOnly share with an authorized recipient.\n\nContinue?');
 }
-async function shareBatch(){
+function isPhoto(file){
+ return /^image\/(png|jpeg|jpg|webp|gif|bmp)$/i.test(file.type||'')||
+  /\.(png|jpe?g|webp|gif|bmp)$/i.test(file.name||'');
+}
+function albumSteps(pkg){
+ // Preserve the exact summary as photo 1. Follow with invoice photographs
+ // in original invoice order; never combine or modify the original image bytes.
+ const photos=pkg.files.filter(isPhoto);
+ const documents=pkg.files.filter(file=>!isPhoto(file));
+ const steps=[];
+ for(let i=0;i<photos.length;i+=ALBUM_SIZE){
+  const n=Math.floor(i/ALBUM_SIZE)+1;
+  const group=photos.slice(i,i+ALBUM_SIZE);
+  steps.push({
+   kind:'photos',files:group,
+   label:'Share Photo Album '+n,
+   detail:group.length+' photo'+(group.length===1?'':'s')+
+    (i===0?' · Summary picture first':' · Real invoice photos')
+  });
+ }
+ for(let i=0;i<documents.length;i+=ALBUM_SIZE){
+  const group=documents.slice(i,i+ALBUM_SIZE);
+  steps.push({
+   kind:'documents',files:group,
+   label:'Share Original File'+(group.length===1?'':'s')+' '+(Math.floor(i/ALBUM_SIZE)+1),
+   detail:group.length+' original document'+(group.length===1?'':'s')+
+    ' · Stored as a document, not a photo'
+  });
+ }
+ return steps;
+}
+function canShareFiles(files){
+ try{
+  return typeof navigator.share==='function'&&typeof navigator.canShare==='function'&&
+   navigator.canShare({files});
+ }catch(error){
+  console.warn('Native photo share capability:',error);
+  return false;
+ }
+}
+function hidePhotoPanel(){
+ const panel=$('bbArPhotoAlbums');
+ if(panel){panel.hidden=true;panel.replaceChildren();}
+}
+function createPhotoPlan(pkg){
+ sharePlan={
+  signature:pkg.signature,
+  steps:albumSteps(pkg),
+  handed:new Set()
+ };
+ return sharePlan;
+}
+function showPhotoPanel(){
+ const panel=$('bbArPhotoAlbums'),plan=sharePlan;
+ if(!panel||!plan)return;
+ panel.replaceChildren();
+ panel.hidden=false;
+ const heading=document.createElement('div');
+ heading.className='bb-ar-album-title';
+ heading.textContent='📸 Share Customer Summary + Real Invoice Photos';
+ panel.appendChild(heading);
+ const message=document.createElement('div');
+ message.className='bb-ar-album-help';
+ const photoCount=plan.steps.filter(s=>s.kind==='photos').length;
+ message.textContent=plan.steps.length>1
+  ?photoCount+' photo album'+(photoCount===1?'':'s')+'. Tap each Share Album button in order, then choose Telegram and the same customer chat each time.'
+  :'Choose Telegram from the device share sheet. The summary photo goes first.';
+ panel.appendChild(message);
+ const pkg=packageData;
+ if(pkg?.missing?.length){
+  const missing=document.createElement('div');
+  missing.className='bb-ar-album-warning';
+  missing.textContent='⚠ Original invoice not uploaded: '+pkg.missing.join(', ')+'. Only available originals can be shared.';
+  panel.appendChild(missing);
+ }
+ const unsupported=[];
+ plan.steps.forEach((step,index)=>{
+  const row=document.createElement('div');
+  row.className='bb-ar-album-row';
+  const labels=document.createElement('div');
+  labels.className='bb-ar-album-labels';
+  const main=document.createElement('strong');
+  main.textContent=step.kind==='photos'?'Photo Album '+(plan.steps.slice(0,index).filter(s=>s.kind==='photos').length+1):'Original Documents';
+  const sub=document.createElement('small');
+  sub.textContent=step.detail;
+  labels.append(main,sub);
+  const btn=document.createElement('button');
+  btn.type='button';
+  btn.className='btn summary-telegram-btn bb-ar-album-share-button';
+  btn.textContent=plan.handed.has(index)?'↻ Share Again':step.label;
+  btn.disabled=!canShareFiles(step.files);
+  if(btn.disabled)unsupported.push(step.label);
+  btn.addEventListener('click',()=>{void sharePhotoStep(index)});
+  row.append(labels,btn);
+  panel.append(row);
+ });
+ if(unsupported.length){
+  const note=document.createElement('div');
+  note.className='bb-ar-album-warning';
+  note.textContent='This browser cannot share these photo/file groups directly. Open BIG BROTHER A/R on an Android tablet or phone with a compatible browser and Telegram installed. Nothing has been downloaded or sent. Download Package remains optional.';
+  panel.append(note);
+ }
+ const close=document.createElement('button');
+ close.type='button';
+ close.className='bb-ar-album-close';
+ close.textContent='Close photo sharing';
+ close.addEventListener('click',hidePhotoPanel);
+ panel.append(close);
+}
+async function sharePhotoStep(index){
+ // A fresh user tap is mandatory for EACH album; no automatic next share.
+ // navigator.share must be called before the first await in this handler.
+ const pkg=valid(),plan=sharePlan;
+ if(!pkg||!plan||plan.signature!==pkg.signature){
+  indicator('The invoice summary changed. Reopen it before sharing.',true);
+  hidePhotoPanel();return;
+ }
+ const step=plan.steps[index];
+ if(!step)return;
+ if(!canShareFiles(step.files)){
+  indicator('Photo album sharing is not supported in this browser. Try the Android/tablet browser. No PDF or ZIP was downloaded.',true);
+  showPhotoPanel();return;
+ }
+ const caption=shareCaption(pkg,chosen());
+ const suffix=plan.steps.length>1
+  ?'\nPart '+(index+1)+' of '+plan.steps.length:'';
+ let request;
+ try{
+  request=navigator.share({
+   files:step.files,
+   title:'BIG BROTHER Customer Invoice Summary',
+   text:caption+suffix
+  });
+ }catch(error){
+  indicator('Cannot open the file share sheet: '+(error?.message||'Please try again.'),true);
+  return;
+ }
+ indicator('Choose Telegram and confirm the recipient for '+step.label+'.');
+ try{
+  await request;
+  // Web Share confirms a native handoff, NOT a verified Telegram delivery.
+  plan.handed.add(index);
+  indicator(step.label+' handed to your device share sheet. Confirm Telegram received the photos before sharing the next album.');
+ }catch(error){
+  if(error?.name==='AbortError')indicator(step.label+' canceled. Nothing was automatically sent. Tap to try again.');
+  else indicator('Could not share '+step.label+'. '+(error?.message||'Try a compatible phone/tablet browser.'),true);
+ }finally{
+  if(sharePlan===plan&&visible())showPhotoPanel();
+ }
+}
+function shareBatch(){
  const pkg=valid();if(!pkg)return;
  const picked=chosen();
  if(!approveMixedCustomers(picked)){indicator('Sharing canceled.');return}
- const btn=$('bbShareSummaryOriginals'),files=pkg.files;
- btn.disabled=true;
- const caption=shareCaption(pkg,picked);
- try{
-  let canShareAlbum=false;
-  try{
-   canShareAlbum=typeof navigator.share==='function'&&
-    typeof navigator.canShare==='function'&&navigator.canShare({files});
-  }catch(error){console.warn('Multi-file share capability check:',error)}
-  if(canShareAlbum){
-   try{
-    // Share the actual summary picture followed by original invoices.
-    await navigator.share({files,title:'BIG BROTHER Customer Invoice Summary',text:caption});
-    indicator('Summary and '+(files.length-1)+' originals handed to your share sheet. Select Telegram and verify the recipient.');
-    return;
-   }catch(error){
-    if(error?.name==='AbortError'){indicator('Sharing canceled.');return}
-    console.warn('Native album share unavailable; use PDF:',error);
-   }
-  }
-  // Telegram Web cannot accept attachments directly from a different website.
-  // One PDF contains the outstanding summary page plus all invoice evidence.
-  // Only the separate Download Package button generates a ZIP.
-  if(typeof window.BBARAuditPdfExport?.share!=='function'){
-   throw Error('Customer PDF sharing is not ready. Refresh A/R and try again.');
-  }
-  indicator('Preparing a summary-first PDF for Telegram instead of a ZIP…');
-  const result=await window.BBARAuditPdfExport.share();
-  if(result==='shared')indicator('Summary-first PDF handed to the share sheet. Choose Telegram and verify the recipient.');
-  else if(result==='downloaded')indicator('Summary-first PDF downloaded. Attach it in Telegram Web; the customer outstanding total is on page 1.');
-  else if(result==='cancelled')indicator('Sharing canceled. You can try again.');
-  else if(result==='blocked')indicator('Browser blocked sharing. Tap Share PDF to Telegram again.');
-  else indicator('PDF sharing did not complete. Review the PDF status above and retry.',true);
- }catch(error){
-  console.error('Summary + originals Telegram sharing:',error);
-  indicator(error?.message||'Could not prepare Telegram sharing.',true);
- }finally{btn.disabled=false}
+ const plan=createPhotoPlan(pkg);
+ if(!plan.steps.length){indicator('No original photos available to share.',true);return}
+ showPhotoPanel();
+ // For a single photo album, open the share sheet from this same direct tap.
+ // Multi-album sharing uses visible buttons, each requiring its OWN tap.
+ if(plan.steps.length===1&&canShareFiles(plan.steps[0].files)){
+  void sharePhotoStep(0);
+ }else{
+  indicator(plan.steps.length+' share group(s) prepared. Tap Share Photo Album 1, select Telegram, then continue in order. No PDF will be created.');
+ }
 }
 function init(){
  const actions=document.querySelector('#summaryOverlay .summary-actions');
@@ -258,7 +384,31 @@ function init(){
  actions.style.flexWrap='wrap';
  actions.append(share,save);
  actions.after(status);
- share.addEventListener('click',()=>void shareBatch());save.addEventListener('click',()=>void downloadBatch());
+ const photoPanel=document.createElement('div');
+ photoPanel.id='bbArPhotoAlbums';
+ photoPanel.className='bb-ar-photo-panel';
+ photoPanel.hidden=true;
+ status.after(photoPanel);
+ const styles=document.createElement('style');
+ styles.id='bbArPhotoAlbumStyles';
+ styles.textContent=[
+  '#bbArPhotoAlbums[hidden]{display:none!important}',
+  '.bb-ar-photo-panel{box-sizing:border-box;padding:12px;margin:8px 0 12px;border:1px solid #bad4ed;border-radius:12px;background:#f4f9ff;font:12px Arial,sans-serif;color:#173d6a}',
+  '.bb-ar-album-title{font-size:14px;font-weight:900;margin-bottom:7px}',
+  '.bb-ar-album-help{line-height:1.45;margin-bottom:10px;color:#395a7c}',
+  '.bb-ar-album-row{display:flex;align-items:center;justify-content:space-between;gap:12px;background:#fff;border:1px solid #dce7f3;border-radius:9px;padding:10px;margin:7px 0}',
+  '.bb-ar-album-labels{display:flex;flex-direction:column;gap:3px;min-width:0;overflow-wrap:anywhere}',
+  '.bb-ar-album-labels strong{font-size:12px}',
+  '.bb-ar-album-labels small{font-size:11px;line-height:1.35;color:#536b84}',
+  '.bb-ar-album-share-button{white-space:normal;flex-shrink:0;min-height:36px;font-size:11px}',
+  '.bb-ar-album-share-button:disabled{opacity:.5;cursor:not-allowed}',
+  '.bb-ar-album-warning{background:#fff9e9;border:1px solid #f1dfa8;border-radius:8px;padding:9px;color:#7d550b;margin:9px 0;line-height:1.4;overflow-wrap:anywhere}',
+  '.bb-ar-album-close{margin-top:8px;background:#fff;border:1px solid #ccd8e7;border-radius:8px;color:#4f6075;padding:8px 13px;cursor:pointer}',
+  '@media(max-width:650px){.bb-ar-album-row{flex-direction:column;align-items:stretch}.bb-ar-album-share-button{width:100%;min-height:40px}}',
+  '@media print{#bbArPhotoAlbums{display:none!important}}'
+ ].join('\n');
+ document.head.appendChild(styles);
+ share.addEventListener('click',shareBatch);save.addEventListener('click',()=>void downloadBatch());
  const overlay=$('summaryOverlay');
  let wasOpen=visible();
  const observer=new MutationObserver(()=>{
