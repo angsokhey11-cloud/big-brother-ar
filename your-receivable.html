@@ -122,8 +122,8 @@ function filterChanged(){
     if(!html.includes('</body>'))throw new Error('A/R document body missing for Real Invoice viewer.');
     html=html.replace('</body>', '<scr'+'ipt src="receivable-real-invoice-view-v1.js?v=20261001-downloadshare5"></scr'+'ipt></body>');
     html=html.replace('</body>', '<scr'+'ipt src="ar-bank-wallet-picker-v1.js?v=20261011-wallet1"></scr'+'ipt></body>');
-    html=html.replace('</body>', '<scr'+'ipt src="receivable-batch-real-invoice-v1.js?v=20261024-direct-ready3"></scr'+'ipt></body>');
-    // Shared summary-first PDF fallback for Telegram sharing when the native album is unsupported.
+    html=html.replace('</body>', '<scr'+'ipt src="receivable-batch-real-invoice-v1.js?v=20261024-pc-telegram-clipboard1"></scr'+'ipt></body>');
+    // Dedicated PDF export remains separate from the new photo-to-clipboard sharing.
     html=html.replace('</body>', '<scr'+'ipt src="receivable-audit-pdf-v1.js?v=20261024-telegram-pdf-fallback2"></scr'+'ipt></body>');
     // Authorized A/R pending-customer dropdown and multi-sheet Excel export.
     html=html.replace('</body>', '<scr'+'ipt src="receivable-customer-excel-v1.js?v=20261023-customerfooter6"></scr'+'ipt></body>');
