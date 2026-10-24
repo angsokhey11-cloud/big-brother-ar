@@ -484,15 +484,15 @@ async function sendThroughShareSheet(file){
    text:'Customer Invoice Summary and supporting invoices'
   });
   show('PDF handed to your device share sheet. Select Telegram and check the recipient.');
-  return true;
+  return 'shared';
  }catch(error){
   if(error?.name==='AbortError'){
    show('Sharing cancelled. PDF is ready to share again.');
-   return true;
+   return 'cancelled';
   }
   if(error?.name==='NotAllowedError'){
    show('PDF is ready. Tap “Share PDF to Telegram” again to open the share sheet.');
-   return true;
+   return 'blocked';
   }
   console.warn('Customer PDF native sharing unavailable:',error);
   return false;
@@ -500,11 +500,11 @@ async function sendThroughShareSheet(file){
 }
 async function shareCustomerPdf(event){
  event?.preventDefault();event?.stopPropagation();
- if(busy)return;
+ if(busy)return 'busy';
  let telegramTab=null;
  try{
   const picked=selectedRows();
-  if(!mixedCustomerApproval(picked)){show('Sharing cancelled.');return;}
+  if(!mixedCustomerApproval(picked)){show('Sharing cancelled.');return 'cancelled';}
   // On desktop, open Telegram from the actual click before asynchronous PDF creation.
   // Telegram Web cannot accept an attachment programmatically from our site.
   // Decide at click-time so popup blockers do not stop Telegram Web after
@@ -519,15 +519,18 @@ async function shareCustomerPdf(event){
   if(!nativeShare)telegramTab=window.open('https://web.telegram.org/','_blank','noopener,noreferrer');
   buttonBusy(true);
   const prepared=await prepareCustomerPdf(picked);
-  if(await sendThroughShareSheet(prepared.file))return;
+  const nativeStatus=await sendThroughShareSheet(prepared.file);
+  if(nativeStatus)return nativeStatus;
   downloadFile(prepared.file);
   show('PDF downloaded: '+prepared.file.name+'. '+(telegramTab
    ?'Telegram Web opened; attach the downloaded PDF to the intended customer chat.'
    :'Attach the downloaded PDF in Telegram. Browser security prevents automatic file attachment.'));
+  return 'downloaded';
  }catch(error){
   console.error('A/R customer PDF sharing:',error);
   show(error?.message||'Could not share customer PDF.',true);
   alert('Customer PDF was not shared.\n\n'+(error?.message||'Please try again.'));
+  return 'error';
  }finally{buttonBusy(false);}
 }
 function install(){
