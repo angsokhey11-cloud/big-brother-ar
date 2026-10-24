@@ -13,7 +13,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#f4f7fb;fon
 </head>
 <body>
 <div id="boot">Loading Your Receivable…</div>
-<iframe id="arMobileFrame" src="your-receivable.html?embed=1&view=your&mobileSkin=1&v=20261024-telegram-share3" title="Your Receivable"></iframe>
+<iframe id="arMobileFrame" src="your-receivable.html?embed=1&view=your&mobileSkin=1&v=20261024-mobile-selectall1" title="Your Receivable"></iframe>
 <script>
 (function(){
 'use strict';
@@ -237,6 +237,50 @@ const HEADER_FILTER_CSS=`
 .filters.bb-mobile-filter-panel .bb-ar-multi-counter{margin-left:auto!important;font-size:10px!important}
 .filters.bb-mobile-filter-panel .bb-ar-customer-footer{display:flex!important;justify-content:flex-end!important;gap:8px!important}
 .filters.bb-mobile-filter-panel .bb-ar-customer-footer button{width:auto!important;min-width:75px!important;min-height:34px!important;font-size:11px!important;grid-column:auto!important}
+.bb-mobile-card-select-all{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:8px!important;
+  margin:5px 0 8px!important;
+  padding:10px 12px!important;
+  border:1px solid #d2e1f3!important;
+  border-radius:12px!important;
+  background:#eff6ff!important;
+  color:#164b84!important;
+  font-family:Arial,Helvetica,sans-serif!important;
+}
+.bb-mobile-card-select-all label{
+  display:flex!important;
+  align-items:center!important;
+  gap:9px!important;
+  min-width:0!important;
+  font-size:12px!important;
+  font-weight:850!important;
+  cursor:pointer!important;
+}
+.bb-mobile-card-select-all input[type="checkbox"]{
+  appearance:auto!important;
+  display:block!important;
+  width:19px!important;
+  height:19px!important;
+  min-height:19px!important;
+  max-width:19px!important;
+  padding:0!important;
+  margin:0!important;
+  border-radius:4px!important;
+  flex:0 0 19px!important;
+  accent-color:#1768d5!important;
+  cursor:pointer!important;
+}
+.bb-mobile-card-select-all input[type="checkbox"]:disabled{opacity:.42!important;cursor:default!important}
+.bb-mobile-card-select-all .bb-mobile-card-selection-count{
+  flex:none!important;
+  font-size:10.5px!important;
+  font-weight:750!important;
+  color:#587089!important;
+  white-space:nowrap!important;
+}
 .bb-filter-clear{
   grid-column:1/-1!important;
   min-height:40px!important;
@@ -454,6 +498,65 @@ function buildFilterUI(doc,win){
   syncFilterButton();
 }
 
+
+function wireMobileCardSelectAll(doc,win){
+  // All and Your Receivable mobile use the same invoice-card skin. Reuse
+  // the actual A/R Select All implementation so processing invoices,
+  // filters, Summary Invoice and Receive Selected retain existing rules.
+  const body=doc.getElementById('arBody');
+  const table=body?.closest('.tablewrap');
+  if(!body||!table||doc.getElementById('bbMobileCardSelectAll'))return;
+
+  const bar=doc.createElement('div');
+  bar.className='bb-mobile-card-select-all';
+  bar.id='bbMobileCardSelectAll';
+  const label=doc.createElement('label');
+  const checkbox=doc.createElement('input');
+  checkbox.type='checkbox';
+  checkbox.id='bbMobileCardSelectAllBox';
+  checkbox.setAttribute('aria-label','Select all visible eligible receivable invoices');
+  const title=doc.createElement('span');
+  title.textContent='Select all shown';
+  label.append(checkbox,title);
+  const count=doc.createElement('span');
+  count.id='bbMobileCardSelectionCount';
+  count.className='bb-mobile-card-selection-count';
+  count.setAttribute('aria-live','polite');
+  bar.append(label,count);
+  table.parentNode.insertBefore(bar,table);
+
+  function syncSelection(){
+    // The already-filtered cards are the source of truth. Processing cards
+    // are disabled by A/R and never included in Select All.
+    const eligible=[...body.querySelectorAll('input.rowcheck:not(:disabled)')];
+    const selected=eligible.filter(el=>el.checked).length;
+    checkbox.disabled=eligible.length===0;
+    checkbox.checked=eligible.length>0&&selected===eligible.length;
+    checkbox.indeterminate=selected>0&&selected<eligible.length;
+    count.textContent=selected+' / '+eligible.length+' selected';
+    title.textContent=eligible.length?'Select all shown ('+eligible.length+')':'No selectable invoices';
+  }
+
+  checkbox.addEventListener('change',()=>{
+    if(typeof win.toggleSelectAll==='function'){
+      win.toggleSelectAll(checkbox.checked);
+      syncSelection();
+    }else{
+      checkbox.checked=false;
+      count.textContent='Selection unavailable';
+    }
+  });
+  // Re-rendering changes the cards when a filter, refresh, or bulk selection
+  // changes. Individual card checkbox clicks do not re-render: listen for
+  // their bubbling change event as well.
+  body.addEventListener('change',event=>{
+    if(event.target?.matches?.('input.rowcheck'))syncSelection();
+  });
+  new win.MutationObserver(syncSelection).observe(body,{childList:true});
+  doc.addEventListener('bb-ar-customer-scope-changed',syncSelection);
+  syncSelection();
+}
+
 function wireSummary(doc,win){
   const sheet=doc.getElementById('summarySheet');
   if(sheet&&!sheet.__bbFastMobileObserved){
@@ -505,6 +608,7 @@ async function enhance(){
   headerStyle.textContent=HEADER_FILTER_CSS;
 
   buildFilterUI(doc,win);
+  wireMobileCardSelectAll(doc,win);
   wireSummary(doc,win);
   cleanSummaryTable(doc);
 
