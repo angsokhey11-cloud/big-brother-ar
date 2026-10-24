@@ -50,9 +50,16 @@ async function storageFile(row){
  if(!res.ok)throw Error('Could not load original '+row.invoiceNo+'. Please refresh and retry.');
  const blob=await res.blob();
  const extension=String(row.path).split('.').pop().toLowerCase();
- const ext=['jpg','jpeg','png','webp','pdf'].includes(extension)?extension:'jpg';
+ const ext=['jpg','jpeg','png','webp','gif','bmp','pdf'].includes(extension)?extension:'bin';
+ const fileTypes={jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png',
+  webp:'image/webp',gif:'image/gif',bmp:'image/bmp',pdf:'application/pdf'};
+ const recordedMime=String(row.mimeType||blob.type||'').toLowerCase();
+ // Older invoice uploads may have a generic octet-stream MIME. Correct it
+ // from the extension so Android can share real photos as photos, not files.
+ const mime=(!recordedMime||recordedMime==='application/octet-stream'||recordedMime==='binary/octet-stream')
+  ?(fileTypes[ext]||'application/octet-stream'):recordedMime;
  return new File([blob],'Original_'+safe(row.invoiceNo)+'_'+safe(row.invoiceId)+'.'+ext,
-  {type:row.mimeType||blob.type||'application/octet-stream'});
+  {type:mime});
 }
 async function build(){
  const chosenRows=chosen();
