@@ -411,7 +411,13 @@ function localFolderName(value){
 }
 function desktopPreparedName(index,file,isSummary){
  const prefix=String(index+1).padStart(2,'0')+'_';
- return prefix+(isSummary?'Customer_Summary.png':localFolderName(file.name||'Real_Invoice.png'));
+ if(isSummary)return prefix+'Customer_Summary.png';
+ const original=String(file.name||'Real_Invoice.png');
+ const ext=(original.match(/\.[a-z0-9]{2,5}$/i)||['.png'])[0];
+ // Keep the original extension even when the invoice ID makes its filename
+ // long: without .jpg/.png Windows and Telegram may not detect a photo.
+ const stem=localFolderName(original.slice(0,-ext.length));
+ return prefix+stem+ext.toLowerCase();
 }
 function desktopPhotoGroups(files){
  const groups=[];
@@ -422,7 +428,8 @@ function desktopBatchPlan(pkg){
  const when=new Date();
  const stamp=when.getFullYear()+String(when.getMonth()+1).padStart(2,'0')+
   String(when.getDate()).padStart(2,'0')+'_'+String(when.getHours()).padStart(2,'0')+
-  String(when.getMinutes()).padStart(2,'0')+String(when.getSeconds()).padStart(2,'0');
+  String(when.getMinutes()).padStart(2,'0')+String(when.getSeconds()).padStart(2,'0')+
+  '_'+Math.floor(Math.random()*1679616).toString(36).padStart(4,'0');
  const photos=pkg.files.filter(isPhoto);
  const docs=pkg.files.filter(f=>!isPhoto(f));
  sharePlan={
