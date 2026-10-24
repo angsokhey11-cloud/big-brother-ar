@@ -110,7 +110,8 @@ async function build(){
   sharePlan=null;hidePhotoPanel();
   previousSignature=signature;
   buttonsBusy(files.length<=1);
-  indicator((files.length-1)+' originals ready'+(missing.length?' · Missing: '+missing.join(', '):' · All selected originals included')+'. '+(files.length<=1?'Upload an original first, or use the existing Summary sharing button.':'Use Share to send photos in groups of 10. No generated PDF or automatic ZIP.'));
+  const originalCount=files.length-1;
+  indicator(originalCount+' original'+(originalCount===1?'':'s')+' ready');
  }catch(e){
   if(seq!==buildSeq)return;
   packageData=null;buttonsBusy(true);indicator(e.message||'Could not prepare original invoice package.',true);
