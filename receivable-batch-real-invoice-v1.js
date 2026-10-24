@@ -233,8 +233,12 @@ async function shareBatch(){
    throw Error('Customer PDF sharing is not ready. Refresh A/R and try again.');
   }
   indicator('Preparing a summary-first PDF for Telegram instead of a ZIP…');
-  await window.BBARAuditPdfExport.share();
-  indicator('PDF sharing prepared. Page 1 shows outstanding totals; invoice copies follow. Attach the PDF in Telegram if downloaded.');
+  const result=await window.BBARAuditPdfExport.share();
+  if(result==='shared')indicator('Summary-first PDF handed to the share sheet. Choose Telegram and verify the recipient.');
+  else if(result==='downloaded')indicator('Summary-first PDF downloaded. Attach it in Telegram Web; the customer outstanding total is on page 1.');
+  else if(result==='cancelled')indicator('Sharing canceled. You can try again.');
+  else if(result==='blocked')indicator('Browser blocked sharing. Tap Share PDF to Telegram again.');
+  else indicator('PDF sharing did not complete. Review the PDF status above and retry.',true);
  }catch(error){
   console.error('Summary + originals Telegram sharing:',error);
   indicator(error?.message||'Could not prepare Telegram sharing.',true);
