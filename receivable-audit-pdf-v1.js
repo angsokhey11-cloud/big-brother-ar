@@ -507,7 +507,15 @@ async function shareCustomerPdf(event){
   if(!mixedCustomerApproval(picked)){show('Sharing cancelled.');return;}
   // On desktop, open Telegram from the actual click before asynchronous PDF creation.
   // Telegram Web cannot accept an attachment programmatically from our site.
-  const nativeShare=typeof navigator.share==='function'&&typeof navigator.canShare==='function';
+  // Decide at click-time so popup blockers do not stop Telegram Web after
+  // the PDF is generated. Desktop browsers may define navigator.share while
+  // refusing file sharing: a share API alone is not enough.
+  let nativeShare=false;
+  try{
+   const probe=new File(['%PDF-1.4'],'invoice.pdf',{type:'application/pdf'});
+   nativeShare=typeof navigator.share==='function'&&typeof navigator.canShare==='function'&&
+    navigator.canShare({files:[probe]});
+  }catch(_){}
   if(!nativeShare)telegramTab=window.open('https://web.telegram.org/','_blank','noopener,noreferrer');
   buttonBusy(true);
   const prepared=await prepareCustomerPdf(picked);
@@ -515,7 +523,7 @@ async function shareCustomerPdf(event){
   downloadFile(prepared.file);
   show('PDF downloaded: '+prepared.file.name+'. '+(telegramTab
    ?'Telegram Web opened; attach the downloaded PDF to the intended customer chat.'
-   :'Open Telegram and attach this downloaded PDF to the intended customer chat.'));
+   :'Attach the downloaded PDF in Telegram. Browser security prevents automatic file attachment.'));
  }catch(error){
   console.error('A/R customer PDF sharing:',error);
   show(error?.message||'Could not share customer PDF.',true);
