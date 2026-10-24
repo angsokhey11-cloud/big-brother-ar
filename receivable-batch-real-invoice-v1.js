@@ -362,20 +362,53 @@ async function sharePhotoStep(index){
   if(sharePlan===plan&&visible())showPhotoPanel();
  }
 }
+async function shareDirectFiles(pkg,picked){
+ // Legacy one-tap behavior for 1–10 files: do not open Album 1 UI.
+ // Invoke navigator.share synchronously from the green button's user tap,
+ // before any await, or Android may reject the gesture.
+ const files=pkg.files,btn=$('bbShareSummaryOriginals');
+ hidePhotoPanel();
+ sharePlan=null;
+ if(!canShareFiles(files)){
+  indicator('This browser cannot share these files directly. Try your Android tablet or phone with Telegram installed. No PDF or ZIP was downloaded.',true);
+  return;
+ }
+ btn.disabled=true;
+ let request;
+ try{
+  request=navigator.share({
+   files,
+   title:'BIG BROTHER Customer Invoice Summary',
+   text:shareCaption(pkg,picked)
+  });
+ }catch(error){
+  btn.disabled=false;
+  indicator('Could not open the device share sheet: '+(error?.message||'Try again.'),true);
+  return;
+ }
+ indicator('Choose Telegram and the customer chat in the normal device share sheet.');
+ try{
+  await request;
+  indicator('Summary picture and '+(files.length-1)+' original invoice file(s) handed to the device share sheet. Confirm Telegram received them.');
+ }catch(error){
+  if(error?.name==='AbortError')indicator('Sharing canceled. Nothing was automatically sent.');
+  else indicator('Could not share the pictures. '+(error?.message||'Please try again.'),true);
+ }finally{btn.disabled=false}
+}
 function shareBatch(){
  const pkg=valid();if(!pkg)return;
  const picked=chosen();
  if(!approveMixedCustomers(picked)){indicator('Sharing canceled.');return}
+ // The familiar direct sharing flow for up to 10 pictures/files.
+ // Album controls are exclusively for packages larger than 10.
+ if(pkg.files.length<=ALBUM_SIZE){
+  void shareDirectFiles(pkg,picked);
+  return;
+ }
  const plan=createPhotoPlan(pkg);
  if(!plan.steps.length){indicator('No original photos available to share.',true);return}
  showPhotoPanel();
- // For a single photo album, open the share sheet from this same direct tap.
- // Multi-album sharing uses visible buttons, each requiring its OWN tap.
- if(plan.steps.length===1&&canShareFiles(plan.steps[0].files)){
-  void sharePhotoStep(0);
- }else{
-  indicator(plan.steps.length+' share group(s) prepared. Tap Share Photo Album 1, select Telegram, then continue in order. No PDF will be created.');
- }
+ indicator(plan.steps.length+' share group(s) prepared. Tap Share Photo Album 1, select Telegram, then continue in order. No PDF will be created.');
 }
 function init(){
  const actions=document.querySelector('#summaryOverlay .summary-actions');
