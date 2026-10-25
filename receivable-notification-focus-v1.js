@@ -41,6 +41,12 @@
     line.style.cssText='display:flex;gap:7px;align-items:center;flex-wrap:wrap;padding:8px 11px;margin:5px 0 9px;border:1px solid #c9ddf5;background:#edf5ff;border-radius:9px;color:#174a86;font:700 12px Arial,sans-serif;';
     line.textContent='🔔 Notification filter · '+customer+' · '+mode;
     filters.parentNode.insertBefore(line,filters);
+    // Don't leave a stale "Notification filter" caption if staff changes
+    // the customer or another filter manually afterward.
+    function clearCaption(){if(line.parentNode)line.remove();}
+    document.addEventListener('bb-ar-customer-scope-changed',clearCaption,{once:true});
+    filters.addEventListener('input',clearCaption,{once:true});
+    filters.addEventListener('change',clearCaption,{once:true});
   }
   function apply(){
     if(done)return;
