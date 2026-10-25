@@ -7,6 +7,9 @@
   if(window.BBARCustomerExcelV1)return;
 
   var selectedCustomers=new Set(),allCustomersSelected=true;
+  // Notification deep links identify customers by ID (names can be duplicated).
+  // Manual checkbox selections continue to work by name as before.
+  var exactCustomerId=null;
   var draftSelectedCustomers=new Set(),draftAllCustomersSelected=true;
   var customerMenu,customerInput,customerWrap,customerArrow,exportButton,menuSearch,menuList,menuCounter,selectShownButton;
   var menuOpen=false,exportBusy=false;
@@ -45,7 +48,11 @@
     return found;
   }
   function filterSelectedCustomers(list){
-    return allCustomersSelected?list:list.filter(function(r){return selectedCustomers.has(norm(r.customer));});
+    return allCustomersSelected?list:list.filter(function(r){
+      return exactCustomerId!==null
+        ? str(r.customerId)===exactCustomerId
+        : selectedCustomers.has(norm(r.customer));
+    });
   }
   // Desktop A/R tables live inside .panel{overflow:hidden}. When a filter
   // produces zero invoices, the panel shrinks and clips the dropdown footer.
@@ -89,7 +96,10 @@
   function updateInputSummary(){
     if(!customerInput)return;
     var count=allCustomersSelected?pendingCustomers().length:selectedCustomers.size;
-    var description=allCustomersSelected?'All customers selected':count+' customers selected';
+    var selectedName=!allCustomersSelected&&selectedCustomers.size===1
+      ?pendingCustomers().find(function(x){return selectedCustomers.has(norm(x.name));})?.name:'';
+    var description=allCustomersSelected?'All customers selected':
+      (selectedName||count+' customers selected');
     customerInput.placeholder=description;
     customerInput.setAttribute('aria-label',description);
     if(customerArrow)customerArrow.title='Search Customer · '+description;
@@ -278,6 +288,7 @@
     ok.type='button';ok.className='bb-ar-customer-apply';
     ok.textContent='OK';
     ok.addEventListener('click',function(){
+      exactCustomerId=null; // Manual selection overrides one-time notification focus.
       allCustomersSelected=draftAllCustomersSelected;
       selectedCustomers=new Set(draftSelectedCustomers);
       setMenu(false);
@@ -548,7 +559,8 @@
       if(!result||result.success!==true||!Array.isArray(result.receivables))throw new Error(result?.error||'Could not refresh authorized outstanding invoices.');
       var authorized=result.receivables.filter(function(r){
         if(!allowedLocation(r,loc)||!isOpen(r))return false;
-        return allCustomersSelected||selectedCustomers.has(norm(r.customer));
+        return allCustomersSelected||
+          (exactCustomerId!==null?str(r.customerId)===exactCustomerId:selectedCustomers.has(norm(r.customer)));
       });
       if(!authorized.length){alert('No outstanding invoices for the selected customer/location.');return;}
       var groups=new Map();
@@ -579,11 +591,27 @@
     isFiltered:function(){return !allCustomersSelected;},
     getSelectedNames:function(){return allCustomersSelected?[]:[...selectedCustomers];},
     setSelectedNames:function(names){
+      exactCustomerId=null;
       allCustomersSelected=false;
       selectedCustomers=new Set((names||[]).map(norm));
       refreshCustomerMenu();renderChanged();
     },
+    setSelectedCustomerId:function(customerId){
+      var requested=str(customerId);
+      if(!requested||typeof rows==='undefined'||!Array.isArray(rows))return false;
+      var row=rows.find(function(r){return str(r.customerId)===requested&&isOpen(r);});
+      // Reuse only rows already authorized by the existing A/R Supabase feed.
+      if(!row)return false;
+      allCustomersSelected=false;
+      exactCustomerId=requested;
+      selectedCustomers=new Set([norm(row.customer)]);
+      setMenu(false);
+      refreshCustomerMenu();
+      renderChanged();
+      return true;
+    },
     clearSelection:function(){
+      exactCustomerId=null;
       // Clear Filters (whole A/R screen) restores the default ALL selection.
       allCustomersSelected=true;selectedCustomers.clear();
       if(customerInput)customerInput.value='';
