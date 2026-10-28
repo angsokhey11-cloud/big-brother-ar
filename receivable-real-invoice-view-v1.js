@@ -180,7 +180,16 @@ async function open(id,no,customer){
   const doc=await window.BBARAdapter.rpc('bb_real_invoice_existing',{p_id:id});
   if(box.hidden||sequence!==activePreview)return;
   if(!doc?.path){
-   if(cached){await cache?.remove(id);feedback('This original is no longer available online.');return}
+   if(cached){
+    await cache?.remove(id);
+    if(activePreviewUrl){URL.revokeObjectURL(activePreviewUrl);activePreviewUrl=''}
+    activeOriginal=null;preparedFile=null;
+    box.querySelector('#bbOriginalDownload').disabled=true;
+    box.querySelector('#bbOriginalTelegram').disabled=true;
+    body.textContent='This original is no longer available for your account.';
+    feedback('Saved copy cleared after online verification.');
+    return;
+   }
    throw Error('No accessible uploaded original for this invoice.');
   }
   if(cached&&cached.path===doc.path){
