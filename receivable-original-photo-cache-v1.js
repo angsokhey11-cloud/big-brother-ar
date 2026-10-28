@@ -154,9 +154,8 @@ async function clear(){
   }catch(_){resolve(false)}
  });
 }
-async function cleanup(){
- if(cleaning)return cleaning;
- cleaning=(async()=>{
+async function doCleanup(){
+
   const db=await openDb();
   if(!db)return {removed:0};
   return new Promise(resolve=>{
@@ -186,8 +185,15 @@ async function cleanup(){
     tx.onerror=()=>resolve({removed:0});tx.onabort=()=>resolve({removed:0});
    }catch(_){resolve({removed:0})}
   });
- })().finally(()=>{cleaning=null});
- return cleaning;
+}
+function cleanup(){
+ // Always queue behind any running pass; otherwise a second newly cached
+ // photo can arrive after the first scan and evade the 200MB cap.
+ const previous=cleaning||Promise.resolve();
+ const job=previous.catch(()=>{}).then(doCleanup);
+ cleaning=job;
+ job.then(()=>{if(cleaning===job)cleaning=null},()=>{if(cleaning===job)cleaning=null});
+ return job;
 }
 window.BBAROriginalPhotoCacheV1=Object.freeze({get,put,remove,markVerified,list,stats,clear,cleanup,
   maxBytes:MAX,ageMs:AGE,currentUserId:user});
