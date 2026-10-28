@@ -202,10 +202,11 @@ async function open(id,no,customer){
   // photo exists, keep it visible until the replacement is fully ready.
   const file=await originalFile(activeOriginal);
   if(box.hidden||sequence!==activePreview)return;
-  await cache?.put(id,doc.path,file).catch(()=>false);
+  const saved=await (cache?.put(id,doc.path,file)||Promise.resolve(false)).catch(()=>false);
   if(box.hidden||sequence!==activePreview)return;
   showOriginalFile(box,file,doc.path);
-  feedback(cached?'Original invoice updated on device':'Original invoice saved for 7-day offline viewing');
+  feedback(saved?(cached?'Original invoice updated on device':'Original invoice saved for 7-day offline viewing'):
+    'Original opened online. Device storage unavailable; this photo was not saved for offline viewing.');
  }catch(e){
   if(cached){
    // A failed metadata check must not blank a previously rendered photo.
