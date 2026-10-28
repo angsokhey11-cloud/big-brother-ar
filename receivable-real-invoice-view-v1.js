@@ -176,6 +176,7 @@ async function open(id,no,customer){
   // 24-hour metadata recheck, not a second photo download. Replacement
   // originals are fetched only when their storage path actually changed.
   if(cached&&(navigator.onLine===false||Date.now()-cached.verifiedAt<24*60*60*1000))return;
+  if(navigator.onLine===false)throw Error('Not saved on this device. Open this invoice online once.');
   await window.BBARAdapter.ensureSession();
   const doc=await window.BBARAdapter.rpc('bb_real_invoice_existing',{p_id:id});
   if(box.hidden||sequence!==activePreview)return;
