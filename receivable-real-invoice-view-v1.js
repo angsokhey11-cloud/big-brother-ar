@@ -138,43 +138,73 @@ async function shareOriginal(){
  finally{button.disabled=false;}
 }
 
+function showOriginalFile(box,file,path){
+ if(activePreviewUrl){URL.revokeObjectURL(activePreviewUrl);activePreviewUrl=''}
+ const body=box.querySelector('#bbOriginalBody');
+ preparedFile=file;
+ activePreviewUrl=URL.createObjectURL(file);
+ box.querySelector('#bbOriginalDownload').disabled=false;
+ box.querySelector('#bbOriginalTelegram').disabled=false;
+ body.replaceChildren();
+ if(/\.pdf$/i.test(path)||file.type==='application/pdf'){
+  const frame=document.createElement('iframe');
+  frame.src=activePreviewUrl;frame.title='Original invoice PDF';body.append(frame);
+ }else{
+  const img=document.createElement('img');
+  img.src=activePreviewUrl;img.alt='Original paper invoice';body.append(img);
+ }
+}
 async function open(id,no,customer){
  const box=viewer(),body=box.querySelector('#bbOriginalBody'),sequence=++activePreview;
+ const cache=window.BBAROriginalPhotoCacheV1;
  activeOriginal=null;preparedFile=null;feedback('');
  if(activePreviewUrl){URL.revokeObjectURL(activePreviewUrl);activePreviewUrl=''}
  box.querySelector('#bbOriginalDownload').disabled=true;
  box.querySelector('#bbOriginalTelegram').disabled=true;
  box.querySelector('#bbOriginalLabel').textContent='Original: '+no+' · '+customer;
- body.textContent='Loading original securely…';box.hidden=false;
+ body.textContent='Opening original invoice…';box.hidden=false;
+ let cached=null;
  try{
+  // Device-first, even when online. Never block a saved photo on an RPC.
+  cached=await cache?.get(id);
+  if(box.hidden||sequence!==activePreview)return;
+  if(cached){
+   activeOriginal={path:cached.path,no,customer};
+   showOriginalFile(box,new File([cached.blob],filenameFor(activeOriginal),{type:cached.blob.type||'image/jpeg'}),cached.path);
+   feedback('Saved photo · opened from this device');
+  }
+  // 24-hour metadata recheck, not a second photo download. Replacement
+  // originals are fetched only when their storage path actually changed.
+  if(cached&&(navigator.onLine===false||Date.now()-cached.verifiedAt<24*60*60*1000))return;
   await window.BBARAdapter.ensureSession();
   const doc=await window.BBARAdapter.rpc('bb_real_invoice_existing',{p_id:id});
-  if(!doc?.path)throw Error('No accessible uploaded original for this invoice.');
   if(box.hidden||sequence!==activePreview)return;
-
+  if(!doc?.path){
+   if(cached){await cache?.remove(id);feedback('This original is no longer available online.');return}
+   throw Error('No accessible uploaded original for this invoice.');
+  }
+  if(cached&&cached.path===doc.path){
+   await cache?.markVerified(id,doc.path);
+   return;
+  }
   activeOriginal={path:doc.path,no,customer};
-
-  // Fetch the authenticated object once, then use the same bytes for
-  // preview, Download and Share. This works consistently on hosted
-  // Supabase and Local Brain without depending on signed-URL behavior.
+  // Online-only and on demand: authenticated byte fetch once. If a saved
+  // photo exists, keep it visible until the replacement is fully ready.
   const file=await originalFile(activeOriginal);
   if(box.hidden||sequence!==activePreview)return;
-
-  preparedFile=file;
-  activePreviewUrl=URL.createObjectURL(file);
-  box.querySelector('#bbOriginalDownload').disabled=false;
-  box.querySelector('#bbOriginalTelegram').disabled=false;
-
-  body.replaceChildren();
-  if(/\.pdf$/i.test(doc.path)){
-   const frame=document.createElement('iframe');frame.src=activePreviewUrl;frame.title='Original invoice PDF';body.append(frame);
-  }else{
-   const img=document.createElement('img');img.src=activePreviewUrl;img.alt='Original paper invoice';body.append(img);
-  }
+  await cache?.put(id,doc.path,file).catch(()=>false);
+  if(box.hidden||sequence!==activePreview)return;
+  showOriginalFile(box,file,doc.path);
+  feedback(cached?'Original invoice updated on device':'Original invoice saved for 7-day offline viewing');
  }catch(e){
+  if(cached){
+   // A failed metadata check must not blank a previously rendered photo.
+   feedback(navigator.onLine===false?'Saved photo · offline': 'Saved photo · online update unavailable');
+   return;
+  }
   if(activePreviewUrl){URL.revokeObjectURL(activePreviewUrl);activePreviewUrl=''}
   preparedFile=null;
-  body.textContent=e.message||'Could not open original invoice.';
+  body.textContent=navigator.onLine===false?'Not saved on this device. Open this invoice online once.':(e.message||'Could not open original invoice.');
  }
 }
 function install(){
