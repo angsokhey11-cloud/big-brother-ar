@@ -352,9 +352,13 @@ const cardCssPromise=loadCardCss();
 function cleanSummaryTable(doc){
   const table=doc.querySelector('#summarySheet .sum-table');
   if(!table)return;
-  table.querySelectorAll('tr').forEach(row=>{
-    if(row.children.length>=7&&row.children[3])row.children[3].remove();
-  });
+  // Remove Due Date by its HEADER, not by fixed column index.
+  // Multi-customer summaries include an extra Customer column.
+  const heading=table.querySelector('thead tr');
+  if(!heading)return;
+  const position=[...heading.children].findIndex(el=>/due date/i.test(String(el.textContent||'')));
+  if(position<0)return;
+  table.querySelectorAll('tr').forEach(row=>row.children[position]?.remove());
 }
 
 /* BIG BROTHER Mobile Summary V3: one compact toolbar and a readable
