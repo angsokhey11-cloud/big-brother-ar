@@ -89,7 +89,7 @@ function setLive(){
   document.documentElement.classList.remove('bb-ar-cache-pending');
 }
 function isNetworkFailure(error){
-  return error instanceof TypeError || /failed to fetch|networkerror|network request failed|load failed|offline|timeout/i.test(String(error?.message||error||''));
+  return error instanceof TypeError || /failed to fetch|networkerror|network request failed|load failed|offline|timeout|\(408\)|\(429\)|\(500\)|\(502\)|\(503\)|\(504\)/i.test(String(error?.message||error||''));
 }
 window.BBARSmartCacheV1={
   read,saveAccess:access=>writeKey(ACCESS,access),
