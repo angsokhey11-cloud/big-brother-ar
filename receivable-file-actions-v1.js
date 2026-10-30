@@ -5,7 +5,21 @@
 (function(){
 'use strict';
 const MAX_FILE=18*1024*1024,MAX_TOTAL=24*1024*1024,MAX_COUNT=12;
-const native=()=>typeof window.BBNativeFiles?.postMessage==='function';
+// Android's origin-scoped bridge may be attached to the trusted top frame
+// rather than a nested A/R iframe. Use an accessible same-origin ancestor.
+function findNativeBridge(){
+ const candidates=[window];
+ try{if(window.parent&&window.parent!==window)candidates.push(window.parent)}catch(_){}
+ try{if(window.top&&window.top!==window)candidates.push(window.top)}catch(_){}
+ for(const frame of candidates){
+  try{
+   if(frame.location.origin!==window.location.origin)continue;
+   if(typeof frame.BBNativeFiles?.postMessage==='function')return frame.BBNativeFiles;
+  }catch(_){}
+ }
+ return null;
+}
+const native=()=>!!findNativeBridge();
 function inInstalledApk(){
   if(!/Android/i.test(navigator.userAgent||''))return false;
   try{
@@ -55,7 +69,8 @@ async function sendNative(action,files){
  for(const file of files){
   packaged.push({name:filename(file.name),type:String(file.type||'application/octet-stream'),data:await readBase64(file)});
  }
- const bridge=window.BBNativeFiles;
+ const bridge=findNativeBridge();
+ if(!bridge)throw Error('Native Android file bridge is unavailable in this A/R frame.');
  const requestId=++bbNextNativeRequest;
  // The native WebMessageListener delivers replies to this SAME source frame,
  // including the nested My/All Receivables iframe.
@@ -103,5 +118,23 @@ async function open(file){
  if(await sendNative('open',[file]))return 'native';
  browserDownload(file);return 'browser';
 }
-window.BBARFileActionsV1=Object.freeze({isNative:native,inInstalledApk,save,share,open});
+function diagnostics(){
+ let topOrigin='different-origin',mode='browser';
+ try{
+  topOrigin=window.top.location.origin;
+  const search=new URLSearchParams(window.top.location.search);
+  if(search.get('source')==='android-online')mode='online-app';
+  else if(search.get('localbrain')==='1')mode='local-brain';
+ }catch(_){}
+ return {
+  version:'BB-AR-FILE-ACTIONS-V2',
+  pageOrigin:location.origin,topOrigin,mode,
+  adapterReady:true,nativeBridgeReady:native(),
+  webShareReady:typeof navigator.share==='function',
+  pdfToolsReady:typeof window.BBARAuditPdfExport?.save==='function',
+  rendererReady:typeof window.html2canvas==='function'||typeof window.html2pdf==='function',
+  summaryReady:!!document.getElementById('summarySheet')
+ };
+}
+window.BBARFileActionsV1=Object.freeze({isNative:native,inInstalledApk,save,share,open,diagnostics});
 })();
