@@ -473,11 +473,17 @@ function exportStatus(prepared){
  return s.pages+' page(s), '+s.originals+' paper original(s), '+
   s.storedDigitals+' saved digital original(s), '+s.digitals+' generated digital invoice(s).';
 }
+function verifyPdfAdapter(){
+ const a=window.BBARFileActionsV1;
+ if(!a)throw Error('PDF export adapter did not load.');
+ if(a.inInstalledApk?.()&&!a.isNative?.())throw Error('Native Android file service is missing.');
+}
 async function exportAudit(event){
  event?.preventDefault();event?.stopPropagation();
  if(busy)return;
  buttonBusy(true);
  try{
+  verifyPdfAdapter();
   const picked=selectedRows();
   show('Preparing PDF with '+picked.length+' selected invoice(s)…');
   const prepared=await prepareCustomerPdf(picked);
@@ -532,6 +538,7 @@ async function shareCustomerPdf(event){
  if(busy)return 'busy';
  let telegramTab=null;
  try{
+  verifyPdfAdapter();
   const picked=selectedRows();
   if(!mixedCustomerApproval(picked)){show('Sharing cancelled.');return 'cancelled';}
   // On desktop, open Telegram from the actual click before asynchronous PDF creation.
