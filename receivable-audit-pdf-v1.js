@@ -402,6 +402,22 @@ async function downloadFile(file){
  document.body.appendChild(anchor);anchor.click();anchor.remove();
  setTimeout(()=>URL.revokeObjectURL(url),60000);
 }
+/* Older Local Brain databases may expose the approved per-invoice lookup
+ * while lacking the bulk manifest RPC. That is not grounds to omit evidence:
+ * use the existing authorized invoice-ID lookup in findAttachment() instead.
+ * Never fall back on permission-denied or network errors.
+ */
+async function authorizedOriginalManifest(ids){
+ try{return await rpc('bb_ar_original_manifest',{p_invoice_ids:ids})}
+ catch(error){
+   const message=String(error?.message||error||'');
+   if(!/PGRST202|Could not find the function.*bb_ar_original_manifest|function.*bb_ar_original_manifest.*does not exist|undefined function bb_ar_original_manifest/i.test(message))
+     throw Error('Could not verify authorized invoice originals. '+message);
+   show('Local bulk-original lookup unavailable; verifying originals by authorized invoice ID…');
+   return [];
+ }
+}
+
 async function prepareCustomerPdf(picked){
  // Even a previously prepared/cached PDF must be checked against CURRENT
  // authorized A/R before allowing another delayed download/share.
@@ -420,7 +436,7 @@ async function prepareCustomerPdf(picked){
  try{
   results=await Promise.all([
    loadPdfLib(),createSummaryImageBlob(),
-   rpc('bb_ar_original_manifest',{p_invoice_ids:ids})
+   authorizedOriginalManifest(ids)
   ]);
  }catch(error){
   throw Error('PDF preparation failed while loading the renderer, summary image, or authorized originals. '+(error?.message||'Try reopening Summary.'));
