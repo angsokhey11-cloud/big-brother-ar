@@ -396,6 +396,12 @@ function cleanSummaryTable(doc){
       const td=source?source.cloneNode(true):doc.createElement('td');
       td.removeAttribute('style');
       if(i===0)td.textContent=formatSummaryShortDate(source?.textContent);
+      // Keep invoice numbers as normal-weight text, like customer names.
+      // Outstanding stays bold, including in the A4 PDF/print source.
+      if(i===1){
+        td.textContent=String(source?.textContent||'').trim();
+        td.style.fontWeight='400';
+      }
       if(i===2&&sourceIndex<0)td.textContent=singleName;
       if(i===3)td.classList.add('money');
       tr.appendChild(td);
