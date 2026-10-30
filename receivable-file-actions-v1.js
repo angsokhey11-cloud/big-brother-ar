@@ -40,11 +40,15 @@ async function save(file){
 }
 async function share(files,title,text){
  if(!Array.isArray(files))files=[files];
- if(await sendNative('share',files))return 'native';
+ if(native()){
+   await sendNative('share',files);
+   return 'native';
+ }
  if(typeof navigator.share!=='function'||typeof navigator.canShare!=='function'||!navigator.canShare({files}))
   throw Error('File sharing is unavailable here. Use Save to Device and attach the saved file in Telegram.');
- // Call without an intervening await in the browser branch: retain user activation.
- await navigator.share({files,title:title||'BIG BROTHER',text:text||''});
+ // The native browser API MUST start in the original button click task.
+ const request=navigator.share({files,title:title||'BIG BROTHER',text:text||''});
+ await request;
  return 'browser';
 }
 async function open(file){
