@@ -853,6 +853,27 @@ createSummaryImageBlob=async function(){
     if(bbSummaryImagePromise===task)bbSummaryImagePromise=null;
   }
 };
+function bbSummaryPwaShareStatus(message,error){
+  const modal=$('summaryOverlay')?.querySelector('.summary-modal');
+  if(!modal)return;
+  let note=$('bbSummaryShareStatus');
+  if(!note){
+    note=document.createElement('div');
+    note.id='bbSummaryShareStatus';
+    note.setAttribute('role','status');
+    note.style.cssText='padding:5px 9px 8px;text-align:right;font:600 11px/1.5 Arial,sans-serif;color:#315a7e';
+    const actions=modal.querySelector('.summary-actions');
+    if(actions)actions.after(note);
+    else modal.prepend(note);
+  }
+  note.style.color=error?'#a52d2d':'#315a7e';
+  note.textContent=message||'';
+}
+function bbSummaryPwaShareReady(){
+  const button=$('shareTelegramBtn');
+  if(button&&!button.disabled)button.textContent='✈️ Share Summary to Telegram — Ready';
+  bbSummaryPwaShareStatus('Summary picture ready. Tap Share to Telegram to open the device share sheet.');
+}
 function bbWarmSummaryPicture(){
   const key=bbSummaryImageKey();
   if(bbPreparedSummary&&bbPreparedSummaryKey===key)return Promise.resolve(bbPreparedSummary);
@@ -861,7 +882,9 @@ function bbWarmSummaryPicture(){
   const task=createSummaryImageBlob().then(blob=>{
     if(key!==bbSummaryImageKey()||$('summaryOverlay').classList.contains('hidden'))return null;
     const file=new File([blob],summaryFileBase()+'.png',{type:'image/png'});
-    bbPreparedSummary=file;bbPreparedSummaryKey=key;return file;
+    bbPreparedSummary=file;bbPreparedSummaryKey=key;
+    if(!window.BBARFileActionsV1?.isNative?.())bbSummaryPwaShareReady();
+    return file;
   });
   bbSummaryWarmTask=task;
   task.finally(()=>{if(bbSummaryWarmTask===task)bbSummaryWarmTask=null}).catch(()=>{});
@@ -913,6 +936,56 @@ async function shareSummaryToTelegram(event){
   const prepared=bbPreparedSummaryKey===bbSummaryImageKey()?bbPreparedSummary:null;
   const mobile=/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)||
     navigator.maxTouchPoints>0;
+  // Installed PWA: identical user-gesture discipline to working
+  // "Share Summary + Real Invoices". Files must exist BEFORE navigator.share.
+  // Unlike APK, PWA cannot call share after any canvas/PDF await.
+  if(mobile&&!fileTools?.isNative?.()&&!fileTools?.inInstalledApk?.()){
+    if(!prepared){
+      if(button){button.disabled=true;button.textContent='⏳ Preparing Summary Picture…'}
+      bbSummaryPwaShareStatus('Preparing summary picture for sharing…');
+      try{
+        const ready=await bbWarmSummaryPicture();
+        if(!ready)throw Error('The summary changed. Reopen Summary Invoice.');
+        bbSummaryPwaShareStatus('Summary ready — reopen More Function and tap Share to Telegram.');
+      }catch(error){
+        bbSummaryPwaShareStatus('Could not prepare the summary: '+(error?.message||'Try again.'),true);
+      }finally{
+        if(button){button.disabled=false;button.textContent=bbPreparedSummaryKey===bbSummaryImageKey()&&bbPreparedSummary?
+          '✈️ Share Summary to Telegram — Ready':oldText;}
+      }
+      return;
+    }
+    let supportsFileShare=false;
+    try{supportsFileShare=typeof navigator.share==='function'&&
+      typeof navigator.canShare==='function'&&navigator.canShare({files:[prepared]})}catch(_){}
+    if(!supportsFileShare){
+      try{
+        if(!fileTools)throw Error('Save to Device is unavailable.');
+        await fileTools.save(prepared);
+        bbSummaryPwaShareStatus('Summary PNG saved. Attach it in Telegram; this browser cannot share image files directly.');
+      }catch(error){bbSummaryPwaShareStatus('Could not save summary: '+(error?.message||'Try again.'),true)}
+      return;
+    }
+    // Must be the first asynchronous operation initiated by THIS user tap.
+    let request;
+    try{
+      request=navigator.share({
+        files:[prepared],title:'BIG BROTHER Customer Invoice Summary'
+      });
+    }catch(error){
+      bbSummaryPwaShareStatus('Cannot open share sheet: '+(error?.message||'Try again.'),true);
+      return;
+    }
+    bbSummaryPwaShareStatus('Select Telegram and confirm the customer chat.');
+    try{
+      await request;
+      bbSummaryPwaShareStatus('Summary handed to device share sheet. Confirm Telegram received it.');
+    }catch(error){
+      if(error?.name==='AbortError')bbSummaryPwaShareStatus('Sharing cancelled. You can try again.');
+      else bbSummaryPwaShareStatus('Sharing failed: '+(error?.message||'Try again.'),true);
+    }
+    return;
+  }
   // An embedded Android APK must use our native file bridge. WebView has no
   // navigator.share API: do not waste time rendering a PNG only to show a
   // misleading 'use Chrome' warning.
