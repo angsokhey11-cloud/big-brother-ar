@@ -718,7 +718,8 @@ async function printSummary(){
   // Print the original A4 document. APK WebView cannot open Chrome Print UI;
   // hand an A4 PDF to Android's installed PDF viewer instead.
   try{
-    await verifySummaryCurrent();
+    // A Local Brain print is a device snapshot, never a fresh cloud query.
+    if(!isLocalBrainInvoiceExport())await verifySummaryCurrent();
     if(window.BBARFileActionsV1?.isNative?.()){
       if(!window.PDFLib?.PDFDocument){
         await new Promise((resolve,reject)=>{
