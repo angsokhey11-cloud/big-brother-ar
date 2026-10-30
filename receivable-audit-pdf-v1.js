@@ -547,7 +547,7 @@ async function shareCustomerPdf(event){
   }catch(_){}
   // A previously prepared PDF must launch the PWA share sheet directly
   // from the tap; awaiting even an already-cached async PDF can lose the gesture.
-  if(nativeShare&&preparedPdf?.signature===selectionSignature(picked)){
+  if(!window.BBARFileActionsV1?.isNative?.()&&nativeShare&&preparedPdf?.signature===selectionSignature(picked)){
     let request;
     try{
       request=navigator.share({
@@ -564,9 +564,10 @@ async function shareCustomerPdf(event){
   show('Preparing '+picked.length+' invoice(s) for PDF sharing…');
   const prepared=await prepareCustomerPdf(picked);
   show('PDF prepared ('+exportStatus(prepared)+'). Opening device share picker…');
-  if(window.BBARFileActionsV1?.isNative?.()){
-    await window.BBARFileActionsV1.share([prepared.file],'BIG BROTHER Customer Invoice Summary','Customer Invoice Summary and supporting invoices');
-    show('Android file share chooser opened. Select Telegram and confirm the recipient.');
+  const fileActions=window.BBARFileActionsV1;
+  if(fileActions?.isNative?.()||fileActions?.inInstalledApk?.()){
+    await fileActions.share([prepared.file],'BIG BROTHER Customer Invoice Summary','Customer Invoice Summary and supporting invoices');
+    show('Android file chooser opened; choose Telegram and confirm the customer.');
     return 'native';
   }
   const nativeStatus=await sendThroughShareSheet(prepared.file);
