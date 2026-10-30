@@ -6,6 +6,21 @@
 'use strict';
 const MAX_FILE=18*1024*1024,MAX_TOTAL=24*1024*1024,MAX_COUNT=12;
 const native=()=>typeof window.BBNativeFiles?.postMessage==='function';
+function inInstalledApk(){
+  if(!/Android/i.test(navigator.userAgent||''))return false;
+  try{
+    const topUrl=new URL(window.top.location.href);
+    const isDashboard=topUrl.pathname.startsWith('/big-brother-dashboard/');
+    const params=topUrl.searchParams;
+    return isDashboard&&(params.get('source')==='android-online'||params.get('localbrain')==='1')&&
+      window.top!==window;
+  }catch(_){return false;}
+}
+function requireApkBridge(){
+  if(inInstalledApk()&&!native())throw Error(
+    'The APK native file handler is unavailable. Install the latest signed BIG BROTHER APK, run Local Brain Code Sync if using Local, then reopen the app. Your invoice data is unchanged.'
+  );
+}
 function filename(v){return String(v||'BIG-BROTHER-export').replace(/[\\/\\x00-\\x1f:*?"<>|]/g,'_').slice(0,145)}
 function readBase64(blob){
  return new Promise((resolve,reject)=>{
@@ -35,10 +50,12 @@ function browserDownload(file){
  setTimeout(()=>URL.revokeObjectURL(url),60000);
 }
 async function save(file){
+ requireApkBridge();
  if(await sendNative('save',[file]))return 'native';
  browserDownload(file);return 'browser';
 }
 async function share(files,title,text){
+ requireApkBridge();
  if(!Array.isArray(files))files=[files];
  if(native()){
    await sendNative('share',files);
@@ -52,8 +69,9 @@ async function share(files,title,text){
  return 'browser';
 }
 async function open(file){
+ requireApkBridge();
  if(await sendNative('open',[file]))return 'native';
  browserDownload(file);return 'browser';
 }
-window.BBARFileActionsV1=Object.freeze({isNative:native,save,share,open});
+window.BBARFileActionsV1=Object.freeze({isNative:native,inInstalledApk,save,share,open});
 })();
