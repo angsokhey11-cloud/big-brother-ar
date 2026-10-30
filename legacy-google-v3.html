@@ -241,8 +241,8 @@ input,select,textarea{width:100%;border:1px solid #cbd6e3;border-radius:9px;padd
     <div class="a4-sheet" id="summarySheet"></div>
   </div>
 </div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<!-- Bundle the renderer locally: Local Brain APK must never wait on CDN timeouts. -->
+<script src="vendor/html2pdf.bundle.min.js?v=20261030-local-pdf1"></script>
 <script src="receivable-file-actions-v1.js?v=20261030-share-android1"></script>
 
 <script>
@@ -781,9 +781,10 @@ async function createSummaryImageBlob(){
   try{
     const renderPromise=html2canvas(clone,{
       backgroundColor:"#ffffff",
-      scale:2,
+      scale:1.5,
       useCORS:true,
-      logging:false
+      logging:false,
+      windowWidth:Math.max(794,document.documentElement.clientWidth)
     });
     const canvas=await Promise.race([
       renderPromise,
