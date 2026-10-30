@@ -895,6 +895,17 @@ async function shareSummaryToTelegram(event){
     navigator.maxTouchPoints>0;
   // PWA: open the native share sheet DIRECTLY from the click.
   // This must run before the first await, or Android may reject it.
+  // If an installed PWA cannot share files, still let staff save and manually
+  // attach the summary. Never silently pretend Telegram received it.
+  if(mobile&&prepared&&!fileTools?.isNative?.()&&
+     !(typeof navigator.share==='function'&&typeof navigator.canShare==='function'&&
+       navigator.canShare({files:[prepared]}))){
+    try{
+      if(fileTools)await fileTools.save(prepared);
+      alert('Summary picture saved to your device. Open Telegram and attach that picture to the intended customer chat.');
+    }catch(error){alert('Could not save the summary picture: '+(error?.message||'Try again.'))}
+    return;
+  }
   if(mobile&&prepared&&!fileTools?.isNative?.()&&
      typeof navigator.share==='function'&&typeof navigator.canShare==='function'&&
      navigator.canShare({files:[prepared]})){
