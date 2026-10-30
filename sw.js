@@ -1,7 +1,7 @@
 /* BIG BROTHER Your Receivable real-function asset cache pilot V1.
    Scope restricted to this static GitHub Pages repository path.
    No interception of Supabase, authentication, financial RPC or writes. */
-const NAME='bb-ar-real-ui-v15', PREFIX=new URL('./',self.registration.scope).pathname;
+const NAME='bb-ar-real-ui-v16', PREFIX=new URL('./',self.registration.scope).pathname;
 const MAIN=['your-receivable-mobile.html','your-receivable.html','all-receivable-mobile.html','all-receivable-engine-mobile.html','legacy-google-v3.html','supabase-ar-adapter.js','receivable-smart-cache-v1.js','receivable-file-actions-v1.js'];
 const OTHER=['your-receivable-mobile-cards-v1.html','receivable-telegram-v1.js','receivable-backup-v1.js',
   'receivable-original-photo-cache-v1.js','receivable-real-invoice-view-v1.js',
