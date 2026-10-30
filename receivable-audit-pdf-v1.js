@@ -12,6 +12,14 @@ const PDF_LIB_URLS=[
  'https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js'
 ];
 const A4=[595.28,841.89], MARGIN=12;
+function localPdfMode(){
+ if(typeof window.BBARIsLocalInvoiceExport==='function')return window.BBARIsLocalInvoiceExport();
+ try{
+  return location.hostname==='bigbrother.local'||
+    new URLSearchParams(location.search).get('localbrain')==='1';
+ }catch(_){return false}
+}
+
 let busy=false;
 const $=id=>document.getElementById(id);
 const label=row=>(String(row.customer||'Customer')+' / '+String(row.invoiceNo||'Invoice'));
@@ -48,7 +56,7 @@ async function rpc(name,args){
 function delay(ms){return new Promise(resolve=>setTimeout(resolve,ms));}
 async function loadPdfLib(){
  if(window.PDFLib?.PDFDocument)return window.PDFLib;
- for(const url of PDF_LIB_URLS){
+ for(const url of (localPdfMode()?PDF_LIB_URLS.slice(0,1):PDF_LIB_URLS)){
   try{
    await new Promise((resolve,reject)=>{
     const script=document.createElement('script');
@@ -439,7 +447,106 @@ async function authorizedOriginalManifest(ids){
  }
 }
 
+/* LOCAL BRAIN ONLY: create a summary from the selected device snapshot.
+ * Never fetch private originals, their manifest, or a sales-detail RPC from
+ * Supabase for a local PDF. Include only user-scoped local originals already
+ * saved on this device. Missing originals are explicitly documented.
+ */
+async function localSummaryPicture(missing){
+ const sheet=$('summarySheet');
+ if(!sheet)fail('The local Summary Invoice paper is not ready.');
+ await ensureCanvasAvailable();
+ const clone=sheet.cloneNode(true);
+ clone.removeAttribute('id');
+ clone.style.cssText='width:794px;min-height:1123px;margin:0;padding:27px 32px 32px;box-sizing:border-box;background:#fff;transform:none;box-shadow:none';
+ const note=document.createElement('div');
+ note.style.cssText='margin:18px 0 0;padding:10px 12px;border-top:2px solid #2a5aa2;background:#f3f6fa;color:#33445c;font:12px/1.55 Arial,sans-serif;overflow-wrap:anywhere';
+ const message=document.createElement('div');
+ message.style.cssText='font-weight:bold;margin-bottom:4px';
+ message.textContent='LOCAL SUMMARY COPY — not reverified against cloud balances';
+ note.appendChild(message);
+ const detail=document.createElement('div');
+ detail.textContent=missing.length?
+  missing.length+' original invoice image(s) not stored on this device; omitted: '+
+  missing.map(r=>String(r.invoiceNo||r.invoiceId||'')).join(', '):
+  'All included original invoice images came from this device.';
+ note.appendChild(detail);clone.appendChild(note);
+ const wrapper=document.createElement('div');
+ wrapper.style.cssText='position:fixed;left:0;top:0;width:794px;z-index:-1;pointer-events:none;background:white';
+ wrapper.appendChild(clone);document.body.appendChild(wrapper);
+ try{
+  const canvas=await html2canvas(clone,{backgroundColor:'#fff',scale:1.35,
+   useCORS:false,logging:false,windowWidth:794});
+  const blob=await new Promise((resolve,reject)=>canvas.toBlob(
+   v=>v?resolve(v):reject(Error('Could not render local Summary Invoice.')),'image/png'));
+  return blob;
+ }finally{wrapper.remove()}
+}
+async function prepareLocalCustomerPdf(picked){
+ const signature=selectionSignature(picked)+'|LOCAL';
+ if(preparedPdf?.signature===signature)return preparedPdf;
+ const cache=window.BBAROriginalPhotoCacheV1;
+ const locallySaved=[],missing=[];
+ for(const row of picked){
+  // A device photo cache is account-scoped and holds only previous authorized
+  // downloads. No network call is made by get().
+  let original=null;
+  try{original=await cache?.get(String(row.invoiceId||''))}
+  catch(error){console.warn('Device original not accessible:',error)}
+  if(original?.blob instanceof Blob&&original.blob.size>0&&original.path){
+   locallySaved.push({row,original});
+  }else missing.push(row);
+ }
+ const PDFLib=await loadPdfLib();
+ const summaryImage=await localSummaryPicture(missing);
+ const pdf=await PDFLib.PDFDocument.create();
+ pdf.setTitle('BIG BROTHER Local Customer Invoice Summary');
+ pdf.setSubject('LOCAL COPY — missing original invoices are omitted, not cloud verified');
+ await addPicture(pdf,summaryImage,'image/png','summary.png');
+ let originals=0,multiPage=0;
+ for(const item of locallySaved){
+  const {row,original}=item;
+  show('Adding saved local original: '+label(row));
+  try{
+   const count=await addOriginal(pdf,original.blob,{
+     path:original.path,mimeType:original.blob.type,source:'local-device'
+   },row);
+   originals++;
+   if(count>1)multiPage++;
+  }catch(error){
+   // Do not fail the summary because a saved offline attachment is invalid.
+   // Tell the user exactly which original was omitted instead.
+   missing.push(row);
+   show('Local original unreadable; omitted: '+label(row),true);
+   console.warn('Skipped unreadable local original:',error);
+  }
+ }
+ // If a cached original was unreadable, rebuild the first Summary page notice
+ // so it also lists that omission. The PDF must never imply it was included.
+ if(missing.length!==picked.length-locallySaved.length){
+   const current=await localSummaryPicture(missing);
+   const replacement=await PDFLib.PDFDocument.create();
+   await addPicture(replacement,current,'image/png','summary.png');
+   const pages=await replacement.copyPages(pdf,pdf.getPageIndices().slice(1));
+   pages.forEach(p=>replacement.addPage(p));
+   const finalBytes=await replacement.save({useObjectStreams:true});
+   const file=new File([finalBytes],fileName(picked),{type:'application/pdf'});
+   const result={file,signature,stats:{pages:replacement.getPageCount(),originals,
+     storedDigitals:0,digitals:0,multiPage,skippedOriginals:missing.length,
+     localCopy:true},customers:customerNames(picked)};
+   preparedPdf=result;return result;
+ }
+ const bytes=await pdf.save({useObjectStreams:true});
+ const file=new File([bytes],fileName(picked),{type:'application/pdf'});
+ const result={file,signature,stats:{pages:pdf.getPageCount(),originals,
+  storedDigitals:0,digitals:0,multiPage,skippedOriginals:missing.length,
+  localCopy:true},customers:customerNames(picked)};
+ preparedPdf=result;
+ return result;
+}
+
 async function prepareCustomerPdf(picked){
+ if(localPdfMode())return prepareLocalCustomerPdf(picked);
  // Even a previously prepared/cached PDF must be checked against CURRENT
  // authorized A/R before allowing another delayed download/share.
  if(typeof verifySummaryCurrent!=='function')fail('Summary export verification is unavailable. Refresh A/R.');
@@ -495,6 +602,8 @@ async function prepareCustomerPdf(picked){
 }
 function exportStatus(prepared){
  const s=prepared.stats;
+ if(s.localCopy)return 'LOCAL COPY — '+s.pages+' page(s), '+s.originals+
+  ' locally saved original(s), '+s.skippedOriginals+' missing original(s) skipped; balances not cloud-verified';
  return s.pages+' page(s), '+s.originals+' paper original(s), '+
   s.storedDigitals+' saved digital original(s), '+s.digitals+' generated digital invoice(s).';
 }
