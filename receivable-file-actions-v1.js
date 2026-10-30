@@ -88,6 +88,27 @@ async function sendNative(action,files){
    }
  });
 }
+async function ping(){
+ const bridge=findNativeBridge();
+ if(!bridge)return {ok:false,message:'No native JavaScript bridge detected in this frame or a same-origin parent.'};
+ const requestId=++bbNextNativeRequest;
+ bridge.onmessage=bbNativeReply;
+ try{
+   await new Promise((resolve,reject)=>{
+     const timer=setTimeout(()=>{
+       bbNativePending.delete(requestId);
+       reject(Error('No Android response after 7 seconds. The APK is outdated or rejected this frame.'));
+     },7000);
+     bbNativePending.set(requestId,{resolve,reject,timer});
+     try{bridge.postMessage(JSON.stringify({action:'ping',requestId}))}
+     catch(e){clearTimeout(timer);bbNativePending.delete(requestId);reject(e)}
+   });
+   return {ok:true,message:'Native listener accepted this screen origin and replied.'};
+ }catch(error){
+   return {ok:false,message:String(error?.message||error)};
+ }
+}
+
 function browserDownload(file){
  const url=URL.createObjectURL(file),anchor=document.createElement('a');
  anchor.href=url;anchor.download=filename(file.name);
@@ -136,5 +157,5 @@ function diagnostics(){
   summaryReady:!!document.getElementById('summarySheet')
  };
 }
-window.BBARFileActionsV1=Object.freeze({isNative:native,inInstalledApk,save,share,open,diagnostics});
+window.BBARFileActionsV1=Object.freeze({isNative:native,inInstalledApk,save,share,open,diagnostics,ping});
 })();
