@@ -378,6 +378,60 @@ function fitSummaryToPhone(doc){
   spacer.style.marginTop=Math.ceil(natural*scale-natural)+'px';
 }
 
+
+/* Mobile-only: keep original PDF/share controls while making Summary readable.
+   This same mobile skin is used by both My Receivable and All Receivable. */
+function wireSummaryMoreFunction(doc,win){
+ const actions=doc.querySelector('#summaryOverlay .summary-actions');
+ if(!actions||actions.__bbMoreFunctionReady)return;
+ const close=[...actions.children].find(el=>el.tagName==='BUTTON'&&
+    String(el.getAttribute('onclick')||'').includes('closeSummary'));
+ if(!close)return;
+ actions.__bbMoreFunctionReady=true;
+ const style=doc.createElement('style');
+ style.id='bb-ar-summary-more-mobile-v2';
+ style.textContent="\n@media screen {\n #summaryOverlay{padding:4px!important;align-items:stretch!important;justify-content:center!important}\n #summaryOverlay .summary-modal{width:100%!important;max-width:none!important;max-height:100%!important;overflow:auto!important;overscroll-behavior:contain!important;padding:8px 8px 12px!important;border-radius:11px!important;background:#edf3f9!important}\n #summaryOverlay .summary-actions{display:flex!important;flex-wrap:nowrap!important;align-items:center!important;justify-content:space-between!important;gap:10px!important;margin:0 0 6px!important;padding:2px 0 7px!important;position:sticky!important;top:0!important;z-index:30!important;background:#edf3f9!important}\n #summaryOverlay .summary-actions>.btn{min-height:39px!important;padding:8px 13px!important;flex:0 0 auto!important;border-radius:10px!important;font-size:12px!important;font-weight:800!important}\n #summaryOverlay .summary-actions>.bb-ar-summary-more{background:#173f77!important;color:#fff!important;box-shadow:0 2px 7px rgba(15,46,83,.13)!important}\n #summaryOverlay #bbArSummaryMoreList{position:absolute!important;right:0!important;top:calc(100% - 3px)!important;width:min(350px,calc(100vw - 26px))!important;max-height:min(65dvh,540px)!important;overflow:auto!important;padding:7px!important;border:1px solid #cddbea!important;border-radius:13px!important;background:#fff!important;box-shadow:0 14px 34px rgba(19,49,88,.25)!important;z-index:80!important;overscroll-behavior:contain!important}\n #summaryOverlay #bbArSummaryMoreList[hidden]{display:none!important}\n #summaryOverlay #bbArSummaryMoreList>.btn{display:block!important;position:static!important;width:100%!important;min-height:42px!important;margin:0 0 5px!important;padding:10px 12px!important;border-radius:9px!important;font-size:12px!important;font-weight:800!important;text-align:left!important;white-space:normal!important;line-height:1.3!important}\n #summaryOverlay #bbArSummaryMoreList>.btn:last-child{margin-bottom:0!important}\n #summaryOverlay #bbAuditPdfStatus{min-height:0!important;flex-basis:auto!important;padding:0!important;margin:0!important;text-align:left!important;font-size:10px!important;line-height:1.35!important}\n #summaryOverlay #bbAuditPdfStatus:empty{display:none!important}\n #summaryOverlay #bbBatchOriginalStatus{min-height:0!important;margin:0 0 5px!important;padding:2px 3px!important;font-size:10px!important;line-height:1.3!important}\n #summaryOverlay #bbBatchOriginalStatus:empty{display:none!important}\n #summaryOverlay .a4-sheet{box-shadow:0 2px 10px rgba(19,49,88,.11)!important}\n}\n@media print {#bbArSummaryMoreList,#bbArSummaryMoreButton{display:none!important}}\n";
+ doc.head.appendChild(style);
+ const more=doc.createElement('button');
+ more.id='bbArSummaryMoreButton';more.type='button';
+ more.className='btn bb-ar-summary-more';
+ more.setAttribute('aria-controls','bbArSummaryMoreList');
+ more.setAttribute('aria-expanded','false');
+ more.textContent='☷ More Function';
+ const menu=doc.createElement('div');
+ menu.id='bbArSummaryMoreList';
+ menu.setAttribute('role','group');
+ menu.setAttribute('aria-label','Summary invoice functions');
+ menu.hidden=true;
+ actions.append(more,menu);
+ function setOpen(open){menu.hidden=!open;more.setAttribute('aria-expanded',open?'true':'false')}
+ function collect(){
+   // Moving the actual controls preserves click handlers from PDF/photo modules.
+   for(const el of [...actions.children]){
+     if(el===close||el===more||el===menu)continue;
+     if(el.tagName==='BUTTON')menu.appendChild(el);
+     else if(el.id==='bbAuditPdfStatus')actions.after(el);
+   }
+ }
+ collect();
+ new win.MutationObserver(collect).observe(actions,{childList:true});
+ more.addEventListener('click',()=>{collect();setOpen(menu.hidden)});
+ menu.addEventListener('click',event=>{
+   const button=event.target.closest('button');
+   if(button&&!button.disabled)setOpen(false);
+ });
+ doc.addEventListener('pointerdown',event=>{
+   if(!menu.hidden&&!actions.contains(event.target))setOpen(false);
+ });
+ doc.addEventListener('keydown',event=>{
+   if(event.key==='Escape'&&!menu.hidden){setOpen(false);more.focus()}
+ });
+ const overlay=doc.getElementById('summaryOverlay');
+ if(overlay)new win.MutationObserver(()=>{
+   if(overlay.classList.contains('hidden'))setOpen(false);
+ }).observe(overlay,{attributes:true,attributeFilter:['class']});
+}
+
 function activeFilterCount(doc){
   const others=['searchBox','locationFilter','currencyFilter','statusFilter',
     'arFromDateFilter','arToDateFilter','arMinAmountFilter','arMaxAmountFilter']
@@ -569,6 +623,7 @@ function wireMobileCardSelectAll(doc,win){
 }
 
 function wireSummary(doc,win){
+  wireSummaryMoreFunction(doc,win);
   const sheet=doc.getElementById('summarySheet');
   if(sheet&&!sheet.__bbFastMobileObserved){
     sheet.__bbFastMobileObserved=true;
