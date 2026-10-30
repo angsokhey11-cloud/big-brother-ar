@@ -698,9 +698,34 @@ function buildSummary(picked,contact){
   $('summarySheet').innerHTML=`<div class="sum-top"><div class="sum-brand"><h1>BIG BROTHER</h1><p>Ready to be your partner</p><div class="sum-contact">Phnom Penh, Cambodia<br>010 650 327, 070 998 988<br>angsokkhey11@gmail.com</div></div><div class="sum-meta"><div><strong>Summary Date:</strong> ${esc(formatReceivableInvoiceDate(today()))}</div><div><strong>Prepared By:</strong> ${esc(preparedBy)}</div><div><strong>Selected Invoices:</strong> ${picked.length}</div><div><strong>Selected Customers:</strong> ${customerNames.length}</div></div></div><div class="sum-divider"></div><div class="sum-title">${multiCustomer?'SELECTED CUSTOMER INVOICE SUMMARY':'CUSTOMER INVOICE SUMMARY'}</div><div class="sum-customer">${customerBox}${contactBox}</div><table class="sum-table"><thead><tr><th style="width:5%">#</th>${customerHead}<th style="width:16%">Invoice No</th><th style="width:13%">Date</th><th style="width:13%">Due Date</th><th style="width:14%;text-align:right">Grand Total</th><th style="width:12%;text-align:right">Paid</th><th style="width:14%;text-align:right">Outstanding</th></tr></thead><tbody>${picked.map((r,i)=>`<tr><td class="center">${i+1}</td>${customerCell(r)}<td><strong>${esc(r.invoiceNo)}</strong></td><td>${esc(formatReceivableInvoiceDate(r.invoiceDate))}</td><td>${esc(formatReceivableInvoiceDate(r.dueDate))}</td><td class="money">${money(r.grandTotal,r.currency)}</td><td class="money">${money(r.amountPaid,r.currency)}</td><td class="money"><strong>${money(r.outstanding,r.currency)}</strong></td></tr>`).join('')}</tbody></table>${grandOutstanding}<div class="sum-footer"><span>Invoice Summary includes only selected outstanding invoice balances.</span><span>BIG BROTHER</span></div>`;
 }
 async function printSummary(){
-  // Never print an out-of-date receivable balance from an old summary.
-  try{await verifySummaryCurrent();window.print();}
-  catch(error){alert(error?.message||'Could not verify the summary. Reopen it.');}
+  // Print the original A4 document. APK WebView cannot open Chrome Print UI;
+  // hand an A4 PDF to Android's installed PDF viewer instead.
+  try{
+    await verifySummaryCurrent();
+    if(window.BBARFileActionsV1?.isNative?.()){
+      if(!window.PDFLib?.PDFDocument){
+        await new Promise((resolve,reject)=>{
+          const js=document.createElement('script');
+          js.src='vendor/pdf-lib.min.js?v=20261021-local-pdf1';
+          js.onload=resolve;js.onerror=()=>reject(Error('PDF renderer unavailable.'));
+          document.head.append(js);
+        });
+      }
+      if(!window.PDFLib?.PDFDocument)throw Error('PDF renderer unavailable.');
+      const image=await createSummaryImageBlob();
+      const pdf=await window.PDFLib.PDFDocument.create();
+      const page=pdf.addPage([595.28,841.89]);
+      const png=await pdf.embedPng(await image.arrayBuffer());
+      const ratio=Math.min(595.28/png.width,841.89/png.height);
+      const width=png.width*ratio,height=png.height*ratio;
+      page.drawImage(png,{x:(595.28-width)/2,y:841.89-height,width,height});
+      const bytes=await pdf.save();
+      const name=summaryFileBase()+'.pdf';
+      await window.BBARFileActionsV1.open(new File([bytes],name,{type:'application/pdf'}));
+      return;
+    }
+    window.print();
+  }catch(error){alert(error?.message||'Could not prepare the summary for printing. Reopen it.');}
 }
 
 function summarySafeFileName(value,fallback){
