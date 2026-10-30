@@ -35,7 +35,32 @@ function requireApkBridge(){
     'The APK native file handler is unavailable. Install the latest signed BIG BROTHER APK, run Local Brain Code Sync if using Local, then reopen the app. Your invoice data is unchanged.'
   );
 }
-function filename(v){return String(v||'BIG-BROTHER-export').replace(/[\\/\\x00-\\x1f:*?"<>|]/g,'_').slice(0,145)}
+/* Android must receive a filename with a real extension. Do not truncate
+ * after the suffix: customer names in Khmer + full invoice date ranges can
+ * exceed the old 145-character limit. Keep UTF-8 bytes under file-system limits.
+ */
+const BB_SUFFIX={
+ 'application/pdf':'.pdf','image/png':'.png',
+ 'image/jpeg':'.jpg','image/webp':'.webp','image/gif':'.gif',
+ 'application/zip':'.zip','text/plain':'.txt'
+};
+function filename(value,mime){
+ const requested=String(mime||'').split(';')[0].trim().toLowerCase();
+ const original=String(value||'BIG-BROTHER-export').normalize('NFC')
+   .replace(/[\\/:*?"<>|\u0000-\u001f\u007f]/g,'_').trim();
+ const extFromName=original.match(/\.(pdf|png|jpe?g|webp|gif|zip|txt)$/i)?.[0]?.toLowerCase()||'';
+ const suffix=BB_SUFFIX[requested]||extFromName;
+ if(!suffix)throw Error('Unsupported file format for saving or sharing.');
+ const stem=original.replace(/\.(pdf|png|jpe?g|webp|gif|zip|txt)$/i,'')
+    .replace(/[.\s]+$/g,'').trim()||'BIG-BROTHER-export';
+ const encoder=new TextEncoder();
+ let reduced='';
+ for(const character of stem){
+   if(encoder.encode(reduced+character+suffix).length>175)break;
+   reduced+=character;
+ }
+ return (reduced||'BIG-BROTHER-export')+suffix;
+}
 function readBase64(blob){
  return new Promise((resolve,reject)=>{
   const fr=new FileReader();
@@ -67,7 +92,7 @@ async function sendNative(action,files){
  if(total>MAX_TOTAL||files.some(f=>f.size>MAX_FILE))throw Error('Files exceed the Android share limit. Split your invoice package into smaller groups.');
  const packaged=[];
  for(const file of files){
-  packaged.push({name:filename(file.name),type:String(file.type||'application/octet-stream'),data:await readBase64(file)});
+  packaged.push({name:filename(file.name,file.type),type:String(file.type||'application/octet-stream'),data:await readBase64(file)});
  }
  const bridge=findNativeBridge();
  if(!bridge)throw Error('Native Android file bridge is unavailable in this A/R frame.');
@@ -111,7 +136,7 @@ async function ping(){
 
 function browserDownload(file){
  const url=URL.createObjectURL(file),anchor=document.createElement('a');
- anchor.href=url;anchor.download=filename(file.name);
+ anchor.href=url;anchor.download=filename(file.name,file.type);
  document.body.append(anchor);anchor.click();anchor.remove();
  setTimeout(()=>URL.revokeObjectURL(url),60000);
 }
