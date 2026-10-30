@@ -103,25 +103,50 @@ function ext(path){return String(path||'').split('?')[0].split('.').pop().toLowe
 async function storedBlob(entry,row){
  if(!entry?.path)fail('Stored invoice path is missing for '+label(row));
  if(!window.BBARAdapter?.authenticatedFetch)fail('Private invoice storage access is unavailable.');
- await window.BBARAdapter.ensureSession();
- const path=String(entry.path).split('/').map(encodeURIComponent).join('/');
- const controller=new AbortController();
- const timer=setTimeout(()=>controller.abort(),25000);
- let response;
- try{
-  response=await window.BBARAdapter.authenticatedFetch(
-   '/storage/v1/object/authenticated/'+BUCKET+'/'+path,
-   {cache:'no-store',signal:controller.signal}
-  );
- }catch(error){
-  if(error?.name==='AbortError')fail('Invoice download timed out for '+label(row));
-  throw error;
- }finally{clearTimeout(timer);}
- if(!response.ok)fail('Could not access the stored invoice for '+label(row)+' ('+response.status+').');
- const blob=await response.blob();
- if(!blob.size)fail('Stored invoice file is empty for '+label(row));
- return blob;
+ // Originals remain in private CLOUD storage; the Local APK does NOT need a
+ // previously downloaded photo or a Cloud-to-Local photo sync to export them.
+ const approvedPath=String(entry.path);
+ const encodedPath=approvedPath.split('/').map(encodeURIComponent).join('/');
+ const address='/storage/v1/object/authenticated/'+BUCKET+'/'+encodedPath;
+ const retryable=new Set([400,408,429,500,502,503,504]);
+ let lastMessage='No successful response.';
+ for(let attempt=1;attempt<=3;attempt++){
+  const controller=new AbortController();
+  const timer=setTimeout(()=>controller.abort(),18000);
+  try{
+   // Refresh/check the current user session on each request. The storage
+   // service's permissions are always applied; no public URL or service key.
+   const response=await window.BBARAdapter.authenticatedFetch(
+    address,{cache:'no-store',signal:controller.signal}
+   );
+   if(response.ok){
+    const blob=await response.blob();
+    if(!blob.size)fail('Stored invoice file is empty for '+label(row));
+    return blob;
+   }
+   let reason='';
+   try{
+    const detail=(await response.text()).slice(0,450);
+    const payload=JSON.parse(detail);
+    reason=String(payload.message||payload.error||payload.error_description||'').slice(0,180);
+   }catch(_){}
+   lastMessage='HTTP '+response.status+(reason?' — '+reason:'');
+   // A previous HTTP 400 for INV-4126 was followed by a successful 200
+   // on the same private object. Retry transient service rejections only.
+   if(!retryable.has(response.status))break;
+  }catch(error){
+   lastMessage=error?.name==='AbortError'?'request timed out':
+    String(error?.message||error||'Network request failed').slice(0,180);
+  }finally{clearTimeout(timer)}
+  if(attempt<3){
+   show('Retrying secure cloud original '+attempt+'/2 for '+label(row)+'…');
+   await new Promise(resolve=>setTimeout(resolve,350*attempt));
+  }
+ }
+ fail('Could not access the cloud original for '+label(row)+'. '+lastMessage+
+  '. No incomplete PDF was produced. Check internet connectivity and retry.');
 }
+
 function imageFromBlob(blob){
  return new Promise((resolve,reject)=>{
   const url=URL.createObjectURL(blob),img=new Image();
