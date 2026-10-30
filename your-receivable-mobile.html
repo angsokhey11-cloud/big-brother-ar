@@ -477,8 +477,14 @@ function wireSummaryMoreFunction(doc,win){
  diagnostic.type='button';diagnostic.id='bbArFileActionCheck';
  diagnostic.className='btn secondary';
  diagnostic.textContent='🔎 Check File Actions';
- diagnostic.addEventListener('click',()=>{
+ diagnostic.addEventListener('click',async()=>{
    const adapter=win.BBARFileActionsV1;
+   diagnostic.disabled=true;
+   const oldText=diagnostic.textContent;
+   diagnostic.textContent='🔎 Checking Native Bridge…';
+   let probe=null;
+   try{probe=adapter?.ping?await adapter.ping():null}
+   finally{diagnostic.disabled=false;diagnostic.textContent=oldText}
    const result=adapter?.diagnostics?.()||null;
    const topMode=(()=>{
      try{return new URLSearchParams(win.top.location.search).get('localbrain')==='1'?'Local Brain':
@@ -490,7 +496,9 @@ function wireSummaryMoreFunction(doc,win){
      'Screen: '+topMode,
      'Source: '+win.location.origin,
      'File adapter: '+(adapter?'YES':'NO'),
-     'Native bridge: '+(adapter?.isNative?.()?'YES':'NO'),
+     'Native bridge injected: '+(adapter?.isNative?.()?'YES':'NO'),
+     'Android listener verified: '+(probe?.ok?'YES':'NO'),
+     'Bridge response: '+(probe?.message||'File adapter missing'),
      'PDF export module: '+(typeof win.BBARAuditPdfExport?.save==='function'?'YES':'NO'),
      'PDF renderer: '+(typeof win.html2canvas==='function'||typeof win.html2pdf==='function'?'YES':'NO'),
      'Adapter version: '+(result?.version||'Not installed'),
