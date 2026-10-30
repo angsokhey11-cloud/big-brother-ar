@@ -32,7 +32,12 @@ function buttonBusy(on){
  busy=on;
  const save=$('bbAuditPdfSave'),share=$('bbShareCustomerPdf');
  if(save){save.disabled=on;save.textContent=on?'⏳ Preparing PDF…':'📑 Save PDF + Invoices';}
- if(share){share.disabled=on;share.textContent=on?'⏳ Preparing PDF…':'✈️ Share PDF to Telegram';}
+ if(share){
+  share.disabled=on;
+  share.textContent=on?'⏳ Preparing PDF…':
+   (preparedPdf?.pwaShareReadyUntil>Date.now()?
+    '✈️ Share PDF to Telegram — Ready':'✈️ Share PDF to Telegram');
+ }
 }
 function selectedRows(){
  if(typeof summaryExportRows!=='function')fail('The Summary Invoice selection is not available.');
@@ -675,6 +680,68 @@ async function shareCustomerPdf(event){
   verifyPdfAdapter();
   const picked=selectedRows();
   if(!mixedCustomerApproval(picked)){show('Sharing cancelled.');return 'cancelled';}
+  const fileTools=window.BBARFileActionsV1;
+  const mobile=/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent||'')||
+    navigator.maxTouchPoints>0;
+  // PWA cannot call navigator.share after async PDF generation: the browser
+  // drops the required user activation. Prepare PDF on the first tap and
+  // open the native share sheet SYNCHRONOUSLY from a subsequent ready tap.
+  // This is the same approach as the working original-invoice album actions.
+  if(mobile&&!fileTools?.isNative?.()&&!fileTools?.inInstalledApk?.()){
+    let fileShareSupported=false;
+    try{
+      const probe=new File(['%PDF-1.4'],'invoice.pdf',{type:'application/pdf'});
+      fileShareSupported=typeof navigator.share==='function'&&
+        typeof navigator.canShare==='function'&&navigator.canShare({files:[probe]});
+    }catch(_){}
+    if(!fileShareSupported){
+      show('This PWA cannot share PDFs as files. Use Save PDF + Invoices and attach the PDF in Telegram.',true);
+      return 'unsupported';
+    }
+    const cached=preparedPdf?.signature===selectionSignature(picked)&&
+      preparedPdf.pwaShareReadyUntil>Date.now();
+    if(cached){
+      let allowed=false;
+      try{allowed=navigator.canShare({files:[preparedPdf.file]})}catch(_){}
+      if(!allowed){
+        show('This PDF is too large or unsupported by the device share sheet. Save the PDF and attach it in Telegram.',true);
+        return 'unsupported';
+      }
+      let request;
+      try{
+        request=navigator.share({
+          files:[preparedPdf.file],
+          title:'BIG BROTHER Customer Invoice Summary',
+          text:'Customer Invoice Summary and supporting invoices'
+        });
+      }catch(error){
+        show('Could not open Telegram share picker: '+(error?.message||'Please retry.'),true);
+        return 'error';
+      }
+      show('Choose Telegram and confirm the intended customer chat.');
+      try{
+        await request;
+        show('PDF handed to the device share sheet. Confirm Telegram received it.');
+        return 'shared';
+      }catch(error){
+        if(error?.name==='AbortError'){show('Sharing cancelled. The PDF is still ready.');return 'cancelled'}
+        show('PDF sharing failed: '+(error?.message||'Try again.'),true);
+        return 'error';
+      }
+    }
+    buttonBusy(true);
+    show('Preparing authorized PDF with '+picked.length+' invoice(s)…');
+    const prepared=await prepareCustomerPdf(picked);
+    let allowed=false;
+    try{allowed=navigator.canShare({files:[prepared.file]})}catch(_){}
+    if(!allowed){
+      show('PDF prepared, but this device cannot share the file. Tap Save PDF + Invoices, then attach the saved file in Telegram.',true);
+      return 'unsupported';
+    }
+    prepared.pwaShareReadyUntil=Date.now()+120000;
+    show('PDF ready. Open More Function and tap “Share PDF to Telegram — Ready” to choose Telegram. Ready for 2 minutes.');
+    return 'ready';
+  }
   // On desktop, open Telegram from the actual click before asynchronous PDF creation.
   // Telegram Web cannot accept an attachment programmatically from our site.
   // Decide at click-time so popup blockers do not stop Telegram Web after
@@ -757,7 +824,11 @@ function install(){
  const overlay=$('summaryOverlay');
  if(overlay&&typeof MutationObserver!=='undefined'){
   const observer=new MutationObserver(()=>{
-   if(overlay.classList.contains('hidden'))preparedPdf=null;
+   if(overlay.classList.contains('hidden')){
+     preparedPdf=null;
+     const share=$('bbShareCustomerPdf');
+     if(share&&!busy)share.textContent='✈️ Share PDF to Telegram';
+   }
   });
   observer.observe(overlay,{attributes:true,attributeFilter:['class']});
  }
