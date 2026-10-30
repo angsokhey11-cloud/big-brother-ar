@@ -154,7 +154,8 @@ async function packageZip(pkg){
  const readme=new File([pkg.manifestText],'PACKAGE_CONTENTS.txt',{type:'text/plain'});
  return new File([await zip([...pkg.files,readme])],pkg.filename+'_Originals.zip',{type:'application/zip'});
 }
-function download(file){
+async function download(file){
+ if(window.BBARFileActionsV1?.isNative?.()){await window.BBARFileActionsV1.save(file);return}
  const url=URL.createObjectURL(file),a=document.createElement('a');
  a.href=url;a.download=file.name;document.body.append(a);a.click();a.remove();
  setTimeout(()=>URL.revokeObjectURL(url),60000);
@@ -190,7 +191,7 @@ async function downloadBatch(){
  try{
   if(typeof verifySummaryCurrent!=='function')throw Error('Summary verification is unavailable. Refresh A/R.');
   await verifySummaryCurrent();
-  const file=pkg.cachedZip||await packageZip(pkg);download(file);
+  const file=pkg.cachedZip||await packageZip(pkg);await download(file);
   indicator('Summary and '+(pkg.files.length-1)+' originals downloaded in one ZIP'+(pkg.missing.length?' · Missing: '+pkg.missing.join(', '):'')+'.');
  }catch(e){indicator(e.message||'ZIP download failed.',true)}
  finally{btn.disabled=false}
@@ -245,13 +246,11 @@ function albumSteps(pkg){
  return steps;
 }
 function canShareFiles(files){
+ if(window.BBARFileActionsV1?.isNative?.())return true;
  try{
   return typeof navigator.share==='function'&&typeof navigator.canShare==='function'&&
    navigator.canShare({files});
- }catch(error){
-  console.warn('Native photo share capability:',error);
-  return false;
- }
+ }catch(error){console.warn('Native photo share capability:',error);return false}
 }
 function hidePhotoPanel(){
  const panel=$('bbArPhotoAlbums');
@@ -373,6 +372,15 @@ async function shareDirectFiles(pkg,picked){
  if(!canShareFiles(files)){
   indicator('This browser cannot share these files directly. Try your Android tablet or phone with Telegram installed. No PDF or ZIP was downloaded.',true);
   return;
+ }
+ if(window.BBARFileActionsV1?.isNative?.()){
+   btn.disabled=true;
+   try{
+     await window.BBARFileActionsV1.share(files,'BIG BROTHER Customer Invoice Summary',shareCaption(pkg,picked));
+     indicator('Android share chooser opened. Select Telegram and confirm the recipient.');
+   }catch(error){indicator(error.message||'Could not share invoice files.',true)}
+   finally{btn.disabled=false}
+   return;
  }
  btn.disabled=true;
  let request;
