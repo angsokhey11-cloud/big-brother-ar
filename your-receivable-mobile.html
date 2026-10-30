@@ -471,6 +471,36 @@ function wireSummaryMoreFunction(doc,win){
  menu.hidden=true;
  toolbar.append(more,menu);
  modal.insertBefore(toolbar,actions);
+ // One-tap, read-only diagnostics: no invoice/customer/token details are read
+ // or transmitted. Shows the exact native bridge & renderer state in APK/PWA.
+ const diagnostic=doc.createElement('button');
+ diagnostic.type='button';diagnostic.id='bbArFileActionCheck';
+ diagnostic.className='btn secondary';
+ diagnostic.textContent='🔎 Check File Actions';
+ diagnostic.addEventListener('click',()=>{
+   const adapter=win.BBARFileActionsV1;
+   const result=adapter?.diagnostics?.()||null;
+   const topMode=(()=>{
+     try{return new URLSearchParams(win.top.location.search).get('localbrain')==='1'?'Local Brain':
+       new URLSearchParams(win.top.location.search).get('source')==='android-online'?'Online APK':'Browser/PWA'}
+     catch(_){return 'Embedded view'}
+   })();
+   const lines=[
+     'BIG BROTHER — File Actions Check',
+     'Screen: '+topMode,
+     'Source: '+win.location.origin,
+     'File adapter: '+(adapter?'YES':'NO'),
+     'Native bridge: '+(adapter?.isNative?.()?'YES':'NO'),
+     'PDF export module: '+(typeof win.BBARAuditPdfExport?.save==='function'?'YES':'NO'),
+     'PDF renderer: '+(typeof win.html2canvas==='function'||typeof win.html2pdf==='function'?'YES':'NO'),
+     'Adapter version: '+(result?.version||'Not installed'),
+     '',
+     'If Native bridge is NO in APK: update the signed APK and reopen.',
+     'If File adapter/PDF module is NO in Local: run Code Sync.'
+   ];
+   win.alert(lines.join('\n'));
+ });
+ actions.appendChild(diagnostic);
  function setOpen(open){menu.hidden=!open;more.setAttribute('aria-expanded',open?'true':'false')}
  function collect(){
    // Keep the ACTUAL export/share buttons and their installed click listeners.
