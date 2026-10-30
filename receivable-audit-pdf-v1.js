@@ -393,15 +393,11 @@ function selectionSignature(picked){
  });
 }
 async function downloadFile(file){
- if(window.BBARFileActionsV1?.isNative?.()){
-   await window.BBARFileActionsV1.save(file);return;
- }
- const url=URL.createObjectURL(file);
- const anchor=document.createElement('a');
- anchor.href=url;anchor.download=file.name;
- document.body.appendChild(anchor);anchor.click();anchor.remove();
- setTimeout(()=>URL.revokeObjectURL(url),60000);
+ const adapter=window.BBARFileActionsV1;
+ if(adapter)return adapter.save(file);
+ throw Error('PDF save service is not available. Reopen the updated BIG BROTHER application.');
 }
+
 /* Older Local Brain databases may expose the approved per-invoice lookup
  * while lacking the bulk manifest RPC. That is not grounds to omit evidence:
  * use the existing authorized invoice-ID lookup in findAttachment() instead.
