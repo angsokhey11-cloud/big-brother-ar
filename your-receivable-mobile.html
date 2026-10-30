@@ -719,6 +719,9 @@ async function enhance(){
   }catch(_){return false}
   if(!doc||!doc.head||!doc.getElementById('arBody'))return false;
 
+  // Put the real mobile toolbar on screen immediately, even if the older
+  // card-skin file is still downloading or unavailable offline.
+  wireSummaryMoreFunction(doc,win);
   const cardCss=await cardCssPromise;
 
   let cardStyle=doc.getElementById('bb-mobile-receivable-skin');
@@ -736,6 +739,9 @@ async function enhance(){
     doc.head.appendChild(headerStyle);
   }
   headerStyle.textContent=HEADER_FILTER_CSS;
+  // Keep the preview's stronger mobile-specific rules last in the cascade.
+  const summaryStyle=doc.getElementById('bb-ar-mobile-summary-v3');
+  if(summaryStyle)doc.head.appendChild(summaryStyle);
 
   buildFilterUI(doc,win);
   wireMobileCardSelectAll(doc,win);
