@@ -4,7 +4,10 @@
 (function(){
 'use strict';
 const DB='BB_MOBILE_OFFLINE_WORKSPACE_V1', STORE='snapshots', KEY='BB_SUPABASE_DEV_SESSION_V1';
-const MAX_AGE=7*86400000, SNAP='offline-ar-your', ACCESS='bb-ar-your-access-v1';
+// Separate location-scoped and company-scoped datasets. Never mix the two.
+const SCOPE=new URLSearchParams(location.search).get('view')==='all'?'all':'your';
+const MAX_AGE=7*86400000, SNAP=SCOPE==='all'?'offline-ar-all':'offline-ar-your',
+  ACCESS=SCOPE==='all'?'bb-ar-all-access-v1':'bb-ar-your-access-v1';
 function userId(){
   try{return String(JSON.parse(localStorage.getItem(KEY)||'null')?.user?.id||'').trim()}
   catch(_){return ''}
