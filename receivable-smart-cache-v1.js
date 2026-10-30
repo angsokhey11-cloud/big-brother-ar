@@ -78,7 +78,8 @@ function setPending(when){
   let style=document.getElementById('bb-ar-cache-safety');
   if(!style){
     style=document.createElement('style');style.id='bb-ar-cache-safety';
-    style.textContent='html.bb-ar-cache-pending #arBody button,html.bb-ar-cache-pending #arBody input.rowcheck,html.bb-ar-cache-pending #summaryBtn,html.bb-ar-cache-pending #batchBtn,html.bb-ar-cache-pending #selectAllBox{pointer-events:none!important;opacity:.45!important}';
+    style.textContent='html.bb-ar-cache-pending #arBody button,html.bb-ar-cache-pending #batchBtn{pointer-events:none!important;opacity:.45!important}'+
+      'html.bb-ar-cache-pending #summarySheet .bb-ar-offline-draft{display:block!important}';
     document.head.appendChild(style);
   }
   const status=document.getElementById('syncStatus');
