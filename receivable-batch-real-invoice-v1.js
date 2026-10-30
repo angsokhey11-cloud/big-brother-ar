@@ -338,6 +338,15 @@ async function sharePhotoStep(index){
  const caption=shareCaption(pkg,chosen());
  const suffix=plan.steps.length>1
   ?'\nPart '+(index+1)+' of '+plan.steps.length:'';
+ if(window.BBARFileActionsV1?.isNative?.()){
+   try{
+     await window.BBARFileActionsV1.share(step.files,'BIG BROTHER Customer Invoice Summary',caption+suffix);
+     plan.handed.add(index);
+     indicator(step.label+' opened in Android share chooser. Select Telegram and confirm the recipient.');
+   }catch(error){indicator('Could not share '+step.label+'. '+(error.message||'Try fewer files.'),true)}
+   finally{if(sharePlan===plan&&visible())showPhotoPanel()}
+   return;
+ }
  let request;
  try{
   request=navigator.share({
