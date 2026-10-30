@@ -30,6 +30,21 @@ function readBase64(blob){
   fr.readAsDataURL(blob);
  });
 }
+// The Android chooser must ACK before we report success. A sent WebMessage
+// is not proof that Android received the file or opened the Save/Share picker.
+let bbNextNativeRequest=0;
+const bbNativePending=new Map();
+function bbNativeReply(event){
+  let response;
+  try{response=JSON.parse(String(event?.data||''))}catch(_){return}
+  const entry=bbNativePending.get(response?.requestId);
+  if(!entry)return;
+  bbNativePending.delete(response.requestId);
+  clearTimeout(entry.timer);
+  if(response.ok)entry.resolve(true);
+  else entry.reject(Error('Android could not open the file chooser. '+String(response.message||'Try the signed APK update.')));
+}
+
 async function sendNative(action,files){
  if(!native())return false;
  if(!['save','share','open'].includes(action))throw Error('Unsupported Android file action');
@@ -40,8 +55,23 @@ async function sendNative(action,files){
  for(const file of files){
   packaged.push({name:filename(file.name),type:String(file.type||'application/octet-stream'),data:await readBase64(file)});
  }
- window.BBNativeFiles.postMessage(JSON.stringify({action,files:packaged}));
- return true;
+ const bridge=window.BBNativeFiles;
+ const requestId=++bbNextNativeRequest;
+ // The native WebMessageListener delivers replies to this SAME source frame,
+ // including the nested My/All Receivables iframe.
+ bridge.onmessage=bbNativeReply;
+ return new Promise((resolve,reject)=>{
+   const timer=setTimeout(()=>{
+     bbNativePending.delete(requestId);
+     reject(Error('Android did not confirm the file chooser. Install the latest signed Online/Local APK, run Code Sync for Local Brain, then reopen Summary Invoice.'));
+   },22000);
+   bbNativePending.set(requestId,{resolve,reject,timer});
+   try{bridge.postMessage(JSON.stringify({action,files:packaged,requestId}))}
+   catch(error){
+     clearTimeout(timer);bbNativePending.delete(requestId);
+     reject(Error('Android file handoff failed: '+String(error?.message||error)));
+   }
+ });
 }
 function browserDownload(file){
  const url=URL.createObjectURL(file),anchor=document.createElement('a');
