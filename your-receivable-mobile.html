@@ -23,6 +23,12 @@ const boot=document.getElementById('boot');
 const smartPilot=new URLSearchParams(location.search).get('bb_cache_pilot')==='1';
 const source=new URL(frame.dataset.src,location.href);
 if(smartPilot)source.searchParams.set('bb_cache_pilot','1');
+// Preserve Local Brain context across the nested Receivable engine frame.
+// Otherwise an embedded GitHub Pages engine can accidentally take the
+// Online export path even though the parent dashboard is Local Brain.
+if(new URLSearchParams(location.search).get('localbrain')==='1'||location.hostname==='bigbrother.local'){
+  source.searchParams.set('localbrain','1');
+}
 frame.src=source.href;
 // Register an A/R-scoped web asset cache; no Android APK update needed.
 // This never intercepts Supabase and preserves the existing offline fallback.
