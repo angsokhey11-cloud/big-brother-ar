@@ -278,7 +278,10 @@ async function digitalPng(invoice,row){
  injectHistoryStyle();
  const wrapper=document.createElement('div');
  wrapper.className='bb-audit-capture';
- wrapper.style.cssText='position:fixed;left:-100000px;top:0;width:794px;background:#fff;z-index:-1;';
+ // Android WebView often cannot render elements positioned 100,000px outside
+ // the viewport. Keep the private invoice renderer in the viewport but behind
+ // the visible modal (never expose or change the customer-facing A4 document).
+ wrapper.style.cssText='position:fixed;left:0;top:0;width:794px;background:#fff;z-index:-1;pointer-events:none;overflow:visible;';
  wrapper.innerHTML=buildHistoryInvoiceHtml(invoice);
  document.body.appendChild(wrapper);
  try{
@@ -287,7 +290,8 @@ async function digitalPng(invoice,row){
   if(!node)fail('Invoice template did not render for '+label(row));
   const height=Math.max(node.scrollHeight,1);
   const canvas=await html2canvas(node,{
-   backgroundColor:'#fff',scale:height>2200?1.25:2,useCORS:true,logging:false
+   backgroundColor:'#fff',scale:height>2200?1.1:1.5,useCORS:true,logging:false,
+   windowWidth:Math.max(794,document.documentElement.clientWidth)
   });
   return await new Promise((resolve,reject)=>canvas.toBlob(
    b=>b?resolve(b):reject(Error('Digital invoice image could not be created.')),
@@ -410,10 +414,18 @@ async function prepareCustomerPdf(picked){
  await ensureCanvasAvailable();
  const ids=picked.map(r=>String(r.invoiceId));
  show('Checking '+picked.length+' selected invoice(s)…');
- const [PDFLib,summaryBlob,manifest]=await Promise.all([
-  loadPdfLib(),createSummaryImageBlob(),
-  rpc('bb_ar_original_manifest',{p_invoice_ids:ids})
- ]);
+ // Report failures by stage so staff know whether the problem is a missing
+ // invoice image, local library, A/R access, or the Android Save/Share picker.
+ let results;
+ try{
+  results=await Promise.all([
+   loadPdfLib(),createSummaryImageBlob(),
+   rpc('bb_ar_original_manifest',{p_invoice_ids:ids})
+  ]);
+ }catch(error){
+  throw Error('PDF preparation failed while loading the renderer, summary image, or authorized originals. '+(error?.message||'Try reopening Summary.'));
+ }
+ const [PDFLib,summaryBlob,manifest]=results;
  if(!Array.isArray(manifest))fail('Could not verify authorized invoice originals.');
  const manifestMap=new Map(manifest.filter(r=>r?.invoiceId&&r?.path).map(r=>[String(r.invoiceId),r]));
  const pdf=await PDFLib.PDFDocument.create();
@@ -455,7 +467,9 @@ async function exportAudit(event){
  buttonBusy(true);
  try{
   const picked=selectedRows();
+  show('Preparing PDF with '+picked.length+' selected invoice(s)…');
   const prepared=await prepareCustomerPdf(picked);
+  show('PDF prepared ('+exportStatus(prepared)+'). Opening Save to Device…');
   await downloadFile(prepared.file);
   show('Saved '+prepared.file.name+' — '+exportStatus(prepared));
  }catch(error){
@@ -535,7 +549,9 @@ async function shareCustomerPdf(event){
   }
   if(!nativeShare&&!window.BBARFileActionsV1?.isNative?.())telegramTab=window.open('https://web.telegram.org/','_blank','noopener,noreferrer');
   buttonBusy(true);
+  show('Preparing '+picked.length+' invoice(s) for PDF sharing…');
   const prepared=await prepareCustomerPdf(picked);
+  show('PDF prepared ('+exportStatus(prepared)+'). Opening device share picker…');
   if(window.BBARFileActionsV1?.isNative?.()){
     await window.BBARFileActionsV1.share([prepared.file],'BIG BROTHER Customer Invoice Summary','Customer Invoice Summary and supporting invoices');
     show('Android file share chooser opened. Select Telegram and confirm the recipient.');
