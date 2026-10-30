@@ -388,7 +388,10 @@ function selectionSignature(picked){
   summary:$('summarySheet')?.innerHTML||''
  });
 }
-function downloadFile(file){
+async function downloadFile(file){
+ if(window.BBARFileActionsV1?.isNative?.()){
+   await window.BBARFileActionsV1.save(file);return;
+ }
  const url=URL.createObjectURL(file);
  const anchor=document.createElement('a');
  anchor.href=url;anchor.download=file.name;
@@ -453,8 +456,8 @@ async function exportAudit(event){
  try{
   const picked=selectedRows();
   const prepared=await prepareCustomerPdf(picked);
-  downloadFile(prepared.file);
-  show('Downloaded '+prepared.file.name+' — '+exportStatus(prepared));
+  await downloadFile(prepared.file);
+  show('Saved '+prepared.file.name+' — '+exportStatus(prepared));
  }catch(error){
   console.error('A/R customer PDF download:',error);
   show(error?.message||'PDF could not be prepared.',true);
@@ -516,13 +519,32 @@ async function shareCustomerPdf(event){
    nativeShare=typeof navigator.share==='function'&&typeof navigator.canShare==='function'&&
     navigator.canShare({files:[probe]});
   }catch(_){}
-  if(!nativeShare)telegramTab=window.open('https://web.telegram.org/','_blank','noopener,noreferrer');
+  // A previously prepared PDF must launch the PWA share sheet directly
+  // from the tap; awaiting even an already-cached async PDF can lose the gesture.
+  if(nativeShare&&preparedPdf?.signature===selectionSignature(picked)){
+    let request;
+    try{
+      request=navigator.share({
+        files:[preparedPdf.file],
+        title:'BIG BROTHER Customer Invoice Summary',
+        text:'Customer Invoice Summary and supporting invoices'
+      });
+    }catch(error){show(error.message||'Could not open file sharing.',true);return 'error'}
+    try{await request;show('PDF handed to device share sheet; select Telegram.');return 'shared';}
+    catch(error){if(error.name==='AbortError')return 'cancelled';show(error.message||'Share failed.',true);return 'error'}
+  }
+  if(!nativeShare&&!window.BBARFileActionsV1?.isNative?.())telegramTab=window.open('https://web.telegram.org/','_blank','noopener,noreferrer');
   buttonBusy(true);
   const prepared=await prepareCustomerPdf(picked);
+  if(window.BBARFileActionsV1?.isNative?.()){
+    await window.BBARFileActionsV1.share([prepared.file],'BIG BROTHER Customer Invoice Summary','Customer Invoice Summary and supporting invoices');
+    show('Android file share chooser opened. Select Telegram and confirm the recipient.');
+    return 'native';
+  }
   const nativeStatus=await sendThroughShareSheet(prepared.file);
   if(nativeStatus)return nativeStatus;
-  downloadFile(prepared.file);
-  show('PDF downloaded: '+prepared.file.name+'. '+(telegramTab
+  await downloadFile(prepared.file);
+  show('PDF saved: '+prepared.file.name+'. '+(telegramTab
    ?'Telegram Web opened; attach the downloaded PDF to the intended customer chat.'
    :'Attach the downloaded PDF in Telegram. Browser security prevents automatic file attachment.'));
   return 'downloaded';
