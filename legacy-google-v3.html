@@ -894,6 +894,13 @@ async function shareSummaryToTelegram(event){
   const prepared=bbPreparedSummaryKey===bbSummaryImageKey()?bbPreparedSummary:null;
   const mobile=/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)||
     navigator.maxTouchPoints>0;
+  // An embedded Android APK must use our native file bridge. WebView has no
+  // navigator.share API: do not waste time rendering a PNG only to show a
+  // misleading 'use Chrome' warning.
+  if(mobile&&fileTools?.inInstalledApk?.()&&!fileTools?.isNative?.()){
+    alert('BIG BROTHER Android sharing is not connected in this screen. Open More Function → Check File Actions. If Native Bridge is NO, install the latest signed APK and reopen the app. For Local Brain also run Code Sync.');
+    return;
+  }
   // PWA: open the native share sheet DIRECTLY from the click.
   // This must run before the first await, or Android may reject it.
   // If an installed PWA cannot share files, still let staff save and manually
@@ -973,10 +980,7 @@ async function shareSummaryToTelegram(event){
         return;
       }
       if(!navigator.share){
-        alert(
-          "Your browser does not support sharing summary pictures.\n\n" +
-          "Please use Chrome or Safari with Telegram installed."
-        );
+        alert('Android sharing is not available in this screen. Open More Function → Check File Actions to see whether the native APK bridge and file adapter are connected.');
         return;
       }
 
@@ -1099,10 +1103,8 @@ async function shareSummaryToTelegram(event){
       error
     );
 
-    alert(
-      "Could not share the Customer Invoice Summary.\n\n" +
-      "Please try again."
-    );
+    alert("Could not share the Customer Invoice Summary.\n\n" +
+      String(error?.message||'Open More Function → Check File Actions for diagnostics.'));
   }finally{
     if(button){
       button.disabled=false;
