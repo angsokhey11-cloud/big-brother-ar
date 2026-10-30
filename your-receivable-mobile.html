@@ -376,7 +376,7 @@ function bbSummaryPreview(doc){
  }
  const top=sheet.querySelector('.sum-top');
  if(!top)return;
- const safe=document.createElement('div');
+ const safe=doc.createElement('div');
  safe.innerHTML=''; // Only first-party DOM, never interpret raw network content.
  for(const cls of ['sum-top','sum-divider','sum-title','sum-customer']){
    const item=sheet.querySelector('.'+cls);
