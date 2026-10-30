@@ -596,6 +596,18 @@ function summaryExportRows(){
  if(!summarySnapshot?.length||$('summaryOverlay').classList.contains('hidden'))return [];
  return summarySnapshot.slice();
 }
+// Local Brain exports are based only on locally displayed rows and device
+// originals. Never load cloud originals or recheck balances on Supabase while
+// creating a LOCAL PDF; label such documents as non-live-verified.
+function isLocalBrainInvoiceExport(){
+ try{
+  if(location.hostname==='bigbrother.local')return true;
+  if(new URLSearchParams(location.search).get('localbrain')==='1')return true;
+  if(window.parent!==window&&window.parent.location.hostname==='bigbrother.local')return true;
+ }catch(_){}
+ return false;
+}
+window.BBARIsLocalInvoiceExport=isLocalBrainInvoiceExport;
 async function verifySummaryCurrent(){
  const picked=summaryExportRows();
  if(!picked.length)throw new Error('Summary Invoice is closed. Select invoices and open Summary again.');
@@ -647,7 +659,12 @@ async function openSummary(){
   const customerKeys=[...new Set(picked.map(r=>String(r.customer||'').trim().toLowerCase()))];
   const btn=$('summaryBtn'),oldText=btn.textContent;btn.disabled=true;btn.textContent='Preparing Summary…';
   try{
-    const contact=customerKeys.length===1?await getMasterCustomerContact_(picked[0]):null;
+    // Local mode must not consult the online Master Customer API for PDF setup.
+    const contact=customerKeys.length===1?
+      (isLocalBrainInvoiceExport()?{
+        phone:picked[0].customerPhone||'',
+        address:picked[0].customerAddress||''
+       }:await getMasterCustomerContact_(picked[0])):null;
     buildSummary(picked,contact);
     // Keep exactly the invoice rows displayed inside the open summary;
     // the background live table and its checkboxes may change independently.
@@ -744,7 +761,8 @@ function summaryFileBase(){
 }
 
 async function createSummaryImageBlob(){
-  await verifySummaryCurrent();
+  // Local summary is a clearly labelled snapshot, not a live cloud export.
+  if(!isLocalBrainInvoiceExport())await verifySummaryCurrent();
   if(typeof html2canvas!=="function"){
     throw new Error("Image library is not loaded.");
   }
