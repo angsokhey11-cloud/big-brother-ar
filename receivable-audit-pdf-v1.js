@@ -523,7 +523,7 @@ async function localSummaryPicture(missing){
  wrapper.style.cssText='position:fixed;left:0;top:0;width:794px;z-index:-1;pointer-events:none;background:white';
  wrapper.appendChild(clone);document.body.appendChild(wrapper);
  try{
-  const height=Math.ceil(clone.scrollHeight);
+  const height=Math.ceil(clone.scrollHeight)+6; // retain footer and LOCAL COPY notice border
   if(!Number.isFinite(height)||height<100)fail('Local Summary Invoice has no printable content.');
   const scale=Math.max(1,Math.min(2,14000/height));
   const canvas=await html2canvas(clone,{backgroundColor:'#fff',scale,
