@@ -197,6 +197,49 @@ async function addPicture(pdf,blob,type,path){
  const width=img.width*ratio,height=img.height*ratio;
  page.drawImage(img,{x:(size.width-width)/2,y:(size.height-height)/2,width,height});
 }
+/* Keep the customer Summary readable when it contains many invoices.
+ * A standard A4 PDF may contain several Summary pages before its original
+ * invoice photos. Original invoice attachments still use addPicture unchanged.
+ */
+async function addSummaryPicture(pdf,blob){
+ const uri=URL.createObjectURL(blob),image=new Image();
+ try{
+   await new Promise((resolve,reject)=>{
+     image.onload=resolve;
+     image.onerror=()=>reject(Error('Customer Summary picture cannot be decoded.'));
+     image.src=uri;
+   });
+   const fullWidth=image.naturalWidth,fullHeight=image.naturalHeight;
+   if(!(fullWidth>0&&fullHeight>0))fail('Customer Summary picture is empty.');
+   const printableWidth=A4[0]-2*MARGIN;
+   const printableHeight=A4[1]-2*MARGIN;
+   const pixelsPerPage=Math.max(1,Math.floor(fullWidth*printableHeight/printableWidth));
+   let count=0;
+   for(let top=0;top<fullHeight;top+=pixelsPerPage){
+     const partHeight=Math.min(pixelsPerPage,fullHeight-top);
+     const canvas=document.createElement('canvas');
+     canvas.width=fullWidth;
+     canvas.height=partHeight;
+     const ctx=canvas.getContext('2d',{alpha:false});
+     if(!ctx)fail('Could not render Customer Summary PDF page.');
+     ctx.fillStyle='#ffffff';
+     ctx.fillRect(0,0,fullWidth,partHeight);
+     ctx.drawImage(image,0,top,fullWidth,partHeight,0,0,fullWidth,partHeight);
+     const part=await new Promise((resolve,reject)=>canvas.toBlob(
+       result=>result?resolve(result):reject(Error('Could not encode Customer Summary PDF page.')),
+       'image/png'
+     ));
+     const png=await pdf.embedPng(await part.arrayBuffer());
+     const page=pdf.addPage(A4);
+     const drawingHeight=printableWidth*partHeight/fullWidth;
+     page.drawImage(png,{x:MARGIN,y:A4[1]-MARGIN-drawingHeight,
+       width:printableWidth,height:drawingHeight});
+     count++;
+     canvas.width=0;canvas.height=0;
+   }
+   return count;
+ }finally{URL.revokeObjectURL(uri);}
+}
 async function addOriginal(pdf,blob,entry,row){
  const mime=String(entry.mimeType||blob.type||'').toLowerCase();
  if(mime.includes('pdf')||ext(entry.path)==='pdf'){
@@ -507,7 +550,7 @@ async function prepareLocalCustomerPdf(picked){
  const pdf=await PDFLib.PDFDocument.create();
  pdf.setTitle('BIG BROTHER Local Customer Invoice Summary');
  pdf.setSubject('LOCAL COPY — missing original invoices are omitted, not cloud verified');
- await addPicture(pdf,summaryImage,'image/png','summary.png');
+ const summaryPageCount=await addSummaryPicture(pdf,summaryImage);
  let originals=0,multiPage=0;
  for(const item of locallySaved){
   const {row,original}=item;
@@ -531,8 +574,8 @@ async function prepareLocalCustomerPdf(picked){
  if(missing.length!==picked.length-locallySaved.length){
    const current=await localSummaryPicture(missing);
    const replacement=await PDFLib.PDFDocument.create();
-   await addPicture(replacement,current,'image/png','summary.png');
-   const pages=await replacement.copyPages(pdf,pdf.getPageIndices().slice(1));
+   await addSummaryPicture(replacement,current);
+   const pages=await replacement.copyPages(pdf,pdf.getPageIndices().slice(summaryPageCount));
    pages.forEach(p=>replacement.addPage(p));
    const finalBytes=await replacement.save({useObjectStreams:true});
    const file=new File([finalBytes],fileName(picked),{type:'application/pdf'});
@@ -580,7 +623,7 @@ async function prepareCustomerPdf(picked){
  const pdf=await PDFLib.PDFDocument.create();
  pdf.setTitle('BIG BROTHER Customer Invoice Summary + Supporting Invoices');
  pdf.setSubject('Customer receivables and supporting invoices');
- await addPicture(pdf,summaryBlob,'image/png','summary.png');
+ await addSummaryPicture(pdf,summaryBlob);
  let originals=0,storedDigitals=0,digitals=0,multiPage=0;
  for(let i=0;i<picked.length;i++){
   const row=picked[i],id=String(row.invoiceId);
