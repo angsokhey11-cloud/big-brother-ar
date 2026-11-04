@@ -710,9 +710,12 @@ function buildSummary(picked,contact){
     ? `<div class="sum-box"><strong>Selected Customers</strong><div class="sum-customer-name">${esc(customer)}</div><div class="sum-small" style="margin-top:8px;line-height:1.5">${customerNames.map(esc).join(' · ')}</div></div>`
     : `<div class="sum-box"><strong>Customer</strong><div class="sum-customer-name">${esc(customer)}</div></div>`;
 
+  const contactLines=[];
+  if(phone&&phone!=='-')contactLines.push(`<div class="sum-contact-line"><span class="sum-contact-icon">☎</span><span>${esc(phone)}</span></div>`);
+  if(address&&address!=='-')contactLines.push(`<div class="sum-contact-line"><span class="sum-contact-icon">●</span><span>${esc(address)}</span></div>`);
   const contactBox=multiCustomer
     ? `<div class="sum-box"><strong>Selection</strong><div class="sum-contact-line"><span class="sum-contact-icon">✓</span><span>Only the checked receivable invoices are included in this summary.</span></div><div class="sum-contact-line"><span class="sum-contact-icon">#</span><span>${picked.length} selected invoice${picked.length===1?'':'s'}</span></div></div>`
-    : `<div class="sum-box"><strong>Customer Contact</strong><div class="sum-contact-line"><span class="sum-contact-icon">☎</span><span>${esc(phone)}</span></div><div class="sum-contact-line"><span class="sum-contact-icon">●</span><span>${esc(address)}</span></div></div>`;
+    : `<div class="sum-box"><strong>Customer Contact</strong>${contactLines.join('')||'<div class="sum-contact-line">Contact not provided</div>'}</div>`;
 
   // One consistent, customer-friendly four-column statement across Desktop,
   // Mobile, Telegram PNG, device download and the PDF summary cover.
