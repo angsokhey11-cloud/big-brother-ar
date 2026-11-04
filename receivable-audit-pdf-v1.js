@@ -506,7 +506,7 @@ async function localSummaryPicture(missing){
  await ensureCanvasAvailable();
  const clone=sheet.cloneNode(true);
  clone.removeAttribute('id');
- clone.style.cssText='width:794px;min-height:1123px;margin:0;padding:27px 32px 32px;box-sizing:border-box;background:#fff;transform:none;box-shadow:none';
+ clone.style.cssText='width:794px;min-height:0;height:auto;max-height:none;margin:0;padding:27px 32px 32px;box-sizing:border-box;background:#fff;transform:none;box-shadow:none';
  const note=document.createElement('div');
  note.style.cssText='margin:18px 0 0;padding:10px 12px;border-top:2px solid #2a5aa2;background:#f3f6fa;color:#33445c;font:12px/1.55 Arial,sans-serif;overflow-wrap:anywhere';
  const message=document.createElement('div');
@@ -523,7 +523,11 @@ async function localSummaryPicture(missing){
  wrapper.style.cssText='position:fixed;left:0;top:0;width:794px;z-index:-1;pointer-events:none;background:white';
  wrapper.appendChild(clone);document.body.appendChild(wrapper);
  try{
-  const canvas=await html2canvas(clone,{backgroundColor:'#fff',scale:1.35,
+  const height=Math.ceil(clone.scrollHeight);
+  if(!Number.isFinite(height)||height<100)fail('Local Summary Invoice has no printable content.');
+  const scale=Math.max(1,Math.min(2,14000/height));
+  const canvas=await html2canvas(clone,{backgroundColor:'#fff',scale,
+   width:794,height,
    useCORS:false,logging:false,windowWidth:794});
   const blob=await new Promise((resolve,reject)=>canvas.toBlob(
    v=>v?resolve(v):reject(Error('Could not render local Summary Invoice.')),'image/png'));
