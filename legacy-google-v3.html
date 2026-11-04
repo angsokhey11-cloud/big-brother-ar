@@ -807,7 +807,7 @@ async function createSummaryImageBlob(){
   document.body.appendChild(wrapper);
 
   try{
-    const contentHeight=Math.ceil(clone.scrollHeight);
+    const contentHeight=Math.ceil(clone.scrollHeight)+6; // retain footer border without adding empty paper
     if(!Number.isFinite(contentHeight)||contentHeight<100){
       throw new Error("The Summary picture has no printable content.");
     }
