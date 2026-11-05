@@ -139,6 +139,7 @@ BEGIN
   SET invoice_no = v_number,
       invoice_date = p_invoice_date,
       grand_total = v_new_total,
+      outstanding = p_outstanding, -- include in UPDATE target list to fire clearance-state trigger
       source_created_at = CASE
         WHEN v_invoice.source_created_at IS NOT NULL
           AND (v_invoice.source_created_at AT TIME ZONE 'UTC')::date = v_invoice.invoice_date
