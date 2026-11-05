@@ -24,13 +24,21 @@ function hideEdit(){
  $('arCorrectionVerified').checked=false;
  $('arCorrectionSave').disabled=true;
 }
+function enteredBalance(){
+ const raw=$('arCorrectionBalance').value.trim();
+ if(!/^(?:0|[1-9][0-9]*)(?:\.[0-9]{1,2})?$/.test(raw))return null;
+ if(selection?.currency==='KHR'&&!/^[0-9]+$/.test(raw))return null;
+ const value=Number(raw);
+ return Number.isFinite(value)&&value>=0&&value<=999999999?value:null;
+}
 function refreshSave(){
  const r=selection,n=$('arCorrectionNumber').value.trim(),d=$('arCorrectionDate').value;
- const reason=$('arCorrectionReason').value.trim();
- $('arCorrectionSave').disabled=saving||!r||!n||n.length>80||!d||
+ const reason=$('arCorrectionReason').value.trim(),balance=enteredBalance();
+ const balanceChange=!!r&&balance!==null&&balance!==Number(r.outstanding);
+ $('arCorrectionSave').disabled=saving||!r||!n||n.length>80||!d||balance===null||
   reason.length<8||reason.length>500||
-  (r.has_photo&&!$('arCorrectionVerified').checked)||
-  (r.invoice_no===n&&r.invoice_date===d);
+  ((r.has_photo||balanceChange)&&!$('arCorrectionVerified').checked)||
+  (r.invoice_no===n&&r.invoice_date===d&&!balanceChange);
 }
 function selectRow(r){
  if(saving)return;
@@ -42,14 +50,20 @@ function selectRow(r){
  $('arCorrectionOutstanding').textContent=r.currency+' '+r.outstanding;
  $('arCorrectionNumber').value=r.invoice_no;
  $('arCorrectionDate').value=r.invoice_date;
+ $('arCorrectionBalance').value=Number(r.outstanding).toFixed(r.currency==='KHR'?0:2);
+ $('arCorrectionBalance').step=r.currency==='KHR'?'1':'0.01';
+ $('arCorrectionBalanceLabel').textContent='Correct Outstanding Balance ('+r.currency+')';
+ $('arCorrectionFinancial').textContent='Imported invoice total: '+r.currency+' '+r.grand_total+
+  ' · Previously paid / collected: '+r.currency+' '+r.amount_paid+
+  '. Previously paid amounts stay unchanged.';
  $('arCorrectionReason').value='';
  $('arCorrectionVerified').checked=false;
  $('arCorrectionPhoto').textContent=r.has_photo
   ?'⚠ A real invoice photo is attached. Read the physical invoice first. Its file and previous verification history will not be rewritten.'
   :'No invoice photo is attached. Check the original paper before changing its header.';
  $('arCorrectionPayment').textContent=r.has_payments
-  ?'⚠ Payments are already linked to this invoice. Those transactions will not be changed.'
-  :'Previously paid opening balance and all other amounts will remain unchanged.';
+  ?'⚠ Payments are linked to this invoice. Corrections preserve these transactions and the paid amount.'
+  :'The previously paid opening amount will remain unchanged. The invoice total will adjust to keep outstanding = total − paid.';
  $('arCorrectionEdit').hidden=false;
  refreshSave();
  $('arCorrectionNumber').focus();
@@ -103,29 +117,39 @@ async function saveEdit(){
  if(!selection||saving||$('arCorrectionSave').disabled)return;
  const r=selection,number=$('arCorrectionNumber').value.trim();
  const date=$('arCorrectionDate').value,reason=$('arCorrectionReason').value.trim();
+ const balance=enteredBalance();
+ if(balance===null)return;
  const changes=[];
  if(number!==r.invoice_no)changes.push('Number: '+r.invoice_no+' → '+number);
  if(date!==r.invoice_date)changes.push('Invoice date: '+r.invoice_date+' → '+date);
+ if(balance!==Number(r.outstanding)){
+  changes.push('Outstanding: '+r.currency+' '+r.outstanding+' → '+r.currency+' '+balance);
+  changes.push('Revised imported invoice total: '+r.currency+' '+(balance+Number(r.amount_paid)).toFixed(r.currency==='KHR'?0:2));
+ }
  const prompt='Save audited correction for '+r.customer_name+' ('+r.customer_id+')?'+
   '\n\n'+changes.join('\n')+
-  '\n\nThe original invoice photo, due date, customer, amount, payments and outstanding balance will NOT change.'+
+  '\n\nCustomer, currency, existing payments, due date and original photos will NOT change. This is an opening A/R correction, not a sale or payment.'+
   '\n\nCorrection reason: '+reason;
  if(!window.confirm(prompt))return;
  saving=true;$('arCorrectionSave').disabled=true;
  $('arCorrectionCancelEdit').disabled=true;
  notify('Saving historical A/R correction…');
  try{
-  const response=await rpc('bb_ar_migration_correct_header',{
+  const response=await rpc('bb_ar_migration_correct_invoice',{
    p_invoice_id:r.invoice_id,
-   p_invoice_no:number,p_invoice_date:date,
+   p_invoice_no:number,p_invoice_date:date,p_outstanding:balance,
    p_expected_invoice_no:r.invoice_no,p_expected_invoice_date:r.invoice_date,
+   p_expected_outstanding:r.outstanding,p_expected_grand_total:r.grand_total,
+   p_expected_amount_paid:r.amount_paid,
+   p_verified_original:$('arCorrectionVerified').checked,
    p_reason:reason
   });
   if(!response?.success)throw Error('Correction was not confirmed by server');
   hideEdit();
   await refreshRows(true);
   notify('Saved '+response.invoice_no+' · '+response.invoice_date+
-   '. Corrected fields and reason were audit logged; balances unchanged.');
+   ' · Outstanding '+response.currency+' '+response.outstanding+
+   '. Changes and reason were audit logged; existing payments unchanged.');
   if(typeof window.loadAR==='function'){
    try{await window.loadAR(true)}catch(e){console.warn('A/R list refresh:',e)}
   }
@@ -170,7 +194,7 @@ function mount(){
  '.ar-correct-table tr:nth-child(even){background:#f7faff}',
  '.ar-correct-editor{margin-top:14px;padding:13px;border:1px solid #bad2e8;background:#f3f8ff;border-radius:11px}',
  '.ar-correct-editor h3{margin:0 0 8px}',
- '.ar-correct-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}',
+ '.ar-correct-fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}',
  '.ar-correct-fields label{font-size:12px;font-weight:700;display:grid;gap:5px}',
  '.ar-correct-fields input{width:100%;min-width:0;padding:10px;border:1px solid #b5c9df;border-radius:7px;font-size:15px}',
  '.ar-correct-editor textarea{width:100%;padding:10px;border:1px solid #b5c9df;border-radius:7px;min-height:65px}',
@@ -189,7 +213,7 @@ function mount(){
  modal.innerHTML=[
  '<section class="ar-correct-dialog">',
  '<div class="ar-correct-row"><h2>✎ Edit Imported Historical A/R</h2><button id="arCorrectionClose" class="btn secondary" type="button">✕ Close</button></div>',
- '<p class="ar-correct-note">Admin only · Correct invoice number or invoice date. Select the exact customer. Due dates, amounts, existing payments and real invoice photographs are not changed.</p>',
+ '<p class="ar-correct-note">Admin only · Correct imported opening A/R invoice number, date and/or outstanding balance. All changes are audit logged; no sales, stock, cash or payment entries are created.</p>',
  '<div class="ar-correct-search"><input id="arCorrectionSearch" type="search" autocomplete="off" placeholder="Search customer, invoice number, location, date" aria-label="Search imported A/R">',
  '<button id="arCorrectionFind" type="button" class="btn secondary">🔍 Search</button></div>',
  '<p id="arCorrectionStatus" role="status" class="ar-correct-note" aria-live="polite"></p>',
@@ -200,12 +224,14 @@ function mount(){
  '<p class="ar-correct-note">Customer: <strong id="arCorrectionCustomer"></strong> · Location: <strong id="arCorrectionLocation"></strong></p>',
  '<p class="ar-correct-note">Existing number/date: <strong id="arCorrectionCurrent"></strong> · Due date: <strong id="arCorrectionDue"></strong> · Outstanding: <strong id="arCorrectionOutstanding"></strong></p>',
  '<div class="ar-correct-fields"><label for="arCorrectionNumber">Correct Invoice Number<input id="arCorrectionNumber" maxlength="80" required autocomplete="off"></label>',
- '<label for="arCorrectionDate">Correct Invoice Date<input id="arCorrectionDate" type="date" required></label></div>',
- '<p class="ar-correct-note">Due date is not recalculated. No customer, currency, payments or balance fields are editable here.</p>',
+ '<label for="arCorrectionDate">Correct Invoice Date<input id="arCorrectionDate" type="date" required></label>',
+ '<label for="arCorrectionBalance"><span id="arCorrectionBalanceLabel">Correct Outstanding Balance</span><input id="arCorrectionBalance" type="number" inputmode="decimal" min="0" max="999999999" step="0.01" required></label></div>',
+ '<p id="arCorrectionFinancial" class="ar-correct-note"></p>',
+ '<p class="ar-correct-note">Due date, customer, currency and payments stay unchanged. When outstanding changes, the imported invoice total adjusts accordingly; sales and stock remain untouched.</p>',
  '<p id="arCorrectionPhoto" class="ar-correct-warning"></p><p id="arCorrectionPayment" class="ar-correct-warning"></p>',
- '<label class="ar-correct-note"><input id="arCorrectionVerified" type="checkbox"> I verified the original paper invoice (required if photo attached)</label>',
+ '<label class="ar-correct-note"><input id="arCorrectionVerified" type="checkbox"> I verified the original paper invoice (required for balance corrections or attached photos)</label>',
  '<label for="arCorrectionReason" class="ar-correct-note" style="display:block;margin-top:10px;font-weight:700">Reason for correction (8–500 characters)</label>',
- '<textarea id="arCorrectionReason" maxlength="500" placeholder="Explain the incorrect invoice number or date and the correct source"></textarea>',
+ '<textarea id="arCorrectionReason" maxlength="500" placeholder="Explain the wrong number, date or combined balance, and the source paper invoices"></textarea>',
  '<div class="ar-correct-row" style="margin-top:12px"><button id="arCorrectionCancelEdit" type="button" class="btn secondary">Cancel Edit</button>',
  '<button id="arCorrectionSave" type="button" class="btn primary" disabled>✓ Save Audited Correction</button></div>',
  '</div></section>'
@@ -231,7 +257,7 @@ function mount(){
  $('arCorrectionNext').onclick=()=>{
   if(offset+items.length<count&&!saving){offset+=PAGE_SIZE;void refreshRows()}
  };
- for(const id of ['arCorrectionNumber','arCorrectionDate','arCorrectionReason','arCorrectionVerified']){
+ for(const id of ['arCorrectionNumber','arCorrectionDate','arCorrectionBalance','arCorrectionReason','arCorrectionVerified']){
   $(id).addEventListener('input',refreshSave);
   $(id).addEventListener('change',refreshSave);
  }
