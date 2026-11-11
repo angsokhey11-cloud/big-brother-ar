@@ -6,6 +6,7 @@
 if(window.BBARBankSyncV1)return;
 const CACHE_PREFIX='bb-bank-bulk-v1:',sessionKey='BB_SUPABASE_DEV_SESSION_V1';
 let busy=false;
+let lastOutcome='';
 const $=id=>document.getElementById(id);
 const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 function userId(){
@@ -48,7 +49,7 @@ async function run(){
  if(!startUser)return status('Please sign in before syncing bank balances.',true);
  if(navigator.onLine===false)return status('Offline · cached bank balances kept',true);
  if(typeof window.BBARAdapter?.rpc!=='function')return status('A/R bank service unavailable. Refresh this page.',true);
- busy=true;
+ busy=true;lastOutcome='';
  const button=$('bbARSyncBankBtn');
  if(button)button.textContent='Syncing…';
  status('Downloading verified bank balances…');
@@ -66,6 +67,7 @@ async function run(){
      throw new Error('Unexpected bank balance data; previous cache was preserved');
   const syncedAt=Date.now();
   localStorage.setItem(CACHE_PREFIX+startUser,JSON.stringify({rows,syncedAt}));
+  lastOutcome='success';
   status('Synced '+timeText(syncedAt)+' · '+rows.length+' balance'+(rows.length===1?'':'s'));
   document.dispatchEvent(new CustomEvent('bb:bank-cache-updated',{
    detail:{source:'ar-sync-bank',count:rows.length,syncedAt}
@@ -77,13 +79,21 @@ async function run(){
      select.dispatchEvent(new Event('change',{bubbles:true}));
   }
  }catch(error){
+  lastOutcome='error';
   // Network/auth failures NEVER erase a previously valid cache.
   const prev=current()?.syncedAt;
   status('Sync failed: '+String(error?.message||error)+
     (prev?' · previous cache kept ('+timeText(prev)+')':''),true);
  }finally{
   busy=false;
-  if(button){button.textContent='⟳ Sync Bank';button.disabled=false;button.setAttribute('aria-busy','false')}
+  if(button){
+   const isCompactMobile=!!button.closest?.('.bb-mobile-actionbar');
+   button.textContent=isCompactMobile
+      ?lastOutcome==='success'?'✓ Bank Synced':lastOutcome==='error'?'⚠ Retry Bank':'⟳ Sync Bank'
+      :'⟳ Sync Bank';
+   button.title=$('bbARBankSyncStatus')?.textContent||button.title;
+   button.disabled=false;button.setAttribute('aria-busy','false')
+  }
  }
 }
 function install(){
