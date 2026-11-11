@@ -11,6 +11,11 @@ const money=(n,cur)=>String(cur)+' '+Number(n).toLocaleString('en-US',{minimumFr
 const rowsSelected=()=>typeof selectedPaymentRows==='function'?selectedPaymentRows():[];
 let ticket=0;
 let cached=new Map();
+// A/R Sync Bank replaces the shared cache. Drop the short-lived in-modal
+// multi-outlet snapshot before the payment-method change re-renders it.
+document.addEventListener('bb:bank-cache-updated',event=>{
+ if(event.detail?.source==='ar-sync-bank')cached.clear();
+});
 function modalOpen(){const modal=document.getElementById('batchOverlay');return modal&&!modal.classList.contains('hidden')}
 function context(){
  const rows=rowsSelected();
