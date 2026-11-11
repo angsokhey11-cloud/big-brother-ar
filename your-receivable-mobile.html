@@ -156,6 +156,10 @@ const HEADER_FILTER_CSS=`
 .bb-mobile-actionbar #summaryBtn{background:#173f77!important;color:#fff!important}
 .bb-mobile-actionbar #batchBtn{background:#198754!important;color:#fff!important}
 .bb-mobile-actionbar .btn:disabled{opacity:.48!important}
+.bb-mobile-actionbar.bb-mobile-bank-ready{grid-template-columns:64px minmax(0,1fr) minmax(0,1fr) 64px 38px!important}
+.bb-mobile-actionbar.bb-mobile-bank-ready #bbARBankSyncControls{width:100%!important;min-width:0!important}
+.bb-mobile-actionbar.bb-mobile-bank-ready #bbARSyncBankBtn{font-size:8px!important;min-height:38px!important;width:100%!important;padding:5px 2px!important;white-space:normal!important}
+.bb-mobile-actionbar.bb-mobile-bank-ready #bbARBankSyncStatus{display:none!important}
 .bb-refresh-btn{border:1px solid #d8e1eb!important;background:#fff!important;color:#50657c!important}
 
 .bb-filter-backdrop{
@@ -316,6 +320,7 @@ const HEADER_FILTER_CSS=`
   .cards .card:nth-child(3),.cards .card:nth-child(4){min-height:50px!important;padding:6px 8px!important}
   .cards .card:nth-child(3)>strong,.cards .card:nth-child(4)>strong{font-size:16px!important}
   .bb-mobile-actionbar{grid-template-columns:66px minmax(0,1fr) minmax(0,1fr) 36px!important;gap:5px!important}
+  .bb-mobile-actionbar.bb-mobile-bank-ready{grid-template-columns:57px minmax(0,1fr) minmax(0,1fr) 58px 36px!important}
   .bb-mobile-actionbar .btn,.bb-filter-toggle,.bb-refresh-btn{font-size:8.2px!important;padding:5px 4px!important}
   .filters.bb-mobile-filter-panel{grid-template-columns:repeat(6,minmax(0,1fr))!important;column-gap:5px!important}
   .filters.bb-mobile-filter-panel #locationFilter,.filters.bb-mobile-filter-panel #currencyFilter,.filters.bb-mobile-filter-panel #statusFilter{font-size:8px!important}
@@ -570,6 +575,7 @@ function buildFilterUI(doc,win){
 
   const summary=doc.getElementById('summaryBtn');
   const batch=doc.getElementById('batchBtn');
+  const bankSyncControls=doc.getElementById('bbARBankSyncControls');
   const refresh=[...filters.querySelectorAll('button')].find(btn=>String(btn.getAttribute('onclick')||'').includes('loadAR(true)'));
   if(!summary||!batch||!refresh)return;
 
@@ -586,7 +592,8 @@ function buildFilterUI(doc,win){
   refresh.setAttribute('aria-label','Refresh receivables');
 
   filters.parentNode.insertBefore(bar,filters);
-  bar.append(filterBtn,summary,batch,refresh);
+  if(bankSyncControls)bar.classList.add('bb-mobile-bank-ready');
+  bar.append(filterBtn,summary,batch,...(bankSyncControls?[bankSyncControls]:[]),refresh);
 
   filters.classList.add('bb-mobile-filter-panel');
   // Keep the date/amount row inside the same mobile drawer, not as a
