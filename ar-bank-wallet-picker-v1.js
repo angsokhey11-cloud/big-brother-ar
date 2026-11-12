@@ -17,6 +17,53 @@ function protectTransactionIdFields(){
  }
 }
 
+// Registered bank metadata comes from the VERIFIED transaction, not a guessed payer bank.
+// Keep date values as ISO YYYY-MM-DD for native <input type="date"> on PC, PWA and APK.
+function registeredBankReceivedISO(row){
+ const match=String(row?.received_date||'').trim().match(/^(\d{4})-(\d{2})-(\d{2})(?:$|T|\s)/);
+ if(!match)return '';
+ const year=Number(match[1]),month=Number(match[2]),day=Number(match[3]);
+ const dt=new Date(Date.UTC(year,month-1,day));
+ return year>=2000&&year<=2100&&dt.getUTCFullYear()===year&&
+  dt.getUTCMonth()+1===month&&dt.getUTCDate()===day
+  ?match[1]+'-'+match[2]+'-'+match[3]:'';
+}
+function registeredBankReceivedLabel(row){
+ const iso=registeredBankReceivedISO(row);
+ if(!iso)return 'Not recorded';
+ const m=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+ return iso.slice(8,10)+'-'+m[Number(iso.slice(5,7))-1]+'-'+iso.slice(0,4);
+}
+function registeredBankDetailLine(row){
+ const bankName=String(row?.bank_name||'').trim();
+ return 'Received: '+registeredBankReceivedLabel(row)+' · Bank: '+(bankName||'Not recorded — enter manually');
+}
+function applyRegisteredBankDetails(row,transactionIdField,bankField,dateField){
+ const tx=document.getElementById(transactionIdField);
+ const bank=document.getElementById(bankField);
+ const date=document.getElementById(dateField);
+ if(tx)tx.value=String(row.transaction_id||'').trim();
+ // Clear stale bank name from another receipt. Never invent a bank from payer identity.
+ if(bank)bank.value=String(row.bank_name||'').trim();
+ const receivedISO=registeredBankReceivedISO(row);
+ if(date&&receivedISO)date.value=receivedISO;
+ return !String(row.bank_name||'').trim()
+  ?'This receipt has no receiving Bank name recorded. Please enter the actual Bank name before saving.'
+  :'Registered receipt selected. Received date and Bank name filled from Bank Register.';
+}
+function appendRegisteredBankDetails(line,row){
+ const details=document.createElement('div');
+ details.style.cssText='font-size:11px;line-height:1.5;color:#58748e;margin:4px 0 8px;overflow-wrap:anywhere';
+ details.textContent=registeredBankDetailLine(row);
+ line.append(details);
+}
+function appendBankSelectionNote(panel,text){
+ let note=panel.querySelector?.('[data-registered-bank-selection-note]');
+ if(!note){note=document.createElement('div');note.setAttribute('data-registered-bank-selection-note','');
+  note.style.cssText='font-size:11px;line-height:1.5;border-radius:7px;padding:7px;margin:7px 0;background:#edf6ff;color:#27527c';
+  panel.append(note);}
+ note.textContent=text;
+}
 function bankSnapshot(customerId){try{const s=JSON.parse(localStorage.getItem('BB_SUPABASE_DEV_SESSION_V1')||'null');const t=s?.access_token||'';const sub=JSON.parse(atob(t.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))).sub;if(!sub)return null;const data=JSON.parse(localStorage.getItem('bb-bank-bulk-v1:'+sub)||'null');if(!data)return null;return (data.rows||[]).filter(x=>String(x.customer_id)===String(customerId)&&Number(x.remaining_amount)>0);}catch(_){return null;}}
 function removeUsedBankCache(customerId,transactionId){
  try{const s=JSON.parse(localStorage.getItem('BB_SUPABASE_DEV_SESSION_V1')||'null');const sub=JSON.parse(atob((s?.access_token||'').split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))).sub;
@@ -104,12 +151,12 @@ function showWallet(){
      const btn=document.createElement('button');btn.type='button';btn.textContent='Use '+x.transaction_id+' — remaining '+x.remaining_amount+' '+x.currency;
      btn.onclick=()=>{
        selectedSingle={transactionId:x.transaction_id,rate:Number(x.approved_exchange_rate),customerId:item.customerId};
-       document.getElementById('transactionId').value=x.transaction_id;
-       if(x.bank_name)document.getElementById('payBank').value=x.bank_name;
+       const feedback=applyRegisteredBankDetails(x,'transactionId','payBank','payDate');
+       appendBankSelectionNote(panel,feedback);
        const a=document.getElementById('payAmount');
        if(!Number(a.value)||Number(a.value)>Number(x.equivalent_remaining)) a.value=String(Math.min(Number(item.outstanding),Number(x.equivalent_remaining)));
      };
-     line.append(btn);panel.append(line);
+     line.append(btn);appendRegisteredBankDetails(line,x);panel.append(line);
    });
  }
 }
@@ -137,13 +184,13 @@ function showBatchWallet(){
    const button=document.createElement('button');button.type='button';
    button.textContent='Use '+x.transaction_id+' — remaining '+x.remaining_amount+' '+x.currency;
    button.onclick=()=>{
-    document.getElementById('batchTransactionId').value=x.transaction_id;
-    if(x.bank_name)document.getElementById('batchBank').value=x.bank_name;
+    const feedback=applyRegisteredBankDetails(x,'batchTransactionId','batchBank','batchDate');
+    appendBankSelectionNote(box,feedback);
     if(typeof selectedPaymentRows==='function'){
      const total=selectedPaymentRows().reduce((s,r)=>s+Number(r.outstanding||0),0);
      if(total>Number(x.equivalent_remaining))alert('This registered balance is insufficient for the selected batch. Choose fewer invoices or another transaction.');
     }
-   };row.append(button);box.append(row);
+   };row.append(button);appendRegisteredBankDetails(row,x);box.append(row);
   });
  }
 }
