@@ -9,6 +9,31 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,x=>({'&':'&amp;','<':'&lt;','>':'&
 const clean=s=>String(s??'').trim();
 const money=(n,cur)=>String(cur)+' '+Number(n).toLocaleString('en-US',{minimumFractionDigits:cur==='KHR'?0:2,maximumFractionDigits:cur==='KHR'?0:2});
 const rowsSelected=()=>typeof selectedPaymentRows==='function'?selectedPaymentRows():[];
+// Use exact verified-bank metadata. Never infer receiving bank from payer bank identity.
+function receivedISO(value){
+ const m=String(value||'').trim().match(/^(\d{4})-(\d{2})-(\d{2})(?:$|T|\s)/);
+ if(!m)return '';
+ const y=Number(m[1]),mm=Number(m[2]),d=Number(m[3]),dt=new Date(Date.UTC(y,mm-1,d));
+ return y>=2000&&y<=2100&&dt.getUTCFullYear()===y&&dt.getUTCMonth()+1===mm&&dt.getUTCDate()===d
+  ?m[1]+'-'+m[2]+'-'+m[3]:'';
+}
+function receivedLabel(row){
+ const iso=receivedISO(row?.received_date);
+ if(!iso)return 'Not recorded';
+ const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+ return iso.slice(8,10)+'-'+months[Number(iso.slice(5,7))-1]+'-'+iso.slice(0,4);
+}
+function receiptMeta(rows){
+ const dates=[...new Set(rows.map(r=>receivedISO(r.received_date)).filter(Boolean))];
+ const banks=[...new Set(rows.map(r=>clean(r.bank_name)).filter(Boolean))];
+ return {date:dates.length===1?dates[0]:'',bank:banks.length===1?banks[0]:'',
+  dateMismatch:dates.length>1,bankMismatch:banks.length>1};
+}
+function receiptSummary(row){
+ const bank=clean(row?.bank_name);
+ return 'Received '+receivedLabel(row)+' · Bank: '+(bank||'Not recorded — enter manually');
+}
+
 let ticket=0;
 let cached=new Map();
 // A/R Sync Bank replaces the shared cache. Drop the short-lived in-modal
@@ -109,9 +134,16 @@ async function render(force=false){
    use.style.cssText='margin-right:9px;background:#1769b5;color:white;border:0;border-radius:7px;padding:9px 12px;font-weight:800;cursor:pointer';
    use.onclick=()=>{
     document.getElementById('batchTransactionId').value=tx;
-    const knownBank=[...perCustomer.values()].map(x=>clean(x.bank_name)).find(Boolean);
-    if(knownBank)document.getElementById('batchBank').value=knownBank;
-    note(line,'Selected registered receipt '+tx+'. Confirm the batch to clear all selected invoices. The server verifies each outlet share.');
+    const meta=receiptMeta([...perCustomer.values()]);
+    const bankField=document.getElementById('batchBank');
+    if(bankField)bankField.value=meta.bank;
+    const dateField=document.getElementById('batchDate');
+    if(dateField&&meta.date)dateField.value=meta.date;
+    note(line,'Selected registered receipt '+tx+
+      (meta.date?' · Received '+receivedLabel({received_date:meta.date}):' · Received date missing; confirm manually')+
+      (meta.bank?' · Bank '+meta.bank:' · Receiving Bank not recorded; enter it manually')+
+      (meta.dateMismatch||meta.bankMismatch?' · Outlet receipt metadata differs; verify against Bank Register.':'')+
+      '. The server will verify each outlet share.');
    };line.append(use);
    const amountText=document.createElement('div');amountText.style.cssText='font-size:12px;color:#526d84;margin-top:6px';
    amountText.textContent=ids.map(id=>{
@@ -119,7 +151,11 @@ async function render(force=false){
      return (customer?.customer||id)+': '+money(perCustomer.get(id).remaining_amount,contextAtStart.currency)+
        ' available; '+money(contextAtStart.needed.get(id),contextAtStart.currency)+' selected';
    }).join(' · ');
-   line.append(amountText);target.append(line);
+   line.append(amountText);
+   const metaLine=document.createElement('div');
+   metaLine.style.cssText='font-size:11px;color:#55738c;margin-top:5px;overflow-wrap:anywhere';
+   metaLine.textContent=receiptSummary(perCustomer.values().next().value);
+   line.append(metaLine);target.append(line);
   }
  }else{
   note(target,'Registered money is available for one or more outlets, but no single receipt has enough approved balance for ALL selected outlets. Allocate the bank receipt in Bank History first, then click Refresh All Outlet Balances.',true);
@@ -132,7 +168,11 @@ async function render(force=false){
    row.append(bankLink(item.tx,'Allocate Outlets · '+item.tx));
    const text=document.createElement('span');
    text.textContent=' Registered balance '+money(item.maximum,contextAtStart.currency);
-   row.append(text);target.append(row);
+   row.append(text);
+   const metaLine=document.createElement('div');
+   metaLine.style.cssText='font-size:11px;color:#55738c;line-height:1.5;margin:3px 0 5px';
+   metaLine.textContent=receiptSummary(item.perCustomer.values().next().value);
+   row.append(metaLine);target.append(row);
    // Suggest amounts without approving them. Leave unspent funds with the original outlet.
    if(item.perCustomer.size===1){
     const anchorId=[...item.perCustomer.keys()][0],bankRow=item.perCustomer.get(anchorId);
