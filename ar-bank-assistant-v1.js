@@ -181,7 +181,9 @@ async function submit(b,note,btn){
   const result=await window.BBARAdapter.rpc('bb_ar_bank_assistant_submit_v1',
    {p_payload:{customerId:b.customerId,transactionId:b.transactionId,allocations,note:norm(note)}});
   if(!result?.success)throw Error('Recommendation was not accepted');
-  if(typeof loadAR==='function')await loadAR(true);
+  if(typeof loadAR==='function'){
+   try{await loadAR(true)}catch(refreshError){console.warn('Bank Assistant: recommendation saved but A/R list refresh failed',refreshError)}
+  }
   state.busy=false;state.selected.clear();await load();
   if(state.canApprove&&typeof window.openRequestReview==='function'&&
    (typeof VIEW==='undefined'||VIEW==='all')){
