@@ -37,57 +37,57 @@ input,select,textarea{width:100%;border:1px solid #cbd6e3;border-radius:9px;padd
 #arBody td.khmer-readable small{font-family:Arial,sans-serif;font-size:11px;font-weight:600;color:#64768b;line-height:1.4}
 @media (max-width:1400px){#arBody td.khmer-readable{font-size:15px;color:#1d344d}}
 
-/* Batch A/R only: fixed header/actions and bounded internal scrolling. */
-#batchOverlay{padding:16px;overscroll-behavior:contain}
-#batchOverlay .bb-batch-payment-card{
+/* Single and batch A/R: fixed header/actions and bounded internal scrolling. */
+:is(#batchOverlay,#paymentOverlay){padding:16px;overscroll-behavior:contain}
+:is(#batchOverlay,#paymentOverlay) .bb-batch-payment-card{
   box-sizing:border-box;width:min(820px,100%)!important;max-width:100%!important;
   max-height:calc(100vh - 32px)!important;max-height:calc(100dvh - 32px)!important;
   display:flex;flex-direction:column;overflow:hidden!important;padding:0!important;
   min-height:0;min-width:0
 }
-#batchOverlay .bb-batch-payment-card .modalhead{
+:is(#batchOverlay,#paymentOverlay) .bb-batch-payment-card .modalhead{
   flex:0 0 auto;position:relative!important;top:auto!important;
   padding:16px 22px 12px!important;border-bottom:1px solid var(--line);background:#fff
 }
-#batchOverlay .modalhead>div{min-width:0}
-#batchOverlay .modalhead p{margin:0!important;overflow-wrap:anywhere}
-#batchOverlay .modalhead .close{flex:0 0 34px}
-#batchOverlay .bb-batch-payment-body{
+:is(#batchOverlay,#paymentOverlay) .modalhead>div{min-width:0}
+:is(#batchOverlay,#paymentOverlay) .modalhead p{margin:0!important;overflow-wrap:anywhere}
+:is(#batchOverlay,#paymentOverlay) .modalhead .close{flex:0 0 34px}
+:is(#batchOverlay,#paymentOverlay) .bb-batch-payment-body{
   min-height:0;min-width:0;flex:1 1 auto;overflow-y:auto;overflow-x:hidden;
   padding:14px 22px 10px;overscroll-behavior:contain;scrollbar-gutter:stable
 }
-#batchOverlay .bb-batch-payment-body .batch-list{max-height:min(220px,30vh);overflow:auto}
-#batchOverlay .bb-batch-payment-body .batch-item{font-size:13px;align-items:center}
-#batchOverlay .bb-batch-payment-body .batch-item>*{min-width:0;overflow-wrap:anywhere}
-#batchOverlay .bb-batch-payment-body .grid2{grid-template-columns:repeat(2,minmax(0,1fr))}
-#batchOverlay .bb-batch-payment-body .field{min-width:0}
-#batchOverlay .bb-batch-payment-body input,
-#batchOverlay .bb-batch-payment-body select,
-#batchOverlay .bb-batch-payment-body textarea{max-width:100%}
-#batchOverlay #bbWalletBatch{min-width:0;overflow-wrap:anywhere}
-#batchOverlay .bb-batch-payment-footer{
+:is(#batchOverlay,#paymentOverlay) .bb-batch-payment-body .batch-list{max-height:min(220px,30vh);overflow:auto}
+:is(#batchOverlay,#paymentOverlay) .bb-batch-payment-body .batch-item{font-size:13px;align-items:center}
+:is(#batchOverlay,#paymentOverlay) .bb-batch-payment-body .batch-item>*{min-width:0;overflow-wrap:anywhere}
+:is(#batchOverlay,#paymentOverlay) .bb-batch-payment-body .grid2{grid-template-columns:repeat(2,minmax(0,1fr))}
+:is(#batchOverlay,#paymentOverlay) .bb-batch-payment-body .field{min-width:0}
+:is(#batchOverlay,#paymentOverlay) .bb-batch-payment-body input,
+:is(#batchOverlay,#paymentOverlay) .bb-batch-payment-body select,
+:is(#batchOverlay,#paymentOverlay) .bb-batch-payment-body textarea{max-width:100%}
+:is(#batchOverlay,#paymentOverlay) #bbWalletBatch{min-width:0;overflow-wrap:anywhere}
+:is(#batchOverlay,#paymentOverlay) .bb-batch-payment-footer{
   flex:0 0 auto;min-width:0;padding:12px 22px 14px;
   background:#fff;border-top:1px solid var(--line)
 }
-#batchOverlay .bb-batch-payment-footer #batchError{margin:0 0 8px;max-height:16vh;overflow:auto;overflow-wrap:anywhere}
-#batchOverlay .bb-batch-payment-footer #saveBatchBtn{margin:0!important;min-height:44px;white-space:normal}
-#batchOverlay .bb-batch-payment-footer .secure-note{line-height:1.35;overflow-wrap:anywhere}
+:is(#batchOverlay,#paymentOverlay) .bb-batch-payment-footer :is(#batchError,#paymentError){margin:0 0 8px;max-height:16vh;overflow:auto;overflow-wrap:anywhere}
+:is(#batchOverlay,#paymentOverlay) .bb-batch-payment-footer :is(#saveBatchBtn,#savePayBtn){margin:0!important;min-height:44px;white-space:normal}
+:is(#batchOverlay,#paymentOverlay) .bb-batch-payment-footer .secure-note{line-height:1.35;overflow-wrap:anywhere}
 @media(max-width:600px){
-  #batchOverlay{padding:8px;align-items:flex-end}
-  #batchOverlay .bb-batch-payment-card{width:100%!important;max-height:92vh!important;max-height:92dvh!important;border-radius:16px 16px 0 0}
-  #batchOverlay .bb-batch-payment-card .modalhead{padding:12px 14px!important}
-  #batchOverlay .bb-batch-payment-body{padding:12px 14px 8px;scrollbar-gutter:auto}
-  #batchOverlay .bb-batch-payment-footer{padding:10px 14px calc(10px + env(safe-area-inset-bottom))}
-  #batchOverlay .bb-batch-payment-footer .secure-note{font-size:10px}
+  :is(#batchOverlay,#paymentOverlay){padding:8px;align-items:flex-end}
+  :is(#batchOverlay,#paymentOverlay) .bb-batch-payment-card{width:100%!important;max-height:92vh!important;max-height:92dvh!important;border-radius:16px 16px 0 0}
+  :is(#batchOverlay,#paymentOverlay) .bb-batch-payment-card .modalhead{padding:12px 14px!important}
+  :is(#batchOverlay,#paymentOverlay) .bb-batch-payment-body{padding:12px 14px 8px;scrollbar-gutter:auto}
+  :is(#batchOverlay,#paymentOverlay) .bb-batch-payment-footer{padding:10px 14px calc(10px + env(safe-area-inset-bottom))}
+  :is(#batchOverlay,#paymentOverlay) .bb-batch-payment-footer .secure-note{font-size:10px}
 }
 @media(max-width:350px){
-  #batchOverlay .bb-batch-payment-body .grid2{grid-template-columns:1fr!important}
+  :is(#batchOverlay,#paymentOverlay) .bb-batch-payment-body .grid2{grid-template-columns:1fr!important}
 }
 @media(max-height:380px){
-  #batchOverlay .bb-batch-payment-card{max-height:calc(100vh - 12px)!important;max-height:calc(100dvh - 12px)!important}
-  #batchOverlay .bb-batch-payment-card .modalhead{padding:6px 12px!important}
-  #batchOverlay .bb-batch-payment-footer{padding:6px 12px!important}
-  #batchOverlay .bb-batch-payment-footer .secure-note{display:none}
+  :is(#batchOverlay,#paymentOverlay) .bb-batch-payment-card{max-height:calc(100vh - 12px)!important;max-height:calc(100dvh - 12px)!important}
+  :is(#batchOverlay,#paymentOverlay) .bb-batch-payment-card .modalhead{padding:6px 12px!important}
+  :is(#batchOverlay,#paymentOverlay) .bb-batch-payment-footer{padding:6px 12px!important}
+  :is(#batchOverlay,#paymentOverlay) .bb-batch-payment-footer .secure-note{display:none}
 }
 </style>
 </head>
@@ -162,8 +162,9 @@ input,select,textarea{width:100%;border:1px solid #cbd6e3;border-radius:9px;padd
 </div>
 
 <div class="overlay hidden" id="paymentOverlay">
-  <div class="modalbox">
-    <div class="modalhead"><div><h2>Receive Payment</h2><p id="paymentInfo"></p></div><button class="close" onclick="closePayment()">×</button></div>
+  <div class="modalbox bb-batch-payment-card" role="dialog" aria-modal="true" aria-labelledby="bbSinglePaymentTitle">
+    <div class="modalhead"><div><h2 id="bbSinglePaymentTitle">Receive Payment</h2><p id="paymentInfo"></p></div><button class="close" aria-label="Close payment" onclick="closePayment()">×</button></div>
+    <div class="bb-batch-payment-body" id="bbSinglePaymentBody">
     <div class="grid2">
       <div class="field"><label>Payment Date</label><input type="date" id="payDate"></div>
       <div class="field"><label>Receivable Amount to Clear</label><input type="number" min="0" step="0.01" id="payAmount"></div>
@@ -196,10 +197,13 @@ input,select,textarea{width:100%;border:1px solid #cbd6e3;border-radius:9px;padd
     </div>
     <div class="field"><label>Payment Note</label><textarea id="payNote" rows="2" placeholder="Optional"></textarea></div>
     <div class="field" id="singleAdminField"><label>Admin Code <span style="color:#c93c46">*</span></label><input id="adminCode" type="password" autocomplete="off" placeholder="Required to approve and clear payment"></div>
-    <div class="formerror" id="paymentError"></div>
+    <div class="history" id="historyBox"><h3>Payment History</h3><div id="paymentHistory">Loading…</div></div>
+    </div>
+    <div class="bb-batch-payment-footer">
+    <div class="formerror" id="paymentError" role="alert"></div>
     <button class="btn primary" id="savePayBtn" style="width:100%;margin-top:5px" onclick="savePayment()">✓ Approve & Save Payment</button>
     <div class="secure-note">For Bank payment, duplicate Transaction ID will be rejected by the server. The Admin Code is verified server-side and is never saved into Payments.</div>
-    <div class="history" id="historyBox"><h3>Payment History</h3><div id="paymentHistory">Loading…</div></div>
+    </div>
   </div>
 </div>
 
@@ -1482,6 +1486,7 @@ async function openPayment(invoiceId){
   $('singleFullAmountRow').style.display='flex';
 
   $('paymentOverlay').classList.remove('hidden');
+  $('bbSinglePaymentBody').scrollTop=0;
   $('paymentHistory').textContent='Loading…';
 
   try{
