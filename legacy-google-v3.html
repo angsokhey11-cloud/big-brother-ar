@@ -36,6 +36,59 @@ input,select,textarea{width:100%;border:1px solid #cbd6e3;border-radius:9px;padd
 #arBody td.khmer-readable{font-family:'Noto Sans Khmer','Khmer OS System','Khmer Sangam MN',Arial,sans-serif;font-size:14.5px;font-weight:600;color:#233d58;line-height:1.75;letter-spacing:0;text-rendering:optimizeLegibility}
 #arBody td.khmer-readable small{font-family:Arial,sans-serif;font-size:11px;font-weight:600;color:#64768b;line-height:1.4}
 @media (max-width:1400px){#arBody td.khmer-readable{font-size:15px;color:#1d344d}}
+
+/* Batch A/R only: fixed header/actions and bounded internal scrolling. */
+#batchOverlay{padding:16px;overscroll-behavior:contain}
+#batchOverlay .bb-batch-payment-card{
+  box-sizing:border-box;width:min(820px,100%)!important;max-width:100%!important;
+  max-height:calc(100vh - 32px)!important;max-height:calc(100dvh - 32px)!important;
+  display:flex;flex-direction:column;overflow:hidden!important;padding:0!important;
+  min-height:0;min-width:0
+}
+#batchOverlay .bb-batch-payment-card .modalhead{
+  flex:0 0 auto;position:relative!important;top:auto!important;
+  padding:16px 22px 12px!important;border-bottom:1px solid var(--line);background:#fff
+}
+#batchOverlay .modalhead>div{min-width:0}
+#batchOverlay .modalhead p{margin:0!important;overflow-wrap:anywhere}
+#batchOverlay .modalhead .close{flex:0 0 34px}
+#batchOverlay .bb-batch-payment-body{
+  min-height:0;min-width:0;flex:1 1 auto;overflow-y:auto;overflow-x:hidden;
+  padding:14px 22px 10px;overscroll-behavior:contain;scrollbar-gutter:stable
+}
+#batchOverlay .bb-batch-payment-body .batch-list{max-height:min(220px,30vh);overflow:auto}
+#batchOverlay .bb-batch-payment-body .batch-item{font-size:13px;align-items:center}
+#batchOverlay .bb-batch-payment-body .batch-item>*{min-width:0;overflow-wrap:anywhere}
+#batchOverlay .bb-batch-payment-body .grid2{grid-template-columns:repeat(2,minmax(0,1fr))}
+#batchOverlay .bb-batch-payment-body .field{min-width:0}
+#batchOverlay .bb-batch-payment-body input,
+#batchOverlay .bb-batch-payment-body select,
+#batchOverlay .bb-batch-payment-body textarea{max-width:100%}
+#batchOverlay #bbWalletBatch{min-width:0;overflow-wrap:anywhere}
+#batchOverlay .bb-batch-payment-footer{
+  flex:0 0 auto;min-width:0;padding:12px 22px 14px;
+  background:#fff;border-top:1px solid var(--line)
+}
+#batchOverlay .bb-batch-payment-footer #batchError{margin:0 0 8px;max-height:16vh;overflow:auto;overflow-wrap:anywhere}
+#batchOverlay .bb-batch-payment-footer #saveBatchBtn{margin:0!important;min-height:44px;white-space:normal}
+#batchOverlay .bb-batch-payment-footer .secure-note{line-height:1.35;overflow-wrap:anywhere}
+@media(max-width:600px){
+  #batchOverlay{padding:8px;align-items:flex-end}
+  #batchOverlay .bb-batch-payment-card{width:100%!important;max-height:92vh!important;max-height:92dvh!important;border-radius:16px 16px 0 0}
+  #batchOverlay .bb-batch-payment-card .modalhead{padding:12px 14px!important}
+  #batchOverlay .bb-batch-payment-body{padding:12px 14px 8px;scrollbar-gutter:auto}
+  #batchOverlay .bb-batch-payment-footer{padding:10px 14px calc(10px + env(safe-area-inset-bottom))}
+  #batchOverlay .bb-batch-payment-footer .secure-note{font-size:10px}
+}
+@media(max-width:350px){
+  #batchOverlay .bb-batch-payment-body .grid2{grid-template-columns:1fr!important}
+}
+@media(max-height:380px){
+  #batchOverlay .bb-batch-payment-card{max-height:calc(100vh - 12px)!important;max-height:calc(100dvh - 12px)!important}
+  #batchOverlay .bb-batch-payment-card .modalhead{padding:6px 12px!important}
+  #batchOverlay .bb-batch-payment-footer{padding:6px 12px!important}
+  #batchOverlay .bb-batch-payment-footer .secure-note{display:none}
+}
 </style>
 </head>
 <body>
@@ -151,8 +204,9 @@ input,select,textarea{width:100%;border:1px solid #cbd6e3;border-radius:9px;padd
 </div>
 
 <div class="overlay hidden" id="batchOverlay">
-  <div class="modalbox">
-    <div class="modalhead"><div><h2>Batch Payment</h2><p id="batchInfo">Clear selected invoices with one customer payment.</p></div><button class="close" onclick="closeBatchPayment()">×</button></div>
+  <div class="modalbox bb-batch-payment-card" role="dialog" aria-modal="true" aria-labelledby="bbBatchPaymentTitle">
+    <div class="modalhead"><div><h2 id="bbBatchPaymentTitle">Batch Payment</h2><p id="batchInfo">Clear selected invoices with one customer payment.</p></div><button class="close" aria-label="Close batch payment" onclick="closeBatchPayment()">×</button></div>
+    <div class="bb-batch-payment-body" id="bbBatchPaymentBody">
     <div class="batch-list" id="batchList"></div>
     <div class="batch-total"><span>Total Outstanding</span><span id="batchTotal">$0.00</span></div>
     <div class="full-amount-row" id="batchFullAmountRow">
@@ -184,9 +238,12 @@ input,select,textarea{width:100%;border:1px solid #cbd6e3;border-radius:9px;padd
     </div>
     <div class="field"><label>Payment Note</label><textarea id="batchNote" rows="2" placeholder="Optional"></textarea></div>
     <div class="field" id="batchAdminField"><label>Admin Code <span style="color:#c93c46">*</span></label><input id="batchAdminCode" type="password" autocomplete="off" placeholder="One Admin Code approves the whole batch"></div>
-    <div class="formerror" id="batchError"></div>
+    </div>
+    <div class="bb-batch-payment-footer">
+    <div class="formerror" id="batchError" role="alert"></div>
     <button class="btn batch-btn" id="saveBatchBtn" style="width:100%;margin-top:5px" onclick="saveBatchPayment()">✓ Approve & Clear Selected Invoices</button>
     <div class="secure-note">One payment, one Admin approval, and one Bank Transaction ID can clear all selected invoices. The server recalculates every outstanding balance before saving.</div>
+    </div>
   </div>
 </div>
 
@@ -1562,6 +1619,7 @@ function openBatchPayment(){
   $('batchFullAmountRow').style.display='flex';
 
   $('batchOverlay').classList.remove('hidden');
+  $('bbBatchPaymentBody').scrollTop=0;
 }
 async function saveBatchPayment(){
   const picked=selectedPaymentRows();
