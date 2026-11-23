@@ -53,6 +53,8 @@
       html=html.replace('</body>', '<scr'+'ipt src="receivable-ar-migration-v1.js?v=20261022-all-preview1"></scr'+'ipt></body>');
       // Administrator-only imported opening A/R invoice header corrections.
       html=html.replace('</body>', '<scr'+'ipt src="receivable-ar-correction-v1.js?v=20261105-ar-balance1"></scr'+'ipt></body>');
+      // Bank-only A/R payment reversal: admin review, scoped DB transaction and audit.
+      html=html.replace('</body>', '<scr'+'ipt src="receivable-ar-payment-reversal-v1.js?v=20261123-ar-payment-reversal1"></scr'+'ipt></body>');
     }
     // Audit PDF: current summary image followed by authorized invoice originals / digital fallback.
     html=html.replace('</body>', '<scr'+'ipt src="receivable-audit-pdf-v1.js?v=20261104-summary-fit1"></scr'+'ipt></body>');
